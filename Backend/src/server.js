@@ -20,8 +20,16 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+const CORS_ORIGINS = process.env.CORS_ORIGINS 
+  ? process.env.CORS_ORIGINS.split(',') 
+  : [
+      'http://localhost:5173', 
+      'http://localhost:5174', 
+      'http://localhost:5175'
+    ];
+
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: CORS_ORIGINS,
   credentials: true
 }));
 app.use(express.json());
@@ -39,4 +47,5 @@ app.use('/api/config', configRoutes);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server läuft auf http://0.0.0.0:${PORT}`);
+  console.log(`Erlaubte CORS Origins: ${CORS_ORIGINS.join(', ')}`);
 });

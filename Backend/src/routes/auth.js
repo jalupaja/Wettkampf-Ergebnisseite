@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import bcrypt from 'bcryptjs';
-import { getUserByUsername, getUserById } from '../data/store.js';
+import { getUserByUsername, getUserById, verifyPassword } from '../data/store.js';
 import { generateToken, verifyToken, authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -18,7 +17,7 @@ router.post('/login', (req, res) => {
       return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
     }
     
-    const validPassword = bcrypt.compareSync(password, user.password);
+    const validPassword = verifyPassword(user, password);
     if (!validPassword) {
       return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
     }

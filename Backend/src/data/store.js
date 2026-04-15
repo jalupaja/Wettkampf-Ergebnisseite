@@ -12,6 +12,7 @@ function createDefaultData() {
         id: uuidv4(),
         username: 'admin',
         password: adminPassword,
+        hashed: true,
         role: 'admin',
         groupId: null,
         createdAt: new Date().toISOString()
@@ -136,11 +137,11 @@ export function getUserById(id) {
 }
 
 export function createUser(username, password, role, groupId = null) {
-  const hashedPassword = bcrypt.hashSync(password, SALT_ROUNDS);
   const user = {
     id: uuidv4(),
     username,
-    password: hashedPassword,
+    password: password,
+    hashed: false,
     role,
     groupId: role === 'athlete' ? groupId : null,
     createdAt: new Date().toISOString()
@@ -155,7 +156,7 @@ export function updateUser(id, updates) {
   if (index === -1) return null;
   
   if (updates.password) {
-    updates.password = bcrypt.hashSync(updates.password, SALT_ROUNDS);
+    updates.hashed = false;
   }
   
   store.users[index] = { ...store.users[index], ...updates };
@@ -170,6 +171,13 @@ export function deleteUser(id) {
   store.users.splice(index, 1);
   saveStore();
   return true;
+}
+
+export function verifyPassword(user, password) {
+  if (user.hashed) {
+    return bcrypt.compareSync(password, user.password);
+  }
+  return user.password === password;
 }
 
 export function getGroups() {

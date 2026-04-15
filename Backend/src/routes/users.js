@@ -11,7 +11,7 @@ import {
 
 const router = Router();
 
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, requireAdmin, (req, res) => {
   const users = getUsers();
   const groups = getGroups();
   
@@ -21,15 +21,11 @@ router.get('/', authenticate, (req, res) => {
     role: u.role,
     groupId: u.groupId,
     groupName: u.groupId ? groups.find(g => g.id === u.groupId)?.name : null,
+    password: u.role === 'athlete' ? u.password : undefined,
     createdAt: u.createdAt
   }));
   
-  if (req.user.role === 'admin') {
-    return res.json({ users: safeUsers });
-  }
-  
-  const ownUser = safeUsers.find(u => u.id === req.user.id);
-  res.json({ users: [ownUser] });
+  res.json({ users: safeUsers });
 });
 
 router.post('/', authenticate, requireAdmin, (req, res) => {
@@ -60,7 +56,8 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
         id: user.id,
         username: user.username,
         role: user.role,
-        groupId: user.groupId
+        groupId: user.groupId,
+        password: user.role === 'athlete' ? user.password : undefined
       }
     });
   } catch (error) {
@@ -69,19 +66,10 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
   }
 });
 
-router.put('/:id', authenticate, (req, res) => {
+router.put('/:id', authenticate, requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    
-    if (req.user.role !== 'admin' && req.user.id !== id) {
-      return res.status(403).json({ error: 'Keine Berechtigung' });
-    }
-    
-    if (req.user.role !== 'admin') {
-      delete updates.role;
-      delete updates.username;
-    }
     
     const user = updateUser(id, updates);
     if (!user) {
@@ -93,7 +81,8 @@ router.put('/:id', authenticate, (req, res) => {
         id: user.id,
         username: user.username,
         role: user.role,
-        groupId: user.groupId
+        groupId: user.groupId,
+        password: user.role === 'athlete' ? user.password : undefined
       }
     });
   } catch (error) {
