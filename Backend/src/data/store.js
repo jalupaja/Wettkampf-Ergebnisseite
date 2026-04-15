@@ -45,6 +45,7 @@ function createDefaultData() {
       password: adminPassword,
       hashed: true,
       role: 'admin',
+      isSuperAdmin: true,
       groupId: null,
       createdAt: new Date().toISOString()
     }

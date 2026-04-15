@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'wettkampf-secret-key-2024';
 
 export function generateToken(user) {
   return jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
+    { id: user.id, username: user.username, role: user.role, isSuperAdmin: user.isSuperAdmin || false },
     JWT_SECRET,
     { expiresIn: '24h' }
   );
