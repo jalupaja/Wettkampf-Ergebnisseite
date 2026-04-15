@@ -31,7 +31,8 @@ router.get('/', (req, res) => {
         return {
           routeId: route.id,
           name: route.name,
-          points: route.points,
+          topPoints: route.topPoints,
+          zones: route.zones,
           result: completedEntry ? completedEntry.result : null
         };
       });
@@ -41,48 +42,66 @@ router.get('/', (req, res) => {
         return {
           routeId: route.id,
           name: route.name,
-          points: route.points,
-          result: completedEntry ? completedEntry.result : null
+          topPoints: route.topPoints,
+          count: typeof completedEntry?.result === 'number' ? completedEntry.result : (completedEntry?.result === 'top' ? 1 : 0)
         };
       });
       
       // Calculate points for qualification routes
-      const qualWithResults = qualResults.map(r => ({
-        ...r,
-        isTop: r.result === 'top',
-        isZone: r.result === 'zone'
-      }));
+      const qualWithResults = qualResults.map(r => {
+        let points = 0;
+        let isTop = false;
+        let zoneName = null;
+        let zonePoints = 0;
+        
+        if (r.result === 'top') {
+          isTop = true;
+          points = r.topPoints;
+        } else if (r.result && r.result !== 'top') {
+          // It's a zone name
+          const zone = r.zones.find(z => z.name === r.result);
+          if (zone) {
+            zoneName = r.result;
+            zonePoints = zone.points;
+            points = zone.points;
+          }
+        }
+        
+        return {
+          ...r,
+          isTop,
+          zoneName,
+          zonePoints,
+          points
+        };
+      });
       
-      // Sort: tops first (by points desc), then zones (by points desc)
+      // Sort: tops first (by topPoints desc), then zones (by zonePoints desc)
       const sortedQual = [...qualWithResults].sort((a, b) => {
         if (a.isTop && !b.isTop) return -1;
         if (!a.isTop && b.isTop) return 1;
-        if (a.isZone && !b.isZone) return -1;
-        if (!a.isZone && b.isZone) return 1;
-        return b.points - a.points;
+        if (a.zonePoints !== b.zonePoints) return b.zonePoints - a.zonePoints;
+        return b.topPoints - a.topPoints;
       });
       
       // Take best routes for scoring
       const bestQual = sortedQual.slice(0, bestCount);
       const qualTops = bestQual.filter(r => r.isTop).length;
-      const qualZones = bestQual.filter(r => r.isZone && !r.isTop).length;
-      const qualPoints = qualTops * 100 + qualZones * 50; // Tops = 100, Zones = 50
+      const qualPoints = bestQual.reduce((sum, r) => sum + r.points, 0);
       
-      // Bonus routes: count as number (can have multiple tops)
-      const bonusTops = bonusResults.reduce((sum, r) => sum + (typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0)), 0);
+      // Bonus routes: sum of counts
+      const bonusTops = bonusResults.reduce((sum, r) => sum + r.count, 0);
       const bonusPoints = bonusTops * 50;
       
       const totalTops = qualTops + bonusTops;
-      const totalZones = qualZones;
       const totalPoints = qualPoints + bonusPoints;
       
       return {
         userId: user.id,
         username: user.username,
         qualTops,
-        qualZones,
-        bonusTops,
         qualPoints,
+        bonusTops,
         bonusPoints,
         totalPoints,
         routes: qualResults
@@ -92,7 +111,6 @@ router.get('/', (req, res) => {
     const sortedAthletes = [...athleteResults].sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
       if (b.qualTops !== a.qualTops) return b.qualTops - a.qualTops;
-      if (b.qualZones !== a.qualZones) return b.qualZones - a.qualZones;
       return b.bonusTops - a.bonusTops;
     });
     

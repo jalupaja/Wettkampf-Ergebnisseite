@@ -52,7 +52,7 @@
       editingId = user.id;
       formData = {
         username: user.username,
-        password: '',
+        password: user.password || '',
         role: user.role,
         groupId: user.groupId || ''
       };

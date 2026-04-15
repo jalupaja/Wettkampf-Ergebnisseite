@@ -16,17 +16,25 @@ router.get('/', authenticate, requireAdmin, (req, res) => {
 
 router.post('/', authenticate, requireAdmin, (req, res) => {
   try {
-    const { name, category, points, order } = req.body;
+    const { name, category, topPoints, zones, order } = req.body;
     
-    if (!name || !category || points === undefined) {
-      return res.status(400).json({ error: 'Name, Kategorie und Punkte erforderlich' });
+    if (!name || !category) {
+      return res.status(400).json({ error: 'Name und Kategorie erforderlich' });
     }
     
     if (!['qualification', 'bonus', 'finale'].includes(category)) {
       return res.status(400).json({ error: 'Ungültige Kategorie' });
     }
     
-    const route = createRoute(name, category, points, order);
+    const routeData = {
+      name,
+      category,
+      topPoints: topPoints !== undefined ? topPoints : 100,
+      zones: zones || [],
+      order
+    };
+    
+    const route = createRoute(routeData);
     res.status(201).json({ route });
   } catch (error) {
     console.error('Create route error:', error);

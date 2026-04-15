@@ -10,7 +10,8 @@
   let formData = $state({
     name: '',
     category: 'qualification',
-    points: 100,
+    topPoints: 100,
+    zones: [],
     order: null
   });
   
@@ -44,7 +45,8 @@
       formData = {
         name: route.name,
         category: route.category,
-        points: route.points,
+        topPoints: route.topPoints || route.points || 100,
+        zones: route.zones || [],
         order: route.order
       };
     } else {
@@ -53,7 +55,8 @@
       formData = {
         name: '',
         category: 'qualification',
-        points: 100,
+        topPoints: 100,
+        zones: [],
         order: maxOrder + 1
       };
     }
@@ -63,6 +66,23 @@
   function closeModal() {
     showModal = false;
     editingId = null;
+  }
+  
+  function addZone() {
+    formData.zones = [...formData.zones, { name: `Zone ${formData.zones.length + 1}`, points: 25 }];
+  }
+  
+  function removeZone(index) {
+    formData.zones = formData.zones.filter((_, i) => i !== index);
+  }
+  
+  function updateZone(index, field, value) {
+    formData.zones = formData.zones.map((zone, i) => {
+      if (i === index) {
+        return { ...zone, [field]: field === 'points' ? parseInt(value) || 0 : value };
+      }
+      return zone;
+    });
   }
   
   async function handleSubmit() {
@@ -143,7 +163,7 @@
               <div class="route-order">{route.order}</div>
               <div class="route-info">
                 <span class="route-name">{route.name}</span>
-                <span class="route-points">{route.points} Punkte</span>
+                <span class="route-meta">Top: {route.topPoints} Punkte | Zonen: {route.zones?.length || 0}</span>
               </div>
               <div class="route-actions">
                 <button class="outline btn-sm" onclick={() => moveRoute(route.id, 'up')} disabled={index === 0}>↑</button>
@@ -164,7 +184,7 @@
               <div class="route-order">{route.order}</div>
               <div class="route-info">
                 <span class="route-name">{route.name}</span>
-                <span class="route-points">{route.points} Punkte</span>
+                <span class="route-meta">{route.topPoints} Punkte pro Top</span>
               </div>
               <div class="route-actions">
                 <button class="outline btn-sm" onclick={() => moveRoute(route.id, 'up')} disabled={index === 0}>↑</button>
@@ -185,7 +205,6 @@
               <div class="route-order">{route.order}</div>
               <div class="route-info">
                 <span class="route-name">{route.name}</span>
-                <span class="route-points">{route.points} Punkte</span>
               </div>
               <div class="route-actions">
                 <button class="outline btn-sm" onclick={() => moveRoute(route.id, 'up')} disabled={index === 0}>↑</button>
@@ -237,15 +256,49 @@
           </div>
           
           <div class="form-group">
-            <label for="points">Punkte</label>
+            <label for="topPoints">Top Punkte</label>
             <input
               type="number"
-              id="points"
-              bind:value={formData.points}
-              min="1"
+              id="topPoints"
+              bind:value={formData.topPoints}
+              min="0"
               required
             />
           </div>
+          
+          {#if formData.category === 'qualification'}
+            <div class="form-group">
+              <div class="zone-header">
+                <label>Zonen</label>
+                <button type="button" class="outline btn-sm" onclick={addZone}>+ Zone hinzufügen</button>
+              </div>
+              {#if formData.zones.length === 0}
+                <p class="zone-hint">Keine Zonen konfiguriert. Athleten können nur "Versuch" oder "Top" auswählen.</p>
+              {:else}
+                <div class="zones-list">
+                  {#each formData.zones as zone, index}
+                    <div class="zone-item">
+                      <input
+                        type="text"
+                        value={zone.name}
+                        oninput={(e) => updateZone(index, 'name', e.target.value)}
+                        placeholder="Zone Name"
+                        class="zone-name-input"
+                      />
+                      <input
+                        type="number"
+                        value={zone.points}
+                        oninput={(e) => updateZone(index, 'points', e.target.value)}
+                        placeholder="Punkte"
+                        class="zone-points-input"
+                      />
+                      <button type="button" class="danger btn-sm" onclick={() => removeZone(index)}>×</button>
+                    </div>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          {/if}
           
           <div class="form-group">
             <label for="order">Reihenfolge</label>
@@ -362,8 +415,8 @@
     font-weight: 500;
   }
   
-  .route-points {
-    font-size: 13px;
+  .route-meta {
+    font-size: 12px;
     color: var(--color-text-muted);
   }
   
@@ -396,13 +449,49 @@
     border-radius: 16px;
     padding: 32px;
     width: 100%;
-    max-width: 450px;
+    max-width: 500px;
     border: 1px solid var(--color-border);
+    max-height: 90vh;
+    overflow-y: auto;
   }
   
   .modal h3 {
     margin-bottom: 24px;
     font-size: 20px;
+  }
+  
+  .zone-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .zone-hint {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+  
+  .zones-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  .zone-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .zone-name-input {
+    flex: 1;
+  }
+  
+  .zone-points-input {
+    width: 80px;
   }
   
   .modal-actions {

@@ -57,9 +57,9 @@
   const finaleRoutes = $derived(routes.filter(r => r.category === 'finale'));
   
   const qualTops = $derived(qualRoutes.filter(r => r.result === 'top').length);
-  const qualZones = $derived(qualRoutes.filter(r => r.result === 'zone').length);
-  const totalBonusCount = $derived(bonusRoutes.reduce((sum, r) => sum + (r.result || 0), 0));
-  const maxBonusCount = $derived(bonusRoutes.reduce((sum, r) => sum + 1, 0));
+  const qualZones = $derived(qualRoutes.filter(r => r.result && r.result !== 'top').length);
+  const totalBonusCount = $derived(bonusRoutes.reduce((sum, r) => sum + (typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0)), 0));
+  const maxBonusCount = $derived(bonusRoutes.length);
 </script>
 
 <div class="routes-view">
@@ -87,9 +87,9 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">Bonus Tops</div>
-        <div class="stat-value">{totalBonusCount} / {maxBonusCount}</div>
+        <div class="stat-value">{totalBonusCount}</div>
         <div class="stat-bar">
-          <div class="stat-fill bonus" style="width: {maxBonusCount ? (totalBonusCount / maxBonusCount) * 100 : 0}%"></div>
+          <div class="stat-fill bonus" style="width: {maxBonusCount ? Math.min((totalBonusCount / maxBonusCount) * 100, 100) : 0}%"></div>
         </div>
       </div>
     </div>
@@ -100,16 +100,25 @@
           <h2>Qualifikation</h2>
           <div class="routes-grid">
             {#each qualRoutes as route}
-              <div class="route-card" class:top={route.result === 'top'} class:zone={route.result === 'zone'}>
+              <div class="route-card" class:top={route.result === 'top'} class:zone={route.result && route.result !== 'top'}>
                 <div class="route-name">{route.name}</div>
                 <div class="route-buttons">
                   <button 
                     class="result-btn zone-btn" 
-                    class:active={route.result === 'zone'}
-                    onclick={() => setResult(route.id, route.result === 'zone' ? null : 'zone')}
+                    class:active={route.result === null}
+                    onclick={() => setResult(route.id, null)}
                   >
-                    Zone
+                    Versuch
                   </button>
+                  {#each route.zones || [] as zone}
+                    <button 
+                      class="result-btn zone-btn" 
+                      class:active={route.result === zone.name}
+                      onclick={() => setResult(route.id, route.result === zone.name ? null : zone.name)}
+                    >
+                      {zone.name}
+                    </button>
+                  {/each}
                   <button 
                     class="result-btn top-btn" 
                     class:active={route.result === 'top'}
@@ -129,25 +138,25 @@
           <h2>Bonus</h2>
           <div class="routes-grid">
             {#each bonusRoutes as route}
+              {@const count = typeof route.result === 'number' ? route.result : (route.result === 'top' ? 1 : 0)}
               <div class="route-card bonus-card">
                 <div class="route-name">{route.name}</div>
                 <div class="bonus-counter">
                   <button 
                     class="counter-btn minus" 
-                    onclick={() => decrementBonus(route.id, route.result || 0)}
-                    disabled={(route.result || 0) <= 0}
+                    onclick={() => decrementBonus(route.id, count)}
+                    disabled={count <= 0}
                   >
                     -
                   </button>
-                  <span class="counter-value">{route.result || 0}</span>
+                  <span class="counter-value">{count}</span>
                   <button 
                     class="counter-btn plus"
-                    onclick={() => incrementBonus(route.id, route.result || 0)}
+                    onclick={() => incrementBonus(route.id, count)}
                   >
                     +
                   </button>
                 </div>
-                <div class="route-points">Top {route.result || 0}/{1}</div>
               </div>
             {/each}
           </div>
@@ -270,7 +279,7 @@
   
   .routes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 12px;
   }
   
@@ -302,18 +311,19 @@
   
   .route-buttons {
     display: flex;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
   }
   
   .result-btn {
-    flex: 1;
-    padding: 8px;
+    padding: 6px 10px;
     border: 2px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: 6px;
     background: transparent;
     color: var(--color-text-muted);
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
   }
@@ -343,7 +353,6 @@
     align-items: center;
     justify-content: center;
     gap: 16px;
-    margin-bottom: 8px;
   }
   
   .counter-btn {

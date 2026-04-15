@@ -14,29 +14,40 @@ function createDefaultData() {
   ];
   
   const routes = [
-    { id: uuidv4(), name: 'Route 1', category: 'qualification', points: 100, order: 1, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 2', category: 'qualification', points: 100, order: 2, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 3', category: 'qualification', points: 100, order: 3, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 4', category: 'qualification', points: 100, order: 4, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 5', category: 'qualification', points: 100, order: 5, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 6', category: 'qualification', points: 100, order: 6, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Bonus 1', category: 'bonus', points: 50, order: 7, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Bonus 2', category: 'bonus', points: 50, order: 8, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Bonus 3', category: 'bonus', points: 50, order: 9, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Finale 1', category: 'finale', points: 0, order: 10, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Finale 2', category: 'finale', points: 0, order: 11, createdAt: new Date().toISOString() }
+    { id: uuidv4(), name: 'Route 1', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 1, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 2', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 2, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 3', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 3, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 4', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 4, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 5', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 5, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 6', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 6, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Bonus 1', category: 'bonus', topPoints: 50, zones: [], order: 7, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Bonus 2', category: 'bonus', topPoints: 50, zones: [], order: 8, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Bonus 3', category: 'bonus', topPoints: 50, zones: [], order: 9, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Finale 1', category: 'finale', topPoints: 0, zones: [], order: 10, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Finale 2', category: 'finale', topPoints: 0, zones: [], order: 11, createdAt: new Date().toISOString() }
   ];
   
   const athletes = [
-    { name: 'Klaus Müller', password: 'Klaus123', group: 'Herren', tops: [0, 1, 2, 3], zones: [], bonusTops: 2 },
-    { name: 'Thomas Weber', password: 'Thomas123', group: 'Herren', tops: [0, 1, 2], zones: [4], bonusTops: 1 },
-    { name: 'Stefan Bauer', password: 'Stefan123', group: 'Herren', tops: [0, 1], zones: [2, 3, 4], bonusTops: 3 },
-    { name: 'Maria Schmidt', password: 'Maria123', group: 'Damen', tops: [0, 1, 2, 3], zones: [], bonusTops: 2 },
-    { name: 'Anna Fischer', password: 'Anna123', group: 'Damen', tops: [0, 1, 2], zones: [3], bonusTops: 1 },
-    { name: 'Lisa Wagner', password: 'Lisa123', group: 'Damen', tops: [0, 1], zones: [2, 3], bonusTops: 0 },
-    { name: 'Tim Hoffmann', password: 'Tim123', group: 'Jugend m', tops: [0, 1, 2, 3, 4], zones: [], bonusTops: 3 },
-    { name: 'Lena Klein', password: 'Lena123', group: 'Jugend w', tops: [0, 1, 2, 3], zones: [], bonusTops: 2 }
+    { name: 'Klaus Müller', password: 'klaus123' },
+    { name: 'Thomas Weber', password: 'thomas123' },
+    { name: 'Stefan Bauer', password: 'stefan123' },
+    { name: 'Maria Schmidt', password: 'maria123' },
+    { name: 'Anna Fischer', password: 'anna123' },
+    { name: 'Lisa Wagner', password: 'lisa123' },
+    { name: 'Tim Hoffmann', password: 'tim123' },
+    { name: 'Lena Klein', password: 'lena123' }
   ];
+
+  const athleteResults = {
+    'Klaus Müller': { tops: [0, 1, 2, 3], zones: {4: 'Zone 2'}, bonusTops: 2 },
+    'Thomas Weber': { tops: [0, 1, 2], zones: {4: 'Zone 1'}, bonusTops: 1 },
+    'Stefan Bauer': { tops: [0, 1], zones: {2: 'Zone 1', 3: 'Zone 2', 4: 'Zone 2'}, bonusTops: 3 },
+    'Maria Schmidt': { tops: [0, 1, 2, 3], zones: {}, bonusTops: 2 },
+    'Anna Fischer': { tops: [0, 1, 2], zones: {3: 'Zone 1'}, bonusTops: 1 },
+    'Lisa Wagner': { tops: [0, 1], zones: {2: 'Zone 2', 3: 'Zone 1'}, bonusTops: 0 },
+    'Tim Hoffmann': { tops: [0, 1, 2, 3, 4], zones: {}, bonusTops: 3 },
+    'Lena Klein': { tops: [0, 1, 2, 3], zones: {}, bonusTops: 2 }
+  };
   
   const users = [
     {
@@ -53,22 +64,30 @@ function createDefaultData() {
   
   const completedRoutes = [];
   
-  athletes.forEach(athlete => {
-    const group = groups.find(g => g.name === athlete.group);
+  Object.entries(athleteResults).forEach(([name, results]) => {
+    const groupName = Object.entries({
+      'Klaus Müller': 'Herren', 'Thomas Weber': 'Herren', 'Stefan Bauer': 'Herren',
+      'Maria Schmidt': 'Damen', 'Anna Fischer': 'Damen', 'Lisa Wagner': 'Damen',
+      'Tim Hoffmann': 'Jugend m', 'Lena Klein': 'Jugend w'
+    }).find(([n]) => n === name)?.[1];
+    const group = groups.find(g => g.name === groupName);
     if (!group) return;
     
     const userId = uuidv4();
+    const athleteData = athletes.find(a => a.name === name);
+    if (!athleteData) return;
+    
     users.push({
       id: userId,
-      username: athlete.name,
-      password: athlete.password,
+      username: name,
+      password: athleteData.password,
       hashed: false,
       role: 'athlete',
       groupId: group.id,
       createdAt: new Date().toISOString()
     });
     
-    athlete.tops.forEach(routeIndex => {
+    results.tops.forEach(routeIndex => {
       if (routes[routeIndex]) {
         completedRoutes.push({
           id: uuidv4(),
@@ -80,19 +99,20 @@ function createDefaultData() {
       }
     });
     
-    athlete.zones.forEach(routeIndex => {
+    Object.entries(results.zones).forEach(([routeIndexStr, zoneName]) => {
+      const routeIndex = parseInt(routeIndexStr);
       if (routes[routeIndex]) {
         completedRoutes.push({
           id: uuidv4(),
           userId,
           routeId: routes[routeIndex].id,
-          result: 'zone',
+          result: zoneName,
           completedAt: new Date().toISOString()
         });
       }
     });
     
-    for (let i = 0; i < athlete.bonusTops; i++) {
+    for (let i = 0; i < results.bonusTops; i++) {
       const bonusRoute = routes.find(r => r.category === 'bonus');
       if (bonusRoute) {
         completedRoutes.push({
@@ -241,7 +261,7 @@ export function getRouteById(id) {
   return store.routes.find(r => r.id === id);
 }
 
-export function createRoute(name, category, points, order = null) {
+export function createRoute({ name, category, topPoints = 100, zones = [], order = null }) {
   if (order === null) {
     order = Math.max(...store.routes.map(r => r.order), 0) + 1;
   }
@@ -249,7 +269,8 @@ export function createRoute(name, category, points, order = null) {
     id: uuidv4(),
     name,
     category,
-    points,
+    topPoints,
+    zones,
     order,
     createdAt: new Date().toISOString()
   };
