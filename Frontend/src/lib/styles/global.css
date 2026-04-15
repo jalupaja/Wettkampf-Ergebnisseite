@@ -14,12 +14,17 @@
 }
 
 .light {
-  --color-bg: #f5f5f5;
-  --color-bg-light: #ffffff;
-  --color-bg-lighter: #e8e8e8;
-  --color-text: #1a1a2e;
-  --color-text-muted: #666666;
-  --color-border: #d0d0d0;
+  --color-bg: #f5f5f5 !important;
+  --color-bg-light: #ffffff !important;
+  --color-bg-lighter: #e8e8e8 !important;
+  --color-text: #1a1a2e !important;
+  --color-text-muted: #666666 !important;
+  --color-border: #d0d0d0 !important;
+}
+
+body.light {
+  background-color: #f5f5f5;
+  color: #1a1a2e;
 }
 
 * {

@@ -45,8 +45,10 @@ router.post('/result', authenticate, (req, res) => {
       route.zones.forEach(z => validResults.push(z.name));
     }
     
+    console.log('Route result attempt:', { routeId, result, routeName: route.name, zones: route.zones, validResults });
+    
     if (result !== null && !validResults.includes(result)) {
-      return res.status(400).json({ error: 'Ungültiges Ergebnis' });
+      return res.status(400).json({ error: `Ungültiges Ergebnis: ${result}` });
     }
     
     const result_data = setRouteResult(req.user.id, routeId, result);
