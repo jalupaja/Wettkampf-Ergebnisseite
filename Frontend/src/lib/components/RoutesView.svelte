@@ -22,11 +22,11 @@
     loading = false;
   }
   
-  async function toggleRoute(routeId) {
+  async function setResult(routeId, result) {
     try {
-      await api.routes.toggle(routeId);
+      await api.routes.setResult(routeId, result);
       routes = routes.map(r => 
-        r.id === routeId ? { ...r, completed: !r.completed } : r
+        r.id === routeId ? { ...r, result } : r
       );
     } catch (err) {
       error = err.message;
@@ -37,8 +37,9 @@
   const bonusRoutes = $derived(routes.filter(r => r.category === 'bonus'));
   const finaleRoutes = $derived(routes.filter(r => r.category === 'finale'));
   
-  const qualCompleted = $derived(qualRoutes.filter(r => r.completed).length);
-  const bonusCompleted = $derived(bonusRoutes.filter(r => r.completed).length);
+  const qualTops = $derived(qualRoutes.filter(r => r.result === 'top').length);
+  const qualZones = $derived(qualRoutes.filter(r => r.result === 'zone').length);
+  const bonusCompleted = $derived(bonusRoutes.filter(r => r.result === 'top').length);
 </script>
 
 <div class="routes-view">
@@ -51,14 +52,21 @@
   {:else}
     <div class="stats">
       <div class="stat-card">
-        <div class="stat-label">Qualifikation</div>
-        <div class="stat-value">{qualCompleted} / {qualRoutes.length}</div>
+        <div class="stat-label">Qualifikation Tops</div>
+        <div class="stat-value">{qualTops} / {qualRoutes.length}</div>
         <div class="stat-bar">
-          <div class="stat-fill" style="width: {qualRoutes.length ? (qualCompleted / qualRoutes.length) * 100 : 0}%"></div>
+          <div class="stat-fill top" style="width: {qualRoutes.length ? (qualTops / qualRoutes.length) * 100 : 0}%"></div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Bonus</div>
+        <div class="stat-label">Qualifikation Zonen</div>
+        <div class="stat-value">{qualZones} / {qualRoutes.length}</div>
+        <div class="stat-bar">
+          <div class="stat-fill zone" style="width: {qualRoutes.length ? (qualZones / qualRoutes.length) * 100 : 0}%"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Bonus Tops</div>
         <div class="stat-value">{bonusCompleted} / {bonusRoutes.length}</div>
         <div class="stat-bar">
           <div class="stat-fill bonus" style="width: {bonusRoutes.length ? (bonusCompleted / bonusRoutes.length) * 100 : 0}%"></div>
@@ -72,17 +80,25 @@
           <h2>Qualifikation</h2>
           <div class="routes-grid">
             {#each qualRoutes as route}
-              <button 
-                class="route-card"
-                class:completed={route.completed}
-                onclick={() => toggleRoute(route.id)}
-              >
+              <div class="route-card" class:top={route.result === 'top'} class:zone={route.result === 'zone'}>
                 <div class="route-name">{route.name}</div>
-                <div class="route-points">{route.points} Punkte</div>
-                {#if route.completed}
-                  <div class="check-mark">✓</div>
-                {/if}
-              </button>
+                <div class="route-buttons">
+                  <button 
+                    class="result-btn zone-btn" 
+                    class:active={route.result === 'zone'}
+                    onclick={() => setResult(route.id, route.result === 'zone' ? null : 'zone')}
+                  >
+                    Zone
+                  </button>
+                  <button 
+                    class="result-btn top-btn" 
+                    class:active={route.result === 'top'}
+                    onclick={() => setResult(route.id, route.result === 'top' ? null : 'top')}
+                  >
+                    Top
+                  </button>
+                </div>
+              </div>
             {/each}
           </div>
         </section>
@@ -95,12 +111,12 @@
             {#each bonusRoutes as route}
               <button 
                 class="route-card bonus-card"
-                class:completed={route.completed}
-                onclick={() => toggleRoute(route.id)}
+                class:completed={route.result === 'top'}
+                onclick={() => setResult(route.id, route.result === 'top' ? null : 'top')}
               >
                 <div class="route-name">{route.name}</div>
-                <div class="route-points">{route.points} Punkte</div>
-                {#if route.completed}
+                <div class="route-points">Top</div>
+                {#if route.result === 'top'}
                   <div class="check-mark">✓</div>
                 {/if}
               </button>
@@ -116,12 +132,12 @@
             {#each finaleRoutes as route}
               <button 
                 class="route-card finale-card"
-                class:completed={route.completed}
-                onclick={() => toggleRoute(route.id)}
+                class:completed={route.result === 'top'}
+                onclick={() => setResult(route.id, route.result === 'top' ? null : 'top')}
               >
                 <div class="route-name">{route.name}</div>
-                <div class="route-points">{route.points} Punkte</div>
-                {#if route.completed}
+                <div class="route-points">Top</div>
+                {#if route.result === 'top'}
                   <div class="check-mark">✓</div>
                 {/if}
               </button>
@@ -195,9 +211,16 @@
   
   .stat-fill {
     height: 100%;
-    background: var(--color-primary);
     border-radius: 4px;
     transition: width 0.3s ease;
+  }
+  
+  .stat-fill.top {
+    background: var(--color-primary);
+  }
+  
+  .stat-fill.zone {
+    background: #f39c12;
   }
   
   .stat-fill.bonus {
@@ -218,7 +241,7 @@
   
   .routes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 12px;
   }
   
@@ -227,36 +250,89 @@
     background: var(--color-bg-light);
     border: 2px solid var(--color-border);
     border-radius: 12px;
-    padding: 20px;
+    padding: 16px;
     text-align: center;
     transition: all 0.2s ease;
   }
   
-  .route-card:hover {
+  .route-card.zone {
+    border-color: #f39c12;
+    background: rgba(243, 156, 18, 0.1);
+  }
+  
+  .route-card.top {
     border-color: var(--color-primary);
-    transform: translateY(-2px);
-  }
-  
-  .route-card.completed {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: white;
-  }
-  
-  .route-card.bonus-card.completed {
-    background: var(--color-secondary);
-    border-color: var(--color-secondary);
-  }
-  
-  .route-card.finale-card.completed {
-    background: #9b59b6;
-    border-color: #9b59b6;
+    background: rgba(255, 107, 0, 0.1);
   }
   
   .route-name {
     font-weight: 600;
     font-size: 16px;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .route-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .result-btn {
+    flex: 1;
+    padding: 8px;
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .result-btn:hover {
+    border-color: var(--color-text-muted);
+  }
+  
+  .zone-btn.active {
+    background: #f39c12;
+    border-color: #f39c12;
+    color: white;
+  }
+  
+  .top-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+  }
+  
+  .route-card.bonus-card {
+    cursor: pointer;
+  }
+  
+  .route-card.bonus-card:hover {
+    border-color: var(--color-secondary);
+    transform: translateY(-2px);
+  }
+  
+  .route-card.bonus-card.completed {
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: white;
+  }
+  
+  .route-card.finale-card {
+    cursor: pointer;
+  }
+  
+  .route-card.finale-card:hover {
+    border-color: #9b59b6;
+    transform: translateY(-2px);
+  }
+  
+  .route-card.finale-card.completed {
+    background: #9b59b6;
+    border-color: #9b59b6;
+    color: white;
   }
   
   .route-points {
@@ -271,13 +347,18 @@
     width: 24px;
     height: 24px;
     background: white;
-    color: var(--color-primary);
+    color: var(--color-secondary);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 14px;
     font-weight: bold;
+  }
+  
+  .route-card.finale-card.completed .check-mark {
+    background: white;
+    color: #9b59b6;
   }
   
   .empty-state {

@@ -275,27 +275,35 @@ export function getCompletedRoutes() {
   return store.completedRoutes;
 }
 
-export function toggleCompletedRoute(userId, routeId) {
+export function setRouteResult(userId, routeId, result) {
+  // result: null (not attempted), 'zone', or 'top'
   const existing = store.completedRoutes.find(
     cr => cr.userId === userId && cr.routeId === routeId
   );
   
-  if (existing) {
-    store.completedRoutes = store.completedRoutes.filter(
-      cr => cr !== existing
-    );
+  if (result === null) {
+    // Remove the entry if it exists
+    if (existing) {
+      store.completedRoutes = store.completedRoutes.filter(cr => cr !== existing);
+    }
     saveStore();
-    return { completed: false };
+    return { result: null };
+  }
+  
+  if (existing) {
+    existing.result = result;
+    existing.completedAt = new Date().toISOString();
   } else {
     store.completedRoutes.push({
       id: uuidv4(),
       userId,
       routeId,
+      result,
       completedAt: new Date().toISOString()
     });
-    saveStore();
-    return { completed: true };
   }
+  saveStore();
+  return { result };
 }
 
 export function getConfig() {

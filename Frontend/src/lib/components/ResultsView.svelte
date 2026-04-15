@@ -43,13 +43,13 @@
       <h2>Rangliste</h2>
       {#if config}
         <span class="config-info">
-          Top {config.qualificationBestCount} Qualifikationsrouten werden gewertet
+          Top {config.qualificationBestCount} Routen gewertet
         </span>
       {/if}
     </div>
     
     {#if results.length}
-      {#each results as groupResult, groupIndex}
+      {#each results as groupResult}
         <div class="group-results card">
           <h3 class="group-title">{groupResult.groupName}</h3>
           
@@ -59,9 +59,10 @@
                 <tr>
                   <th class="rank-col">Platz</th>
                   <th class="name-col">Name</th>
-                  <th class="stat-col">Qualifikation</th>
+                  <th class="stat-col">Tops</th>
+                  <th class="stat-col">Zonen</th>
                   <th class="stat-col">Bonus</th>
-                  <th class="points-col">Gesamt</th>
+                  <th class="points-col">Punkte</th>
                 </tr>
               </thead>
               <tbody>
@@ -75,12 +76,13 @@
                     </td>
                     <td class="name-col">{athlete.username}</td>
                     <td class="stat-col">
-                      <span class="stat-value">{athlete.qualPoints}</span>
-                      <span class="stat-detail">({athlete.qualCompleted}/{groupResult.athletes[0]?.qualCompleted || 0})</span>
+                      <span class="stat-value top">{athlete.qualTops}</span>
                     </td>
                     <td class="stat-col">
-                      <span class="stat-value bonus">{athlete.bonusPoints}</span>
-                      <span class="stat-detail">({athlete.bonusCompleted})</span>
+                      <span class="stat-value zone">{athlete.qualZones}</span>
+                    </td>
+                    <td class="stat-col">
+                      <span class="stat-value bonus">{athlete.bonusTops}</span>
                     </td>
                     <td class="points-col total">{athlete.totalPoints}</td>
                   </tr>
@@ -197,18 +199,20 @@
   }
   
   .stat-value {
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  
+  .stat-value.top {
     color: var(--color-primary);
+  }
+  
+  .stat-value.zone {
+    color: #f39c12;
   }
   
   .stat-value.bonus {
     color: var(--color-secondary);
-  }
-  
-  .stat-detail {
-    font-size: 12px;
-    color: var(--color-text-muted);
-    margin-left: 4px;
   }
   
   .points-col.total {

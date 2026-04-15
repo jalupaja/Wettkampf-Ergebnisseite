@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 async function request(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -21,8 +21,8 @@ async function request(endpoint, options = {}) {
 
 export const api = {
   auth: {
-    login: (username, password) => 
-      request('/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+    login: (password) => 
+      request('/login', { method: 'POST', body: JSON.stringify({ password }) }),
     logout: () => request('/logout', { method: 'POST' }),
     me: () => request('/me'),
     check: () => request('/check', { method: 'POST' })
@@ -47,7 +47,7 @@ export const api = {
   
   routes: {
     list: () => request('/Routes'),
-    toggle: (routeId) => request('/Routes/toggle', { method: 'POST', body: JSON.stringify({ routeId }) }),
+    setResult: (routeId, result) => request('/Routes/result', { method: 'POST', body: JSON.stringify({ routeId, result }) }),
     admin: {
       list: () => request('/admin/Routes'),
       create: (data) => request('/admin/Routes', { method: 'POST', body: JSON.stringify(data) }),
