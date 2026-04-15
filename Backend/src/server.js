@@ -38,12 +38,22 @@ app.use(cookieParser());
 app.use('/api', authRoutes);
 app.use('/api/Users', usersRoutes);
 app.use('/api/Groups', groupsRoutes);
-app.use('/api/Routes', routesRoutes);
 app.use('/api/Finale', finaleRoutes);
 app.use('/api/admin/Groups', adminGroupsRoutes);
 app.use('/api/admin/Routes', adminRoutesRoutes);
+app.use('/api/Routes', routesRoutes);
 app.use('/api/results', resultsRoutes);
 app.use('/api/config', configRoutes);
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ error: 'Serverfehler', details: err.message });
+});
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server läuft auf http://0.0.0.0:${PORT}`);

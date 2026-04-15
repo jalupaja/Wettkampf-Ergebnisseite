@@ -16,10 +16,11 @@ router.get('/', authenticate, requireAdmin, (req, res) => {
 
 router.post('/', authenticate, requireAdmin, (req, res) => {
   try {
+    console.log('POST /api/admin/Routes - body:', req.body);
     const { name, category, topPoints, zones, order } = req.body;
     
     if (!name || !category) {
-      return res.status(400).json({ error: 'Name und Kategorie erforderlich' });
+      return res.status(400).json({ error: 'Name und Kategorie erforderlich', received: req.body });
     }
     
     if (!['qualification', 'bonus', 'finale'].includes(category)) {
@@ -38,7 +39,7 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
     res.status(201).json({ route });
   } catch (error) {
     console.error('Create route error:', error);
-    res.status(500).json({ error: 'Serverfehler' });
+    res.status(500).json({ error: 'Serverfehler', details: error.message });
   }
 });
 
