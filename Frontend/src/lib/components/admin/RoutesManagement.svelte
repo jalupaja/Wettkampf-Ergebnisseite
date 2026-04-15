@@ -207,8 +207,8 @@
   {/if}
   
   {#if showModal}
-    <div class="modal-overlay" onclick={closeModal}>
-      <div class="modal" onclick={(e) => e.stopPropagation()}>
+    <div class="modal-overlay" role="dialog" aria-modal="true" onclick={closeModal} onkeydown={(e) => e.key === 'Escape' && closeModal()} tabindex="-1">
+      <div class="modal" role="document" onclick={(e) => e.stopPropagation()}>
         <h3>{editingId ? 'Route bearbeiten' : 'Neue Route'}</h3>
         
         <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
