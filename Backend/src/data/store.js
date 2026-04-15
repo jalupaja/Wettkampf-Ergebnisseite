@@ -6,111 +6,114 @@ const SALT_ROUNDS = 10;
 function createDefaultData() {
   const adminPassword = bcrypt.hashSync('admin123', SALT_ROUNDS);
   
+  const groups = [
+    { id: uuidv4(), name: 'Herren', description: 'Männer allgemein', order: 1, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Damen', description: 'Frauen allgemein', order: 2, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Jugend m', description: 'Männliche Jugend', order: 3, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Jugend w', description: 'Weibliche Jugend', order: 4, createdAt: new Date().toISOString() }
+  ];
+  
+  const routes = [
+    { id: uuidv4(), name: 'Route 1', category: 'qualification', points: 100, order: 1, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 2', category: 'qualification', points: 100, order: 2, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 3', category: 'qualification', points: 100, order: 3, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 4', category: 'qualification', points: 100, order: 4, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 5', category: 'qualification', points: 100, order: 5, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 6', category: 'qualification', points: 100, order: 6, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Bonus 1', category: 'bonus', points: 50, order: 7, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Bonus 2', category: 'bonus', points: 50, order: 8, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Bonus 3', category: 'bonus', points: 50, order: 9, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Finale 1', category: 'finale', points: 0, order: 10, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Finale 2', category: 'finale', points: 0, order: 11, createdAt: new Date().toISOString() }
+  ];
+  
+  const athletes = [
+    { name: 'Klaus Müller', password: 'Klaus123', group: 'Herren', tops: [0, 1, 2, 3], zones: [], bonusTops: 2 },
+    { name: 'Thomas Weber', password: 'Thomas123', group: 'Herren', tops: [0, 1, 2], zones: [4], bonusTops: 1 },
+    { name: 'Stefan Bauer', password: 'Stefan123', group: 'Herren', tops: [0, 1], zones: [2, 3, 4], bonusTops: 3 },
+    { name: 'Maria Schmidt', password: 'Maria123', group: 'Damen', tops: [0, 1, 2, 3], zones: [], bonusTops: 2 },
+    { name: 'Anna Fischer', password: 'Anna123', group: 'Damen', tops: [0, 1, 2], zones: [3], bonusTops: 1 },
+    { name: 'Lisa Wagner', password: 'Lisa123', group: 'Damen', tops: [0, 1], zones: [2, 3], bonusTops: 0 },
+    { name: 'Tim Hoffmann', password: 'Tim123', group: 'Jugend m', tops: [0, 1, 2, 3, 4], zones: [], bonusTops: 3 },
+    { name: 'Lena Klein', password: 'Lena123', group: 'Jugend w', tops: [0, 1, 2, 3], zones: [], bonusTops: 2 }
+  ];
+  
+  const users = [
+    {
+      id: uuidv4(),
+      username: 'admin',
+      password: adminPassword,
+      hashed: true,
+      role: 'admin',
+      groupId: null,
+      createdAt: new Date().toISOString()
+    }
+  ];
+  
+  const completedRoutes = [];
+  
+  athletes.forEach(athlete => {
+    const group = groups.find(g => g.name === athlete.group);
+    if (!group) return;
+    
+    const userId = uuidv4();
+    users.push({
+      id: userId,
+      username: athlete.name,
+      password: athlete.password,
+      hashed: false,
+      role: 'athlete',
+      groupId: group.id,
+      createdAt: new Date().toISOString()
+    });
+    
+    athlete.tops.forEach(routeIndex => {
+      if (routes[routeIndex]) {
+        completedRoutes.push({
+          id: uuidv4(),
+          userId,
+          routeId: routes[routeIndex].id,
+          result: 'top',
+          completedAt: new Date().toISOString()
+        });
+      }
+    });
+    
+    athlete.zones.forEach(routeIndex => {
+      if (routes[routeIndex]) {
+        completedRoutes.push({
+          id: uuidv4(),
+          userId,
+          routeId: routes[routeIndex].id,
+          result: 'zone',
+          completedAt: new Date().toISOString()
+        });
+      }
+    });
+    
+    for (let i = 0; i < athlete.bonusTops; i++) {
+      const bonusRoute = routes.find(r => r.category === 'bonus');
+      if (bonusRoute) {
+        completedRoutes.push({
+          id: uuidv4(),
+          userId,
+          routeId: bonusRoute.id,
+          result: 1,
+          completedAt: new Date().toISOString()
+        });
+      }
+    }
+  });
+  
   return {
-    users: [
-      {
-        id: uuidv4(),
-        username: 'admin',
-        password: adminPassword,
-        hashed: true,
-        role: 'admin',
-        groupId: null,
-        createdAt: new Date().toISOString()
-      }
-    ],
-    groups: [
-      {
-        id: uuidv4(),
-        name: 'Herren',
-        description: 'Männer allgemein',
-        order: 1,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: uuidv4(),
-        name: 'Damen',
-        description: 'Frauen allgemein',
-        order: 2,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: uuidv4(),
-        name: 'Jugend m',
-        description: 'Männliche Jugend',
-        order: 3,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: uuidv4(),
-        name: 'Jugend w',
-        description: 'Weibliche Jugend',
-        order: 4,
-        createdAt: new Date().toISOString()
-      }
-    ],
-    routes: [
-      {
-        id: uuidv4(),
-        name: 'Route 1',
-        category: 'qualification',
-        points: 100,
-        order: 1,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: uuidv4(),
-        name: 'Route 2',
-        category: 'qualification',
-        points: 100,
-        order: 2,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: uuidv4(),
-        name: 'Route 3',
-        category: 'qualification',
-        points: 100,
-        order: 3,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: uuidv4(),
-        name: 'Route 4',
-        category: 'qualification',
-        points: 100,
-        order: 4,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: uuidv4(),
-        name: 'Route 5',
-        category: 'qualification',
-        points: 100,
-        order: 5,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: uuidv4(),
-        name: 'Bonus 1',
-        category: 'bonus',
-        points: 50,
-        order: 6,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: uuidv4(),
-        name: 'Bonus 2',
-        category: 'bonus',
-        points: 50,
-        order: 7,
-        createdAt: new Date().toISOString()
-      }
-    ],
-    completedRoutes: [],
+    users,
+    groups,
+    routes,
+    completedRoutes,
     config: {
       qualificationBestCount: 5,
       finaleMaxAthletes: 8,
-      competitionState: 'setup'
+      competitionState: 'qualification'
     }
   };
 }
@@ -170,6 +173,7 @@ export function deleteUser(id) {
   if (index === -1) return false;
   
   store.users.splice(index, 1);
+  store.completedRoutes = store.completedRoutes.filter(cr => cr.userId !== id);
   saveStore();
   return true;
 }
@@ -277,13 +281,11 @@ export function getCompletedRoutes() {
 }
 
 export function setRouteResult(userId, routeId, result) {
-  // result: null (not attempted), 'zone', or 'top'
   const existing = store.completedRoutes.find(
     cr => cr.userId === userId && cr.routeId === routeId
   );
   
   if (result === null) {
-    // Remove the entry if it exists
     if (existing) {
       store.completedRoutes = store.completedRoutes.filter(cr => cr !== existing);
     }
@@ -308,7 +310,6 @@ export function setRouteResult(userId, routeId, result) {
 }
 
 export function setBonusResult(userId, routeId, count) {
-  // count: number of tops achieved on this bonus route
   const existing = store.completedRoutes.find(
     cr => cr.userId === userId && cr.routeId === routeId
   );

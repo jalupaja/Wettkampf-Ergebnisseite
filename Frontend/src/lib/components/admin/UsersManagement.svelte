@@ -212,13 +212,23 @@
           </div>
           
           <div class="form-group">
-            <label for="groupId">Startklasse</label>
-            <select id="groupId" bind:value={formData.groupId}>
-              {#each groups as group}
-                <option value={group.id}>{group.name}</option>
-              {/each}
+            <label for="role">Rolle</label>
+            <select id="role" bind:value={formData.role}>
+              <option value="athlete">Athlet</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
+          
+          {#if formData.role === 'athlete'}
+            <div class="form-group">
+              <label for="groupId">Startklasse</label>
+              <select id="groupId" bind:value={formData.groupId}>
+                {#each groups as group}
+                  <option value={group.id}>{group.name}</option>
+                {/each}
+              </select>
+            </div>
+          {/if}
           
           <div class="modal-actions">
             <button type="button" class="outline" onclick={closeModal}>
