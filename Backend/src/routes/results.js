@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth.js';
 import {
   getRoutes,
   getUsers,
@@ -10,7 +9,7 @@ import {
 
 const router = Router();
 
-router.get('/', authenticate, (req, res) => {
+router.get('/', (req, res) => {
   const config = getConfig();
   const groups = getGroups();
   const routes = getRoutes();
@@ -69,8 +68,8 @@ router.get('/', authenticate, (req, res) => {
       const qualZones = bestQual.filter(r => r.isZone && !r.isTop).length;
       const qualPoints = qualTops * 100 + qualZones * 50; // Tops = 100, Zones = 50
       
-      // Bonus routes: only tops count
-      const bonusTops = bonusResults.filter(r => r.result === 'top').length;
+      // Bonus routes: count as number (can have multiple tops)
+      const bonusTops = bonusResults.reduce((sum, r) => sum + (typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0)), 0);
       const bonusPoints = bonusTops * 50;
       
       const totalTops = qualTops + bonusTops;

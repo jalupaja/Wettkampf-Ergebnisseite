@@ -1,9 +1,11 @@
 <script>
+  import { onMount } from 'svelte';
   import UsersManagement from './admin/UsersManagement.svelte';
   import GroupsManagement from './admin/GroupsManagement.svelte';
   import RoutesManagement from './admin/RoutesManagement.svelte';
   import ConfigManagement from './admin/ConfigManagement.svelte';
   import ResultsView from './ResultsView.svelte';
+  import FinaleControl from './admin/FinaleControl.svelte';
   
   let activeTab = $state('users');
   
@@ -11,6 +13,7 @@
     { id: 'users', label: 'Benutzer' },
     { id: 'groups', label: 'Startklassen' },
     { id: 'routes', label: 'Routen' },
+    { id: 'finale', label: 'Finale' },
     { id: 'config', label: 'Einstellungen' },
     { id: 'results', label: 'Rangliste' }
   ];
@@ -35,6 +38,8 @@
       <GroupsManagement />
     {:else if activeTab === 'routes'}
       <RoutesManagement />
+    {:else if activeTab === 'finale'}
+      <FinaleControl />
     {:else if activeTab === 'config'}
       <ConfigManagement />
     {:else if activeTab === 'results'}

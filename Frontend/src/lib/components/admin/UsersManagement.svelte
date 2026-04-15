@@ -209,12 +209,6 @@
                 Generieren
               </button>
             </div>
-            {#if formData.password && formData.role === 'athlete'}
-              <div class="password-preview">
-                <span class="label">Aktuelles Passwort:</span>
-                <code class="password-value">{formData.password}</code>
-              </div>
-            {/if}
           </div>
           
           <div class="form-group">

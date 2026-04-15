@@ -3,7 +3,8 @@ import { authenticate } from '../middleware/auth.js';
 import {
   getRoutes,
   getCompletedRoutes,
-  setRouteResult
+  setRouteResult,
+  setBonusResult
 } from '../data/store.js';
 
 const router = Router();
@@ -42,6 +43,26 @@ router.post('/result', authenticate, (req, res) => {
     res.json(result_data);
   } catch (error) {
     console.error('Set route result error:', error);
+    res.status(500).json({ error: 'Serverfehler' });
+  }
+});
+
+router.post('/bonus', authenticate, (req, res) => {
+  try {
+    const { routeId, count } = req.body;
+    
+    if (!routeId) {
+      return res.status(400).json({ error: 'Route-ID erforderlich' });
+    }
+    
+    if (typeof count !== 'number' || count < 0) {
+      return res.status(400).json({ error: 'Ungültige Anzahl' });
+    }
+    
+    const result_data = setBonusResult(req.user.id, routeId, count);
+    res.json(result_data);
+  } catch (error) {
+    console.error('Set bonus result error:', error);
     res.status(500).json({ error: 'Serverfehler' });
   }
 });

@@ -109,7 +109,8 @@ function createDefaultData() {
     completedRoutes: [],
     config: {
       qualificationBestCount: 5,
-      finaleMaxAthletes: 8
+      finaleMaxAthletes: 8,
+      competitionState: 'setup'
     }
   };
 }
@@ -304,6 +305,36 @@ export function setRouteResult(userId, routeId, result) {
   }
   saveStore();
   return { result };
+}
+
+export function setBonusResult(userId, routeId, count) {
+  // count: number of tops achieved on this bonus route
+  const existing = store.completedRoutes.find(
+    cr => cr.userId === userId && cr.routeId === routeId
+  );
+  
+  if (count === 0 || count === null) {
+    if (existing) {
+      store.completedRoutes = store.completedRoutes.filter(cr => cr !== existing);
+    }
+    saveStore();
+    return { count: 0 };
+  }
+  
+  if (existing) {
+    existing.result = count;
+    existing.completedAt = new Date().toISOString();
+  } else {
+    store.completedRoutes.push({
+      id: uuidv4(),
+      userId,
+      routeId,
+      result: count,
+      completedAt: new Date().toISOString()
+    });
+  }
+  saveStore();
+  return { count };
 }
 
 export function getConfig() {

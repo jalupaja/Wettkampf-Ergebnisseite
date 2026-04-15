@@ -33,13 +33,33 @@
     }
   }
   
+  async function incrementBonus(routeId, currentCount) {
+    try {
+      await api.routes.setBonusResult(routeId, currentCount + 1);
+      await loadRoutes();
+    } catch (err) {
+      error = err.message;
+    }
+  }
+  
+  async function decrementBonus(routeId, currentCount) {
+    if (currentCount <= 0) return;
+    try {
+      await api.routes.setBonusResult(routeId, currentCount - 1);
+      await loadRoutes();
+    } catch (err) {
+      error = err.message;
+    }
+  }
+  
   const qualRoutes = $derived(routes.filter(r => r.category === 'qualification'));
   const bonusRoutes = $derived(routes.filter(r => r.category === 'bonus'));
   const finaleRoutes = $derived(routes.filter(r => r.category === 'finale'));
   
   const qualTops = $derived(qualRoutes.filter(r => r.result === 'top').length);
   const qualZones = $derived(qualRoutes.filter(r => r.result === 'zone').length);
-  const bonusCompleted = $derived(bonusRoutes.filter(r => r.result === 'top').length);
+  const totalBonusCount = $derived(bonusRoutes.reduce((sum, r) => sum + (r.result || 0), 0));
+  const maxBonusCount = $derived(bonusRoutes.reduce((sum, r) => sum + 1, 0));
 </script>
 
 <div class="routes-view">
@@ -67,9 +87,9 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">Bonus Tops</div>
-        <div class="stat-value">{bonusCompleted} / {bonusRoutes.length}</div>
+        <div class="stat-value">{totalBonusCount} / {maxBonusCount}</div>
         <div class="stat-bar">
-          <div class="stat-fill bonus" style="width: {bonusRoutes.length ? (bonusCompleted / bonusRoutes.length) * 100 : 0}%"></div>
+          <div class="stat-fill bonus" style="width: {maxBonusCount ? (totalBonusCount / maxBonusCount) * 100 : 0}%"></div>
         </div>
       </div>
     </div>
@@ -109,17 +129,26 @@
           <h2>Bonus</h2>
           <div class="routes-grid">
             {#each bonusRoutes as route}
-              <button 
-                class="route-card bonus-card"
-                class:completed={route.result === 'top'}
-                onclick={() => setResult(route.id, route.result === 'top' ? null : 'top')}
-              >
+              <div class="route-card bonus-card">
                 <div class="route-name">{route.name}</div>
-                <div class="route-points">Top</div>
-                {#if route.result === 'top'}
-                  <div class="check-mark">✓</div>
-                {/if}
-              </button>
+                <div class="bonus-counter">
+                  <button 
+                    class="counter-btn minus" 
+                    onclick={() => decrementBonus(route.id, route.result || 0)}
+                    disabled={(route.result || 0) <= 0}
+                  >
+                    -
+                  </button>
+                  <span class="counter-value">{route.result || 0}</span>
+                  <button 
+                    class="counter-btn plus"
+                    onclick={() => incrementBonus(route.id, route.result || 0)}
+                  >
+                    +
+                  </button>
+                </div>
+                <div class="route-points">Top {route.result || 0}/{1}</div>
+              </div>
             {/each}
           </div>
         </section>
@@ -305,19 +334,49 @@
     color: white;
   }
   
-  .route-card.bonus-card {
+  .bonus-card {
+    cursor: default;
+  }
+  
+  .bonus-counter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .counter-btn {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 20px;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
-  .route-card.bonus-card:hover {
+  .counter-btn:hover:not(:disabled) {
     border-color: var(--color-secondary);
-    transform: translateY(-2px);
+    color: var(--color-secondary);
   }
   
-  .route-card.bonus-card.completed {
-    background: var(--color-secondary);
-    border-color: var(--color-secondary);
-    color: white;
+  .counter-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  
+  .counter-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-secondary);
+    min-width: 40px;
   }
   
   .route-card.finale-card {
@@ -347,18 +406,13 @@
     width: 24px;
     height: 24px;
     background: white;
-    color: var(--color-secondary);
+    color: #9b59b6;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 14px;
     font-weight: bold;
-  }
-  
-  .route-card.finale-card.completed .check-mark {
-    background: white;
-    color: #9b59b6;
   }
   
   .empty-state {

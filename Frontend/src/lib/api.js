@@ -48,6 +48,7 @@ export const api = {
   routes: {
     list: () => request('/Routes'),
     setResult: (routeId, result) => request('/Routes/result', { method: 'POST', body: JSON.stringify({ routeId, result }) }),
+    setBonusResult: (routeId, count) => request('/Routes/bonus', { method: 'POST', body: JSON.stringify({ routeId, count }) }),
     admin: {
       list: () => request('/admin/Routes'),
       create: (data) => request('/admin/Routes', { method: 'POST', body: JSON.stringify(data) }),
