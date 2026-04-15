@@ -2,7 +2,6 @@
   import { api } from '../api.js';
   import { userStore } from '../stores/user.js';
   
-  let username = $state('');
   let password = $state('');
   let error = $state('');
   let loading = $state(false);
@@ -13,7 +12,7 @@
     loading = true;
     
     try {
-      const data = await api.auth.login(username, password);
+      const data = await api.auth.login(password);
       userStore.login(data.user);
     } catch (err) {
       error = err.message;
@@ -36,18 +35,6 @@
       {/if}
       
       <div class="form-group">
-        <label for="username">Benutzername</label>
-        <input
-          type="text"
-          id="username"
-          bind:value={username}
-          placeholder="Benutzername eingeben"
-          required
-          disabled={loading}
-        />
-      </div>
-      
-      <div class="form-group">
         <label for="password">Passwort</label>
         <input
           type="password"
@@ -56,6 +43,7 @@
           placeholder="Passwort eingeben"
           required
           disabled={loading}
+          autofocus
         />
       </div>
       
@@ -63,10 +51,6 @@
         {loading ? 'Anmelden...' : 'Anmelden'}
       </button>
     </form>
-    
-    <div class="hint">
-      <p>Admin-Login: admin / admin123</p>
-    </div>
   </div>
 </div>
 
@@ -131,13 +115,6 @@
     border-radius: 8px;
     font-size: 14px;
     margin-bottom: 16px;
-  }
-  
-  .hint {
-    margin-top: 24px;
-    text-align: center;
-    font-size: 12px;
-    color: var(--color-text-muted);
   }
   
   button {

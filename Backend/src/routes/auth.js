@@ -1,25 +1,22 @@
 import { Router } from 'express';
-import { getUserByUsername, getUserById, verifyPassword } from '../data/store.js';
+import { getUserByUsername, getUserById, getUsers, verifyPassword } from '../data/store.js';
 import { generateToken, verifyToken, authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
 router.post('/login', (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { password } = req.body;
     
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Benutzername und Passwort erforderlich' });
+    if (!password) {
+      return res.status(400).json({ error: 'Passwort erforderlich' });
     }
     
-    const user = getUserByUsername(username);
+    const users = getUsers();
+    let user = users.find(u => verifyPassword(u, password));
+    
     if (!user) {
-      return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
-    }
-    
-    const validPassword = verifyPassword(user, password);
-    if (!validPassword) {
-      return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
+      return res.status(401).json({ error: 'Ungültiges Passwort' });
     }
     
     const token = generateToken(user);
