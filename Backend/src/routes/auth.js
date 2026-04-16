@@ -33,7 +33,8 @@ router.post('/login', (req, res) => {
         id: user.id,
         username: user.username,
         role: user.role,
-        groupId: user.groupId
+        groupId: user.groupId,
+        needsPasswordChange: user.needsPasswordChange || false
       }
     });
   } catch (error) {
@@ -58,7 +59,8 @@ router.get('/me', authenticate, (req, res) => {
       id: user.id,
       username: user.username,
       role: user.role,
-      groupId: user.groupId
+      groupId: user.groupId,
+      needsPasswordChange: user.needsPasswordChange || false
     }
   });
 });
@@ -86,7 +88,8 @@ router.post('/check', (req, res) => {
       id: user.id,
       username: user.username,
       role: user.role,
-      groupId: user.groupId
+      groupId: user.groupId,
+      needsPasswordChange: user.needsPasswordChange || false
     }
   });
 });

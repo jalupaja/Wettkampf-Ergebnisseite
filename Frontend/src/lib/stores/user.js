@@ -8,7 +8,8 @@ function createUserStore() {
     set,
     login: (user) => set(user),
     logout: () => set(null),
-    update
+    update,
+    updatePasswordChanged: () => update(u => u ? { ...u, needsPasswordChange: false } : null)
   };
 }
 

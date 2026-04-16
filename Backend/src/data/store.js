@@ -58,6 +58,7 @@ function createDefaultData() {
       role: 'admin',
       isSuperAdmin: true,
       groupId: null,
+      needsPasswordChange: true,
       createdAt: new Date().toISOString()
     }
   ];
@@ -184,6 +185,7 @@ export function updateUser(id, updates) {
   
   if (updates.password) {
     updates.hashed = false;
+    updates.needsPasswordChange = false;
   }
   
   store.users[index] = { ...store.users[index], ...updates };

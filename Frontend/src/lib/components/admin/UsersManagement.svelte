@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { api } from '../../api.js';
+  import { userStore } from '../../stores/user.js';
   
   let users = $state([]);
   let groups = $state([]);
@@ -101,6 +102,9 @@
       
       if (editingId) {
         await api.users.update(editingId, payload);
+        if (payload.password && editingId === $userStore?.id) {
+          userStore.updatePasswordChanged();
+        }
       } else {
         await api.users.create(payload);
       }

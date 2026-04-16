@@ -19,7 +19,7 @@
     { id: 'status', label: 'Status' }
   ];
   
-  const showPasswordWarning = $derived($userStore?.username === 'admin');
+  const showPasswordWarning = $derived($userStore?.needsPasswordChange === true);
   
   function goToUsers() {
     activeTab = 'users';
