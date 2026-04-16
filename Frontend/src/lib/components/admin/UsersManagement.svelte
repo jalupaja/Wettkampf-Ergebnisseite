@@ -10,6 +10,8 @@
   let showModal = $state(false);
   let generatedPassword = $state('');
   let searchQuery = $state('');
+  let importMode = $state('append');
+  let importing = $state(false);
   
   let formData = $state({
     username: '',
@@ -41,6 +43,55 @@
   onMount(async () => {
     await loadData();
   });
+  
+  function handleExport() {
+    window.open('/api/admin/data/users', '_blank');
+  }
+  
+  function parseCSV(text) {
+    const lines = text.split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(',').map(h => h.trim());
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const values = [];
+      let current = '';
+      let inQuotes = false;
+      for (const char of lines[i]) {
+        if (char === '"') { inQuotes = !inQuotes; }
+        else if (char === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
+        else { current += char; }
+      }
+      values.push(current.trim());
+      const row = {};
+      headers.forEach((h, idx) => {
+        let val = values[idx] || '';
+        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1).replace(/""/g, '"');
+        row[h] = val;
+      });
+      data.push(row);
+    }
+    return data;
+  }
+  
+  async function handleImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    importing = true;
+    error = '';
+    try {
+      const text = await file.text();
+      const data = parseCSV(text);
+      if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
+      await api.data.importUsers(importMode, data);
+      await loadData();
+      alert(`Import erfolgreich!`);
+    } catch (err) {
+      error = err.message;
+    }
+    importing = false;
+    event.target.value = '';
+  }
   
   async function loadData() {
     loading = true;
@@ -131,9 +182,20 @@
 <div class="users-management">
   <div class="header">
     <h2>Benutzerverwaltung</h2>
-    <button class="primary" onclick={() => openModal()}>
-      + Neuer Athlet
-    </button>
+    <div class="header-actions">
+      <div class="import-group">
+        <select bind:value={importMode} class="mode-select">
+          <option value="append">Anhängen</option>
+          <option value="replace">Ersetzen</option>
+        </select>
+        <input type="file" accept=".csv" id="users-import" onchange={handleImport} disabled={importing} class="hidden-input" />
+        <label for="users-import" class="outline btn-sm">{importing ? 'Importieren...' : 'Import'}</label>
+      </div>
+      <button class="outline btn-sm" onclick={handleExport}>Export</button>
+      <button class="primary" onclick={() => openModal()}>
+        + Neuer Athlet
+      </button>
+    </div>
   </div>
   
   {#if error}
@@ -284,6 +346,28 @@
   
   .header h2 {
     font-size: 24px;
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .import-group {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  
+  .mode-select {
+    width: auto;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .hidden-input {
+    display: none;
   }
   
   .error-message {

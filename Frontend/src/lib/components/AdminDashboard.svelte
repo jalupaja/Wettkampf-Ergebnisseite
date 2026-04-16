@@ -7,7 +7,6 @@
   import ConfigManagement from './admin/ConfigManagement.svelte';
   import ResultsView from './ResultsView.svelte';
   import FinaleControl from './admin/FinaleControl.svelte';
-  import DataManagement from './admin/DataManagement.svelte';
   
   let activeTab = $state('results');
   
@@ -17,8 +16,7 @@
     { id: 'groups', label: 'Startklassen' },
     { id: 'routes', label: 'Routen' },
     { id: 'config', label: 'Einstellungen' },
-    { id: 'status', label: 'Status' },
-    { id: 'data', label: 'Import/Export' }
+    { id: 'status', label: 'Status' }
   ];
   
   const showPasswordWarning = $derived($userStore?.needsPasswordChange === true);
@@ -60,8 +58,6 @@
       <ResultsView admin={true} />
     {:else if activeTab === 'status'}
       <FinaleControl />
-    {:else if activeTab === 'data'}
-      <DataManagement />
     {/if}
   </div>
 </div>

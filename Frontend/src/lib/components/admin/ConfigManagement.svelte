@@ -57,10 +57,17 @@
     }
     return Math.min(maxAthletes, groupSize);
   }
+  
+  function handleExport() {
+    window.open('/api/admin/data/config', '_blank');
+  }
 </script>
 
 <div class="config-management">
-  <h2>Einstellungen</h2>
+  <div class="header">
+    <h2>Einstellungen</h2>
+    <button type="button" class="outline btn-sm" onclick={handleExport}>Export</button>
+  </div>
   
   {#if error}
     <div class="error-message">{error}</div>
@@ -146,9 +153,15 @@
     max-width: 600px;
   }
   
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
   h2 {
     font-size: 24px;
-    margin-bottom: 24px;
   }
   
   .error-message {
