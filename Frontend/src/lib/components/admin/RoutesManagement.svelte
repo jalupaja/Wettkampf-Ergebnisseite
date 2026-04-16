@@ -6,7 +6,6 @@
   let loading = $state(true);
   let error = $state('');
   let showModal = $state(false);
-  let importMode = $state('append');
   let importing = $state(false);
   
   let formData = $state({
@@ -68,7 +67,7 @@
       const text = await file.text();
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
-      await api.data.importRoutes(importMode, data);
+      await api.data.importRoutes('append', data);
       await loadRoutes();
       alert(`Import erfolgreich!`);
     } catch (err) {
@@ -76,6 +75,16 @@
     }
     importing = false;
     event.target.value = '';
+  }
+  
+  async function clearAllRoutes() {
+    if (!confirm('Wirklich alle Routen löschen?')) return;
+    try {
+      await api.data.importRoutes('replace', []);
+      await loadRoutes();
+    } catch (err) {
+      error = err.message;
+    }
   }
   
   async function loadRoutes() {
@@ -194,15 +203,10 @@
   <div class="header">
     <h2>Routen-Verwaltung</h2>
     <div class="header-actions">
-      <div class="import-group">
-        <select bind:value={importMode} class="mode-select">
-          <option value="append">Anhängen</option>
-          <option value="replace">Ersetzen</option>
-        </select>
-        <input type="file" accept=".csv" id="routes-import" onchange={handleImport} disabled={importing} class="hidden-input" />
-        <label for="routes-import" class="outline btn-sm">{importing ? 'Importieren...' : 'Import'}</label>
-      </div>
+      <input type="file" accept=".csv" id="routes-import" onchange={handleImport} disabled={importing} class="hidden-input" />
+      <label for="routes-import" class="outline btn-sm">{importing ? 'Importieren...' : 'Import'}</label>
       <button class="outline btn-sm" onclick={handleExport}>Export</button>
+      <button class="danger btn-sm" onclick={clearAllRoutes}>Alle löschen</button>
       <button class="primary" onclick={() => openModal()}>
         + Neue Route
       </button>
@@ -407,18 +411,6 @@
     display: flex;
     gap: 8px;
     align-items: center;
-  }
-  
-  .import-group {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-  
-  .mode-select {
-    width: auto;
-    padding: 6px 10px;
-    font-size: 12px;
   }
   
   .hidden-input {
