@@ -6,6 +6,7 @@
   let loading = $state(true);
   let error = $state('');
   let showModal = $state(false);
+  let importing = $state(false);
   
   let formData = $state({
     name: '',
@@ -18,6 +19,65 @@
   onMount(async () => {
     await loadGroups();
   });
+  
+  function handleExport() {
+    window.open('/api/admin/data/groups', '_blank');
+  }
+  
+  function parseCSV(text) {
+    const lines = text.split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(',').map(h => h.trim());
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const values = [];
+      let current = '';
+      let inQuotes = false;
+      for (const char of lines[i]) {
+        if (char === '"') { inQuotes = !inQuotes; }
+        else if (char === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
+        else { current += char; }
+      }
+      values.push(current.trim());
+      const row = {};
+      headers.forEach((h, idx) => {
+        let val = values[idx] || '';
+        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1).replace(/""/g, '"');
+        row[h] = val;
+      });
+      data.push(row);
+    }
+    return data;
+  }
+  
+  async function handleImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    importing = true;
+    error = '';
+    try {
+      const text = await file.text();
+      const data = parseCSV(text);
+      if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
+      await api.data.importGroups('append', data);
+      await loadGroups();
+      alert(`Import erfolgreich!`);
+    } catch (err) {
+      error = err.message;
+    }
+    importing = false;
+    event.target.value = '';
+  }
+  
+  async function clearAllGroups() {
+    if (!confirm('Wirklich alle Startklassen löschen? Athleten verlieren ihre Zuordnung!')) return;
+    try {
+      await api.data.importGroups('replace', []);
+      await loadGroups();
+    } catch (err) {
+      error = err.message;
+    }
+  }
   
   async function loadGroups() {
     loading = true;
@@ -109,9 +169,15 @@
 <div class="groups-management">
   <div class="header">
     <h2>Startklassen-Verwaltung</h2>
-    <button class="primary" onclick={() => openModal()}>
-      + Neue Startklasse
-    </button>
+    <div class="header-actions">
+      <input type="file" accept=".csv" id="groups-import" onchange={handleImport} disabled={importing} class="hidden-input" />
+      <label for="groups-import" class="outline btn-sm">{importing ? 'Importieren...' : 'Import'}</label>
+      <button class="outline btn-sm" onclick={handleExport}>Export</button>
+      <button class="danger btn-sm" onclick={clearAllGroups}>Alle löschen</button>
+      <button class="primary" onclick={() => openModal()}>
+        + Neue Startklasse
+      </button>
+    </div>
   </div>
   
   {#if error}
@@ -236,6 +302,16 @@
   
   .header h2 {
     font-size: 24px;
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .hidden-input {
+    display: none;
   }
   
   .error-message {

@@ -11,6 +11,8 @@ import {
   updateRoute,
   createUser,
   updateUser,
+  createGroup,
+  updateGroup,
   getGroupById,
   getStore
 } from '../data/store.js';
@@ -196,6 +198,62 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
     res.json({ success: true, results });
   } catch (error) {
     console.error('Import users error:', error);
+    res.status(500).json({ error: 'Serverfehler' });
+  }
+});
+
+router.get('/groups', authenticate, requireAdmin, (req, res) => {
+  const groups = getGroups();
+  const csv = [
+    'name,description,order',
+    ...groups.map(g => `"${g.name}","${g.description || ''}",${g.order}`)
+  ].join('\n');
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="groups.csv"');
+  res.send(csv);
+});
+
+router.post('/groups', authenticate, requireAdmin, (req, res) => {
+  try {
+    const { mode, data } = req.body;
+    const groups = getGroups();
+    
+    if (mode === 'replace') {
+      const store = getStore();
+      store.store.groups = store.store.groups.filter(g => {
+        const hasAthletes = store.store.users.some(u => u.groupId === g.id && u.role === 'athlete');
+        return hasAthletes;
+      });
+    }
+    
+    const results = [];
+    for (const row of data) {
+      try {
+        if (mode === 'replace' || mode === 'append') {
+          const existing = groups.find(g => g.name === row.name);
+          if (existing) {
+            updateGroup(existing.id, {
+              description: row.description || '',
+              order: parseInt(row.order) || existing.order
+            });
+            results.push({ name: row.name, action: 'updated' });
+          } else {
+            createGroup(
+              row.name,
+              row.description || '',
+              parseInt(row.order) || null
+            );
+            results.push({ name: row.name, action: 'created' });
+          }
+        }
+      } catch (err) {
+        results.push({ name: row.name || 'Unknown', error: err.message });
+      }
+    }
+    
+    res.json({ success: true, results });
+  } catch (error) {
+    console.error('Import groups error:', error);
     res.status(500).json({ error: 'Serverfehler' });
   }
 });

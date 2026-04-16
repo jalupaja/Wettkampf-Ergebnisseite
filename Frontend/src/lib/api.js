@@ -80,8 +80,12 @@ export const api = {
     exportUsers: () => {
       window.open(`${API_BASE}/admin/data/users`, '_blank');
     },
+    exportGroups: () => {
+      window.open(`${API_BASE}/admin/data/groups`, '_blank');
+    },
     importConfig: (data) => request('/admin/data/config', { method: 'POST', body: JSON.stringify(data) }),
     importRoutes: (mode, data) => request('/admin/data/routes', { method: 'POST', body: JSON.stringify({ mode, data }) }),
-    importUsers: (mode, data) => request('/admin/data/users', { method: 'POST', body: JSON.stringify({ mode, data }) })
+    importUsers: (mode, data) => request('/admin/data/users', { method: 'POST', body: JSON.stringify({ mode, data }) }),
+    importGroups: (mode, data) => request('/admin/data/groups', { method: 'POST', body: JSON.stringify({ mode, data }) })
   }
 };
