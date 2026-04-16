@@ -175,6 +175,7 @@
   
   {#if showModal}
     <div class="modal-overlay" role="dialog" aria-modal="true" onclick={closeModal} onkeydown={(e) => e.key === 'Escape' && closeModal()} tabindex="-1" aria-label="Dialog">
+      <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
       <div class="modal" role="document" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
         <h3>{editingId ? 'Athlet bearbeiten' : 'Neuer Athlet'}</h3>
         
