@@ -3,8 +3,12 @@
   import { api } from '../../api.js';
   
   let competitionState = $state('setup');
+  let config = $state({});
+  let groups = $state([]);
   let loading = $state(true);
   let error = $state('');
+  let saving = $state(false);
+  let showSettings = $state(false);
   
   const states = [
     { value: 'setup', label: 'Setup', description: 'Routen und Athleten werden vorbereitet' },
@@ -22,6 +26,8 @@
     try {
       const data = await api.config.get();
       competitionState = data.config.competitionState || 'setup';
+      config = data.config;
+      groups = data.groups || [];
     } catch (err) {
       error = err.message;
     }
@@ -35,6 +41,34 @@
     } catch (err) {
       error = err.message;
     }
+  }
+  
+  async function saveConfig() {
+    saving = true;
+    error = '';
+    try {
+      await api.config.update({
+        qualificationBestCount: parseInt(config.qualificationBestCount) || 5,
+        finaleMaxAthletes: parseInt(config.finaleMaxAthletes) || 8,
+        finaleSmallGroupMaxAthletes: parseInt(config.finaleSmallGroupMaxAthletes) || 6,
+        finaleSmallGroupThreshold: parseInt(config.finaleSmallGroupThreshold) || 10
+      });
+      showSettings = false;
+    } catch (err) {
+      error = err.message;
+    }
+    saving = false;
+  }
+  
+  function getFinalistCount(groupSize) {
+    const threshold = config.finaleSmallGroupThreshold || 10;
+    const maxAthletes = config.finaleMaxAthletes || 8;
+    const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
+    
+    if (groupSize < threshold) {
+      return Math.min(smallGroupMax, groupSize);
+    }
+    return Math.min(maxAthletes, groupSize);
   }
 </script>
 
@@ -79,6 +113,76 @@
         <li><strong>Qualifikation:</strong> Athleten können ihre Ergebnisse eintragen</li>
         <li><strong>Finale:</strong> Nur Finalisten können Finale-Routen klettern</li>
       </ul>
+    </div>
+    
+    <div class="settings-section">
+      <button class="outline" onclick={() => showSettings = !showSettings}>
+        {showSettings ? 'Einstellungen ausblenden' : 'Einstellungen anzeigen'}
+      </button>
+      
+      {#if showSettings}
+        <div class="settings-box">
+          <h3>Wettkampf-Einstellungen</h3>
+          
+          <div class="form-group">
+            <label for="qualCount">Anzahl gewertete Qualifikationsrouten</label>
+            <input 
+              type="number" 
+              id="qualCount"
+              bind:value={config.qualificationBestCount}
+              min="1"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="finaleMax">Finalisten (große Gruppen)</label>
+            <input 
+              type="number" 
+              id="finaleMax"
+              bind:value={config.finaleMaxAthletes}
+              min="1"
+            />
+            <span class="hint">Wenn Gruppe ≥ {config.finaleSmallGroupThreshold || 10} Athleten hat</span>
+          </div>
+          
+          <div class="form-group">
+            <label for="smallGroupMax">Finalisten (kleine Gruppen)</label>
+            <input 
+              type="number" 
+              id="smallGroupMax"
+              bind:value={config.finaleSmallGroupMaxAthletes}
+              min="1"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="threshold">Schwelle kleine Gruppe</label>
+            <input 
+              type="number" 
+              id="threshold"
+              bind:value={config.finaleSmallGroupThreshold}
+              min="1"
+            />
+            <span class="hint">Gruppen mit weniger Athleten gelten als "klein"</span>
+          </div>
+          
+          <div class="groups-preview">
+            <h4>Vorschau Finalisten pro Gruppe:</h4>
+            <ul>
+              {#each groups as group}
+                <li>
+                  {group.name}: <strong>{getFinalistCount(group.athleteCount)}</strong> Finalisten 
+                  ({group.athleteCount} Athleten)
+                </li>
+              {/each}
+            </ul>
+          </div>
+          
+          <button class="primary" onclick={saveConfig} disabled={saving}>
+            {saving ? 'Speichern...' : 'Einstellungen speichern'}
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -195,6 +299,68 @@
   }
   
   .info-box strong {
+    color: var(--color-primary);
+  }
+  
+  .settings-section {
+    margin-top: 32px;
+  }
+  
+  .settings-box {
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 16px;
+  }
+  
+  .settings-box h3 {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  
+  .settings-box .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .settings-box label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  
+  .settings-box .hint {
+    display: block;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+  }
+  
+  .groups-preview {
+    background: var(--color-bg-lighter);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px 0;
+  }
+  
+  .groups-preview h4 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: var(--color-text-muted);
+  }
+  
+  .groups-preview ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .groups-preview li {
+    padding: 6px 0;
+    font-size: 14px;
+  }
+  
+  .groups-preview li strong {
     color: var(--color-primary);
   }
 </style>

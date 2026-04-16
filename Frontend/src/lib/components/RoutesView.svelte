@@ -5,6 +5,7 @@
   
   let routes = $state([]);
   let competitionState = $state('setup');
+  let config = $state({});
   let loading = $state(true);
   let error = $state('');
   let finalists = $state(new Set());
@@ -19,10 +20,22 @@
     if (refreshInterval) clearInterval(refreshInterval);
   });
   
+  function getFinalistCount(groupSize) {
+    const threshold = config.finaleSmallGroupThreshold || 10;
+    const maxAthletes = config.finaleMaxAthletes || 8;
+    const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
+    
+    if (groupSize < threshold) {
+      return Math.min(smallGroupMax, groupSize);
+    }
+    return Math.min(maxAthletes, groupSize);
+  }
+  
   async function refreshState() {
     try {
       const configData = await api.config.get();
-      const newState = configData.config.competitionState || 'setup';
+      config = configData.config;
+      const newState = config.competitionState || 'setup';
       
       if (newState !== competitionState) {
         competitionState = newState;
@@ -42,7 +55,9 @@
   function updateFinalists(resultsData) {
     const finalistSet = new Set();
     resultsData.results.forEach(group => {
-      group.athletes.slice(0, 8).forEach(athlete => {
+      const groupSize = group.athletes.length;
+      const finalistCount = getFinalistCount(groupSize);
+      group.athletes.slice(0, finalistCount).forEach(athlete => {
         finalistSet.add(athlete.userId);
       });
     });
@@ -61,7 +76,8 @@
       
       const results = await Promise.all(promises);
       routes = results[0].routes;
-      competitionState = results[1].config.competitionState || 'setup';
+      config = results[1].config;
+      competitionState = config.competitionState || 'setup';
       
       if (competitionState === 'finale' && results[2]) {
         updateFinalists(results[2]);

@@ -134,6 +134,8 @@ function createDefaultData() {
     config: {
       qualificationBestCount: 5,
       finaleMaxAthletes: 8,
+      finaleSmallGroupMaxAthletes: 6,
+      finaleSmallGroupThreshold: 10,
       competitionState: 'qualification'
     }
   };

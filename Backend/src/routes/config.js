@@ -1,12 +1,20 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
-import { getConfig, updateConfig } from '../data/store.js';
+import { getConfig, updateConfig, getGroups, getUsers } from '../data/store.js';
 
 const router = Router();
 
 router.get('/', authenticate, (req, res) => {
   const config = getConfig();
-  res.json({ config });
+  const groups = getGroups();
+  const athletes = getUsers().filter(u => u.role === 'athlete');
+  
+  const groupsWithCounts = groups.map(g => ({
+    ...g,
+    athleteCount: athletes.filter(a => a.groupId === g.id).length
+  }));
+  
+  res.json({ config, groups: groupsWithCounts });
 });
 
 router.put('/', authenticate, requireAdmin, (req, res) => {
@@ -22,6 +30,18 @@ router.put('/', authenticate, requireAdmin, (req, res) => {
     if (updates.finaleMaxAthletes !== undefined) {
       if (!Number.isInteger(updates.finaleMaxAthletes) || updates.finaleMaxAthletes < 1) {
         return res.status(400).json({ error: 'Ungültige Anzahl für Finale' });
+      }
+    }
+    
+    if (updates.finaleSmallGroupMaxAthletes !== undefined) {
+      if (!Number.isInteger(updates.finaleSmallGroupMaxAthletes) || updates.finaleSmallGroupMaxAthletes < 1) {
+        return res.status(400).json({ error: 'Ungültige Anzahl für kleine Gruppen' });
+      }
+    }
+    
+    if (updates.finaleSmallGroupThreshold !== undefined) {
+      if (!Number.isInteger(updates.finaleSmallGroupThreshold) || updates.finaleSmallGroupThreshold < 1) {
+        return res.status(400).json({ error: 'Ungültige Schwelle für kleine Gruppen' });
       }
     }
     
