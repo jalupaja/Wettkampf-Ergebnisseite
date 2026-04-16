@@ -1,10 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import bcrypt from 'bcryptjs';
-
-const SALT_ROUNDS = 10;
 
 function createDefaultData() {
-  const adminPassword = bcrypt.hashSync('admin', SALT_ROUNDS);
+  const adminPassword = 'admin';
   
   const groups = [
     { id: uuidv4(), name: 'Herren', description: 'Männer allgemein', order: 1, createdAt: new Date().toISOString() },
@@ -93,7 +90,7 @@ function createDefaultData() {
         completedRoutes.push({
           id: uuidv4(),
           userId,
-          routeId: routes[routeIndex].id,
+          routeName: routes[routeIndex].name,
           result: 'top',
           completedAt: new Date().toISOString()
         });
@@ -106,7 +103,7 @@ function createDefaultData() {
         completedRoutes.push({
           id: uuidv4(),
           userId,
-          routeId: routes[routeIndex].id,
+          routeName: routes[routeIndex].name,
           result: zoneName,
           completedAt: new Date().toISOString()
         });
@@ -119,7 +116,7 @@ function createDefaultData() {
         completedRoutes.push({
           id: uuidv4(),
           userId,
-          routeId: bonusRoute.id,
+          routeName: bonusRoute.name,
           result: 1,
           completedAt: new Date().toISOString()
         });
@@ -169,7 +166,6 @@ export function createUser(username, password, role, groupId = null) {
     id: uuidv4(),
     username,
     password: password,
-    hashed: false,
     role,
     groupId: role === 'athlete' ? groupId : null,
     createdAt: new Date().toISOString()
@@ -184,7 +180,6 @@ export function updateUser(id, updates) {
   if (index === -1) return null;
   
   if (updates.password) {
-    updates.hashed = false;
     updates.needsPasswordChange = false;
   }
   
@@ -204,9 +199,6 @@ export function deleteUser(id) {
 }
 
 export function verifyPassword(user, password) {
-  if (user.hashed) {
-    return bcrypt.compareSync(password, user.password);
-  }
   return user.password === password;
 }
 
@@ -293,11 +285,13 @@ export function updateRoute(id, updates) {
 }
 
 export function deleteRoute(id) {
-  const index = store.routes.findIndex(r => r.id === id);
-  if (index === -1) return false;
+  const route = store.routes.find(r => r.id === id);
+  if (!route) return false;
   
+  const routeName = route.name;
+  const index = store.routes.findIndex(r => r.id === id);
   store.routes.splice(index, 1);
-  store.completedRoutes = store.completedRoutes.filter(cr => cr.routeId !== id);
+  store.completedRoutes = store.completedRoutes.filter(cr => cr.routeName !== routeName);
   saveStore();
   return true;
 }
@@ -306,9 +300,9 @@ export function getCompletedRoutes() {
   return store.completedRoutes;
 }
 
-export function setRouteResult(userId, routeId, result) {
+export function setRouteResult(userId, routeName, result) {
   const existing = store.completedRoutes.find(
-    cr => cr.userId === userId && cr.routeId === routeId
+    cr => cr.userId === userId && cr.routeName === routeName
   );
   
   if (result === null) {
@@ -326,7 +320,7 @@ export function setRouteResult(userId, routeId, result) {
     store.completedRoutes.push({
       id: uuidv4(),
       userId,
-      routeId,
+      routeName,
       result,
       completedAt: new Date().toISOString()
     });
@@ -335,9 +329,9 @@ export function setRouteResult(userId, routeId, result) {
   return { result };
 }
 
-export function setBonusResult(userId, routeId, count) {
+export function setBonusResult(userId, routeName, count) {
   const existing = store.completedRoutes.find(
-    cr => cr.userId === userId && cr.routeId === routeId
+    cr => cr.userId === userId && cr.routeName === routeName
   );
   
   if (count === 0 || count === null) {
@@ -355,7 +349,7 @@ export function setBonusResult(userId, routeId, count) {
     store.completedRoutes.push({
       id: uuidv4(),
       userId,
-      routeId,
+      routeName,
       result: count,
       completedAt: new Date().toISOString()
     });

@@ -132,7 +132,7 @@ router.get('/users', authenticate, requireAdmin, (req, res) => {
   for (const user of users) {
     const group = user.groupId ? groups.find(g => g.id === user.groupId) : null;
     const userResults = completed.filter(cr => cr.userId === user.id);
-    const resultsStr = JSON.stringify(userResults.map(r => ({ routeId: r.routeId, result: r.result })));
+    const resultsStr = JSON.stringify(userResults.map(r => ({ routeName: r.routeName, result: r.result })));
     
     csvRows.push([
       `"${user.username}"`,

@@ -28,9 +28,8 @@ router.get('/', (req, res) => {
       const userCompleted = completed.filter(cr => cr.userId === user.id);
       
       const qualResults = qualificationRoutes.map(route => {
-        const completedEntry = userCompleted.find(cr => cr.routeId === route.id);
+        const completedEntry = userCompleted.find(cr => cr.routeName === route.name);
         return {
-          routeId: route.id,
           name: route.name,
           topPoints: route.topPoints,
           zones: route.zones,
@@ -39,9 +38,8 @@ router.get('/', (req, res) => {
       });
       
       const bonusResults = bonusRoutes.map(route => {
-        const completedEntry = userCompleted.find(cr => cr.routeId === route.id);
+        const completedEntry = userCompleted.find(cr => cr.routeName === route.name);
         return {
-          routeId: route.id,
           name: route.name,
           topPoints: route.topPoints,
           count: typeof completedEntry?.result === 'number' ? completedEntry.result : (completedEntry?.result === 'top' ? 1 : 0)
@@ -49,9 +47,8 @@ router.get('/', (req, res) => {
       });
       
       const finaleResults = finaleRoutes.map(route => {
-        const completedEntry = userCompleted.find(cr => cr.routeId === route.id);
+        const completedEntry = userCompleted.find(cr => cr.routeName === route.name);
         return {
-          routeId: route.id,
           name: route.name,
           topPoints: route.topPoints,
           isTop: completedEntry?.result === 'top'

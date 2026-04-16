@@ -17,7 +17,7 @@ router.get('/', authenticate, (req, res) => {
   const userCompleted = completed.filter(cr => cr.userId === req.user.id);
   
   const routesWithStatus = routes.map(r => {
-    const userResult = userCompleted.find(cr => cr.routeId === r.id);
+    const userResult = userCompleted.find(cr => cr.routeName === r.name);
     return {
       ...r,
       result: userResult ? userResult.result : null
@@ -45,13 +45,11 @@ router.post('/result', authenticate, (req, res) => {
       route.zones.forEach(z => validResults.push(z.name));
     }
     
-    console.log('Route result attempt:', { routeId, result, routeName: route.name, zones: route.zones, validResults });
-    
     if (result !== null && !validResults.includes(result)) {
       return res.status(400).json({ error: `Ungültiges Ergebnis: ${result}` });
     }
     
-    const result_data = setRouteResult(req.user.id, routeId, result);
+    const result_data = setRouteResult(req.user.id, route.name, result);
     res.json(result_data);
   } catch (error) {
     console.error('Set route result error:', error);
@@ -71,7 +69,12 @@ router.post('/bonus', authenticate, (req, res) => {
       return res.status(400).json({ error: 'Ungültige Anzahl' });
     }
     
-    const result_data = setBonusResult(req.user.id, routeId, count);
+    const route = getRouteById(routeId);
+    if (!route) {
+      return res.status(404).json({ error: 'Route nicht gefunden' });
+    }
+    
+    const result_data = setBonusResult(req.user.id, route.name, count);
     res.json(result_data);
   } catch (error) {
     console.error('Set bonus result error:', error);
