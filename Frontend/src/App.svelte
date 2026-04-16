@@ -9,11 +9,15 @@
   import './lib/styles/global.css';
   
   let loading = $state(true);
-  let theme = $state(true);
+  let isDark = $state(true);
   
   onMount(async () => {
     themeStore.subscribe(value => {
-      theme = value;
+      isDark = value;
+      if (typeof document !== 'undefined') {
+        document.body.classList.toggle('dark', value);
+        document.body.classList.toggle('light', !value);
+      }
     });
     
     try {
@@ -28,7 +32,7 @@
   });
 </script>
 
-<div class:dark={theme} class:light={!theme}>
+<div class:dark={isDark} class:light={!isDark}>
   {#if loading}
     <div class="loading">
       <div class="spinner"></div>
