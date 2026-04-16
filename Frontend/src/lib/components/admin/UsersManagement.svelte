@@ -8,6 +8,7 @@
   let error = $state('');
   let showModal = $state(false);
   let generatedPassword = $state('');
+  let searchQuery = $state('');
   
   let formData = $state({
     username: '',
@@ -17,6 +18,15 @@
   });
   
   let editingId = $state(null);
+  
+  const filteredUsers = $derived(
+    searchQuery.trim() === ''
+      ? users
+      : users.filter(u => 
+          u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (u.groupName && u.groupName.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+  );
   
   function generatePassword() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -129,6 +139,17 @@
   {#if loading}
     <div class="loading">Laden...</div>
   {:else}
+    <div class="search-bar">
+      <input 
+        type="text" 
+        placeholder="Suchen..." 
+        bind:value={searchQuery}
+      />
+      {#if searchQuery}
+        <span class="search-count">{filteredUsers.length} von {users.length}</span>
+      {/if}
+    </div>
+    
     <div class="card">
       <table class="data-table">
         <thead>
@@ -140,7 +161,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each users as user}
+          {#each filteredUsers as user}
             <tr class:admin-row={user.role === 'admin'}>
               <td class="username">
                 {user.username}
@@ -273,6 +294,22 @@
   .loading {
     text-align: center;
     padding: 40px;
+    color: var(--color-text-muted);
+  }
+  
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .search-bar input {
+    max-width: 300px;
+  }
+  
+  .search-count {
+    font-size: 14px;
     color: var(--color-text-muted);
   }
   
