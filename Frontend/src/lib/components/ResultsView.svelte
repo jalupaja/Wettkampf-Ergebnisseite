@@ -1,6 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { api } from '../api.js';
+  import { userStore } from '../stores/user.js';
   
   let { admin = false } = $props();
   
@@ -28,6 +29,11 @@
       error = err.message;
     }
     loading = false;
+  }
+  
+  function isCurrentUser(userId) {
+    const user = $userStore;
+    return user && user.id === userId;
   }
 </script>
 
@@ -68,7 +74,7 @@
               </thead>
               <tbody>
                 {#each groupResult.athletes as athlete, index}
-                  <tr class:gold={index === 0} class:silver={index === 1} class:bronze={index === 2}>
+                  <tr class:gold={index === 0} class:silver={index === 1} class:bronze={index === 2} class:me={isCurrentUser(athlete.userId)}>
                     <td class="rank-col">
                       {#if index === 0}🥇
                       {:else if index === 1}🥈
@@ -186,6 +192,15 @@
   
   .results-table tr.bronze {
     background: rgba(205, 127, 50, 0.1);
+  }
+  
+  .results-table tr.me {
+    background: rgba(255, 107, 0, 0.1);
+    font-weight: 700;
+  }
+  
+  .results-table tr.me td.name-col {
+    font-weight: 700;
   }
   
   .rank-col {
