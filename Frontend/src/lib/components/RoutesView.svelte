@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { api } from '../api.js';
   import { userStore } from '../stores/user.js';
   
@@ -8,12 +8,46 @@
   let loading = $state(true);
   let error = $state('');
   let finalists = $state(new Set());
-  
-  const canEdit = $derived(competitionState !== 'setup');
+  let refreshInterval;
   
   onMount(async () => {
     await loadData();
+    refreshInterval = setInterval(refreshState, 30000);
   });
+  
+  onDestroy(() => {
+    if (refreshInterval) clearInterval(refreshInterval);
+  });
+  
+  async function refreshState() {
+    try {
+      const configData = await api.config.get();
+      const newState = configData.config.competitionState || 'setup';
+      
+      if (newState !== competitionState) {
+        competitionState = newState;
+        if (competitionState === 'finale') {
+          const resultsData = await api.results.get();
+          updateFinalists(resultsData);
+        }
+      } else if (competitionState === 'finale') {
+        const resultsData = await api.results.get();
+        updateFinalists(resultsData);
+      }
+    } catch (err) {
+      console.error('Failed to refresh state:', err);
+    }
+  }
+  
+  function updateFinalists(resultsData) {
+    const finalistSet = new Set();
+    resultsData.results.forEach(group => {
+      group.athletes.slice(0, 8).forEach(athlete => {
+        finalistSet.add(athlete.userId);
+      });
+    });
+    finalists = finalistSet;
+  }
   
   async function loadData() {
     loading = true;
@@ -30,13 +64,7 @@
       competitionState = results[1].config.competitionState || 'setup';
       
       if (competitionState === 'finale' && results[2]) {
-        const finalistSet = new Set();
-        results[2].results.forEach(group => {
-          group.athletes.slice(0, 8).forEach(athlete => {
-            finalistSet.add(athlete.userId);
-          });
-        });
-        finalists = finalistSet;
+        updateFinalists(results[2]);
       }
     } catch (err) {
       error = err.message;
@@ -66,6 +94,21 @@
       return route.category === 'finale' && isFinalist();
     }
     return false;
+  }
+  
+  async function checkStateAndSetResult(routeId, result) {
+    await refreshState();
+    await setResult(routeId, result);
+  }
+  
+  async function checkStateAndIncrementBonus(routeId, currentCount) {
+    await refreshState();
+    await incrementBonus(routeId, currentCount);
+  }
+  
+  async function checkStateAndDecrementBonus(routeId, currentCount) {
+    await refreshState();
+    await decrementBonus(routeId, currentCount);
   }
   
   async function setResult(routeId, result) {
@@ -179,7 +222,7 @@
                   <button 
                     class="result-btn zone-btn" 
                     class:active={route.result === null}
-                    onclick={() => setResult(route.id, null)}
+                    onclick={() => checkStateAndSetResult(route.id, null)}
                   >
                     Versuch
                   </button>
@@ -187,7 +230,7 @@
                     <button 
                       class="result-btn zone-btn" 
                       class:active={route.result === zone.name}
-                      onclick={() => setResult(route.id, route.result === zone.name ? null : zone.name)}
+                      onclick={() => checkStateAndSetResult(route.id, route.result === zone.name ? null : zone.name)}
                     >
                       {zone.name}
                     </button>
@@ -195,7 +238,7 @@
                   <button 
                     class="result-btn top-btn" 
                     class:active={route.result === 'top'}
-                    onclick={() => setResult(route.id, route.result === 'top' ? null : 'top')}
+                    onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}
                   >
                     Top
                   </button>
@@ -217,7 +260,7 @@
                 <div class="bonus-counter">
                   <button 
                     class="counter-btn minus" 
-                    onclick={() => decrementBonus(route.id, count)}
+                    onclick={() => checkStateAndDecrementBonus(route.id, count)}
                     disabled={count <= 0}
                   >
                     -
@@ -225,7 +268,7 @@
                   <span class="counter-value">{count}</span>
                   <button 
                     class="counter-btn plus"
-                    onclick={() => incrementBonus(route.id, count)}
+                    onclick={() => checkStateAndIncrementBonus(route.id, count)}
                   >
                     +
                   </button>
@@ -244,7 +287,7 @@
               <button 
                 class="route-card finale-card"
                 class:completed={route.result === 'top'}
-                onclick={() => setResult(route.id, route.result === 'top' ? null : 'top')}
+                onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}
               >
                 <div class="route-name">{route.name}</div>
                 <div class="route-points">Top</div>
