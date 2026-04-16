@@ -43,7 +43,6 @@
           placeholder="Passwort eingeben"
           required
           disabled={loading}
-          autofocus
         />
       </div>
       

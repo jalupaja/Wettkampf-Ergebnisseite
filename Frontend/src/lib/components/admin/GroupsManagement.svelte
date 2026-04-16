@@ -167,8 +167,8 @@
   {/if}
   
   {#if showModal}
-    <div class="modal-overlay" role="dialog" aria-modal="true" onclick={closeModal} onkeydown={(e) => e.key === 'Escape' && closeModal()} tabindex="-1">
-      <div class="modal" role="document" onclick={(e) => e.stopPropagation()}>
+    <div class="modal-overlay" role="dialog" aria-modal="true" onclick={closeModal} onkeydown={(e) => e.key === 'Escape' && closeModal()} tabindex="-1" aria-label="Dialog">
+      <div class="modal" role="document" onkeydown={(e) => e.stopPropagation()}>
         <h3>{editingId ? 'Startklasse bearbeiten' : 'Neue Startklasse'}</h3>
         
         <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
