@@ -7,14 +7,14 @@
   import ResultsView from './ResultsView.svelte';
   import FinaleControl from './admin/FinaleControl.svelte';
   
-  let activeTab = $state('users');
+  let activeTab = $state('results');
   
   const tabs = [
+    { id: 'results', label: 'Rangliste' },
     { id: 'users', label: 'Benutzer' },
     { id: 'groups', label: 'Startklassen' },
     { id: 'routes', label: 'Routen' },
     { id: 'config', label: 'Einstellungen' },
-    { id: 'results', label: 'Rangliste' },
     { id: 'status', label: 'Status' }
   ];
 </script>
