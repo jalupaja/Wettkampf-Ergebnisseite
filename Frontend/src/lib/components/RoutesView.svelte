@@ -1,11 +1,13 @@
 <script>
   import { onMount } from 'svelte';
   import { api } from '../api.js';
+  import { userStore } from '../stores/user.js';
   
   let routes = $state([]);
   let competitionState = $state('setup');
   let loading = $state(true);
   let error = $state('');
+  let finalists = $state(new Set());
   
   const canEdit = $derived(competitionState !== 'setup');
   
@@ -17,12 +19,25 @@
     loading = true;
     error = '';
     try {
-      const [routesData, configData] = await Promise.all([
-        api.routes.list(),
-        api.config.get()
-      ]);
-      routes = routesData.routes;
-      competitionState = configData.config.competitionState || 'setup';
+      const promises = [api.routes.list(), api.config.get()];
+      
+      if (competitionState === 'finale') {
+        promises.push(api.results.get());
+      }
+      
+      const results = await Promise.all(promises);
+      routes = results[0].routes;
+      competitionState = results[1].config.competitionState || 'setup';
+      
+      if (competitionState === 'finale' && results[2]) {
+        const finalistSet = new Set();
+        results[2].results.forEach(group => {
+          group.athletes.slice(0, 8).forEach(athlete => {
+            finalistSet.add(athlete.userId);
+          });
+        });
+        finalists = finalistSet;
+      }
     } catch (err) {
       error = err.message;
     }
@@ -38,9 +53,27 @@
     }
   }
   
+  function isFinalist() {
+    const user = $userStore;
+    if (!user) return false;
+    return finalists.has(user.id);
+  }
+  
+  function canEditRoute(route) {
+    if (competitionState === 'setup') return false;
+    if (competitionState === 'qualification') return true;
+    if (competitionState === 'finale') {
+      return route.category === 'finale' && isFinalist();
+    }
+    return false;
+  }
+  
   async function setResult(routeId, result) {
-    if (!canEdit) {
-      error = 'Wettkampf noch nicht gestartet';
+    const route = routes.find(r => r.id === routeId);
+    if (!route) return;
+    
+    if (!canEditRoute(route)) {
+      error = 'Keine Berechtigung diese Route zu bearbeiten';
       return;
     }
     try {
@@ -54,8 +87,9 @@
   }
   
   async function incrementBonus(routeId, currentCount) {
-    if (!canEdit) {
-      error = 'Wettkampf noch nicht gestartet';
+    const route = routes.find(r => r.id === routeId);
+    if (!route || !canEditRoute(route)) {
+      error = 'Keine Berechtigung diese Route zu bearbeiten';
       return;
     }
     try {
@@ -67,8 +101,9 @@
   }
   
   async function decrementBonus(routeId, currentCount) {
-    if (!canEdit) {
-      error = 'Wettkampf noch nicht gestartet';
+    const route = routes.find(r => r.id === routeId);
+    if (!route || !canEditRoute(route)) {
+      error = 'Keine Berechtigung diese Route zu bearbeiten';
       return;
     }
     if (currentCount <= 0) return;
@@ -91,9 +126,13 @@
 </script>
 
 <div class="routes-view">
-  {#if !canEdit && !loading}
+  {#if competitionState === 'setup' && !loading}
     <div class="setup-banner">
       Wettkampf noch nicht gestartet. Ergebnisse können noch nicht eingetragen werden.
+    </div>
+  {:else if competitionState === 'finale' && !isFinalist() && !loading}
+    <div class="setup-banner finale">
+      Finale läuft. Nur Finalisten können ihre Ergebnisse bearbeiten.
     </div>
   {/if}
   
@@ -251,6 +290,12 @@
     margin-bottom: 20px;
     text-align: center;
     font-weight: 500;
+  }
+  
+  .setup-banner.finale {
+    background: rgba(155, 89, 182, 0.1);
+    border-color: #9b59b6;
+    color: #9b59b6;
   }
   
   .loading {
