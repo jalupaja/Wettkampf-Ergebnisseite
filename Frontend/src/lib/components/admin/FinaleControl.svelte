@@ -134,36 +134,34 @@
             />
           </div>
           
-          <div class="form-group">
-            <label for="finaleMax">Finalisten (große Gruppen)</label>
-            <input 
-              type="number" 
-              id="finaleMax"
-              bind:value={config.finaleMaxAthletes}
-              min="1"
-            />
-            <span class="hint">Wenn Gruppe ≥ {config.finaleSmallGroupThreshold || 10} Athleten hat</span>
-          </div>
-          
-          <div class="form-group">
-            <label for="smallGroupMax">Finalisten (kleine Gruppen)</label>
-            <input 
-              type="number" 
-              id="smallGroupMax"
-              bind:value={config.finaleSmallGroupMaxAthletes}
-              min="1"
-            />
-          </div>
-          
-          <div class="form-group">
-            <label for="threshold">Schwelle kleine Gruppe</label>
-            <input 
-              type="number" 
-              id="threshold"
-              bind:value={config.finaleSmallGroupThreshold}
-              min="1"
-            />
-            <span class="hint">Gruppen mit weniger Athleten gelten als "klein"</span>
+          <div class="form-group finalist-config">
+            <label>Finalisten</label>
+            <div class="finalist-inputs">
+              <div class="finalist-input-group">
+                <input 
+                  type="number" 
+                  bind:value={config.finaleSmallGroupMaxAthletes}
+                  min="0"
+                />
+                <span class="finalist-label">&lt; {config.finaleSmallGroupThreshold || 10}</span>
+              </div>
+              <div class="finalist-input-group">
+                <input 
+                  type="number" 
+                  bind:value={config.finaleSmallGroupThreshold}
+                  min="1"
+                />
+                <span class="finalist-label">Schwelle</span>
+              </div>
+              <div class="finalist-input-group">
+                <input 
+                  type="number" 
+                  bind:value={config.finaleMaxAthletes}
+                  min="0"
+                />
+                <span class="finalist-label">≥ {config.finaleSmallGroupThreshold || 10}</span>
+              </div>
+            </div>
           </div>
           
           <div class="groups-preview">
@@ -362,5 +360,33 @@
   
   .groups-preview li strong {
     color: var(--color-primary);
+  }
+  
+  .finalist-config {
+    margin-bottom: 16px;
+  }
+  
+  .finalist-inputs {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .finalist-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .finalist-input-group input {
+    width: 70px;
+    text-align: center;
+  }
+  
+  .finalist-label {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
   }
 </style>
