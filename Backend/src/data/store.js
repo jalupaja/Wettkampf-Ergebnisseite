@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const SALT_ROUNDS = 10;
 
 function createDefaultData() {
-  const adminPassword = bcrypt.hashSync('admin123', SALT_ROUNDS);
+  const adminPassword = bcrypt.hashSync('admin', SALT_ROUNDS);
   
   const groups = [
     { id: uuidv4(), name: 'Herren', description: 'Männer allgemein', order: 1, createdAt: new Date().toISOString() },
