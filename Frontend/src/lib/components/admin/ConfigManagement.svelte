@@ -4,8 +4,11 @@
   
   let config = $state({
     qualificationBestCount: 5,
-    finaleMaxAthletes: 8
+    finaleMaxAthletes: 8,
+    finaleSmallGroupMaxAthletes: 6,
+    finaleSmallGroupThreshold: 10
   });
+  let groups = $state([]);
   let loading = $state(true);
   let error = $state('');
   let success = $state('');
@@ -19,7 +22,8 @@
     error = '';
     try {
       const data = await api.config.get();
-      config = data.config;
+      config = { ...config, ...data.config };
+      groups = data.groups || [];
     } catch (err) {
       error = err.message;
     }
@@ -30,12 +34,28 @@
     error = '';
     success = '';
     try {
-      await api.config.update(config);
+      await api.config.update({
+        qualificationBestCount: parseInt(config.qualificationBestCount) || 5,
+        finaleMaxAthletes: parseInt(config.finaleMaxAthletes) || 8,
+        finaleSmallGroupMaxAthletes: parseInt(config.finaleSmallGroupMaxAthletes) || 6,
+        finaleSmallGroupThreshold: parseInt(config.finaleSmallGroupThreshold) || 10
+      });
       success = 'Einstellungen gespeichert!';
       setTimeout(() => success = '', 3000);
     } catch (err) {
       error = err.message;
     }
+  }
+  
+  function getFinalistCount(groupSize) {
+    const threshold = config.finaleSmallGroupThreshold || 10;
+    const maxAthletes = config.finaleMaxAthletes || 8;
+    const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
+    
+    if (groupSize < threshold) {
+      return Math.min(smallGroupMax, groupSize);
+    }
+    return Math.min(maxAthletes, groupSize);
   }
 </script>
 
@@ -71,20 +91,46 @@
           </span>
         </div>
         
-        <div class="form-group">
-          <label for="finaleMaxAthletes">
-            Maximale Athleten im Finale
-          </label>
-          <input
-            type="number"
-            id="finaleMaxAthletes"
-            bind:value={config.finaleMaxAthletes}
-            min="1"
-            max="20"
-          />
-          <span class="hint">
-            Anzahl der Athleten, die ins Finale kommen
-          </span>
+        <div class="form-group finalist-config">
+          <span class="config-label">Finalisten</span>
+          <div class="finalist-inputs">
+            <div class="finalist-input-group">
+              <input 
+                type="number" 
+                bind:value={config.finaleSmallGroupMaxAthletes}
+                min="0"
+              />
+              <span class="finalist-label">&lt; {config.finaleSmallGroupThreshold || 10}</span>
+            </div>
+            <div class="finalist-input-group">
+              <input 
+                type="number" 
+                bind:value={config.finaleSmallGroupThreshold}
+                min="1"
+              />
+              <span class="finalist-label">Schwelle</span>
+            </div>
+            <div class="finalist-input-group">
+              <input 
+                type="number" 
+                bind:value={config.finaleMaxAthletes}
+                min="0"
+              />
+              <span class="finalist-label">≥ {config.finaleSmallGroupThreshold || 10}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="groups-preview">
+          <h4>Vorschau Finalisten pro Gruppe:</h4>
+          <ul>
+            {#each groups as group}
+              <li>
+                {group.name}: <strong>{getFinalistCount(group.athleteCount)}</strong> Finalisten 
+                ({group.athleteCount} Athleten)
+              </li>
+            {/each}
+          </ul>
         </div>
         
         <button type="submit" class="primary">
@@ -140,5 +186,66 @@
     font-size: 13px;
     color: var(--color-text-muted);
     margin-top: 6px;
+  }
+  
+  .finalist-config {
+    margin-bottom: 8px;
+  }
+  
+  .config-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  
+  .finalist-inputs {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .finalist-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .finalist-input-group input {
+    width: 70px;
+    text-align: center;
+  }
+  
+  .finalist-label {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+  
+  .groups-preview {
+    background: var(--color-bg-lighter);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  
+  .groups-preview h4 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: var(--color-text-muted);
+  }
+  
+  .groups-preview ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .groups-preview li {
+    padding: 6px 0;
+    font-size: 14px;
+  }
+  
+  .groups-preview li strong {
+    color: var(--color-primary);
   }
 </style>

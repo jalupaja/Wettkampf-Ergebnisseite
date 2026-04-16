@@ -3,12 +3,8 @@
   import { api } from '../../api.js';
   
   let competitionState = $state('setup');
-  let config = $state({});
-  let groups = $state([]);
   let loading = $state(true);
   let error = $state('');
-  let saving = $state(false);
-  let showSettings = $state(false);
   
   const states = [
     { value: 'setup', label: 'Setup', description: 'Routen und Athleten werden vorbereitet' },
@@ -26,8 +22,6 @@
     try {
       const data = await api.config.get();
       competitionState = data.config.competitionState || 'setup';
-      config = data.config;
-      groups = data.groups || [];
     } catch (err) {
       error = err.message;
     }
@@ -42,37 +36,9 @@
       error = err.message;
     }
   }
-  
-  async function saveConfig() {
-    saving = true;
-    error = '';
-    try {
-      await api.config.update({
-        qualificationBestCount: parseInt(config.qualificationBestCount) || 5,
-        finaleMaxAthletes: parseInt(config.finaleMaxAthletes) || 8,
-        finaleSmallGroupMaxAthletes: parseInt(config.finaleSmallGroupMaxAthletes) || 6,
-        finaleSmallGroupThreshold: parseInt(config.finaleSmallGroupThreshold) || 10
-      });
-      showSettings = false;
-    } catch (err) {
-      error = err.message;
-    }
-    saving = false;
-  }
-  
-  function getFinalistCount(groupSize) {
-    const threshold = config.finaleSmallGroupThreshold || 10;
-    const maxAthletes = config.finaleMaxAthletes || 8;
-    const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
-    
-    if (groupSize < threshold) {
-      return Math.min(smallGroupMax, groupSize);
-    }
-    return Math.min(maxAthletes, groupSize);
-  }
 </script>
 
-<div class="finale-control">
+<div class="status-control">
   <h2>Wettkampf-Status</h2>
   
   {#if error}
@@ -105,88 +71,11 @@
         </div>
       {/each}
     </div>
-    
-    <div class="info-box">
-      <h3>Aktuelle Phase: {states.find(s => s.value === competitionState)?.label}</h3>
-      <ul>
-        <li><strong>Setup:</strong> Vorbereitung des Wettkampfs</li>
-        <li><strong>Qualifikation:</strong> Athleten können ihre Ergebnisse eintragen</li>
-        <li><strong>Finale:</strong> Nur Finalisten können Finale-Routen klettern</li>
-      </ul>
-    </div>
-    
-    <div class="settings-section">
-      <button class="outline" onclick={() => showSettings = !showSettings}>
-        {showSettings ? 'Einstellungen ausblenden' : 'Einstellungen anzeigen'}
-      </button>
-      
-      {#if showSettings}
-        <div class="settings-box">
-          <h3>Wettkampf-Einstellungen</h3>
-          
-          <div class="form-group">
-            <label for="qualCount">Anzahl gewertete Qualifikationsrouten</label>
-            <input 
-              type="number" 
-              id="qualCount"
-              bind:value={config.qualificationBestCount}
-              min="1"
-            />
-          </div>
-          
-          <div class="form-group finalist-config">
-            <span class="config-label">Finalisten</span>
-            <div class="finalist-inputs">
-              <div class="finalist-input-group">
-                <input 
-                  type="number" 
-                  bind:value={config.finaleSmallGroupMaxAthletes}
-                  min="0"
-                />
-                <span class="finalist-label">&lt; {config.finaleSmallGroupThreshold || 10}</span>
-              </div>
-              <div class="finalist-input-group">
-                <input 
-                  type="number" 
-                  bind:value={config.finaleSmallGroupThreshold}
-                  min="1"
-                />
-                <span class="finalist-label">Schwelle</span>
-              </div>
-              <div class="finalist-input-group">
-                <input 
-                  type="number" 
-                  bind:value={config.finaleMaxAthletes}
-                  min="0"
-                />
-                <span class="finalist-label">≥ {config.finaleSmallGroupThreshold || 10}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="groups-preview">
-            <h4>Vorschau Finalisten pro Gruppe:</h4>
-            <ul>
-              {#each groups as group}
-                <li>
-                  {group.name}: <strong>{getFinalistCount(group.athleteCount)}</strong> Finalisten 
-                  ({group.athleteCount} Athleten)
-                </li>
-              {/each}
-            </ul>
-          </div>
-          
-          <button class="primary" onclick={saveConfig} disabled={saving}>
-            {saving ? 'Speichern...' : 'Einstellungen speichern'}
-          </button>
-        </div>
-      {/if}
-    </div>
   {/if}
 </div>
 
 <style>
-  .finale-control {
+  .status-control {
     max-width: 800px;
   }
   
@@ -214,7 +103,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
-    margin-bottom: 32px;
   }
   
   .state-card {
@@ -267,125 +155,5 @@
   .state-card button:disabled {
     background: var(--color-secondary);
     opacity: 1;
-  }
-  
-  .info-box {
-    background: var(--color-bg-light);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 20px;
-  }
-  
-  .info-box h3 {
-    font-size: 16px;
-    margin-bottom: 12px;
-  }
-  
-  .info-box ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .info-box li {
-    padding: 8px 0;
-    border-bottom: 1px solid var(--color-border);
-    font-size: 14px;
-  }
-  
-  .info-box li:last-child {
-    border-bottom: none;
-  }
-  
-  .info-box strong {
-    color: var(--color-primary);
-  }
-  
-  .settings-section {
-    margin-top: 32px;
-  }
-  
-  .settings-box {
-    background: var(--color-bg-light);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    padding: 24px;
-    margin-top: 16px;
-  }
-  
-  .settings-box h3 {
-    font-size: 18px;
-    margin-bottom: 20px;
-  }
-  
-  .settings-box .form-group {
-    margin-bottom: 16px;
-  }
-  
-  .settings-box label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 6px;
-  }
-  
-  .groups-preview {
-    background: var(--color-bg-lighter);
-    border-radius: 8px;
-    padding: 16px;
-    margin: 20px 0;
-  }
-  
-  .groups-preview h4 {
-    font-size: 14px;
-    margin-bottom: 12px;
-    color: var(--color-text-muted);
-  }
-  
-  .groups-preview ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .groups-preview li {
-    padding: 6px 0;
-    font-size: 14px;
-  }
-  
-  .groups-preview li strong {
-    color: var(--color-primary);
-  }
-  
-  .finalist-config {
-    margin-bottom: 16px;
-  }
-  
-  .config-label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 6px;
-  }
-  
-  .finalist-inputs {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-  
-  .finalist-input-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  
-  .finalist-input-group input {
-    width: 70px;
-    text-align: center;
-  }
-  
-  .finalist-label {
-    font-size: 11px;
-    color: var(--color-text-muted);
-    white-space: nowrap;
   }
 </style>

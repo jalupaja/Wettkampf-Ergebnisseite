@@ -13,9 +13,9 @@
     { id: 'users', label: 'Benutzer' },
     { id: 'groups', label: 'Startklassen' },
     { id: 'routes', label: 'Routen' },
-    { id: 'finale', label: 'Finale' },
     { id: 'config', label: 'Einstellungen' },
-    { id: 'results', label: 'Rangliste' }
+    { id: 'results', label: 'Rangliste' },
+    { id: 'status', label: 'Status' }
   ];
 </script>
 
@@ -38,12 +38,12 @@
       <GroupsManagement />
     {:else if activeTab === 'routes'}
       <RoutesManagement />
-    {:else if activeTab === 'finale'}
-      <FinaleControl />
     {:else if activeTab === 'config'}
       <ConfigManagement />
     {:else if activeTab === 'results'}
       <ResultsView admin={true} />
+    {:else if activeTab === 'status'}
+      <FinaleControl />
     {/if}
   </div>
 </div>
