@@ -11,7 +11,8 @@ import {
   updateRoute,
   createUser,
   updateUser,
-  getGroupById
+  getGroupById,
+  getStore
 } from '../data/store.js';
 
 const router = Router();
@@ -70,7 +71,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
     
     if (mode === 'replace') {
       const idsToDelete = routes.map(r => r.id);
-      const store = require('../data/store.js');
+      const store = getStore();
       store.store.routes = store.store.routes.filter(r => !idsToDelete.includes(r.id));
     }
     
@@ -154,7 +155,7 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
     const completed = getCompletedRoutes();
     
     if (mode === 'replace') {
-      const store = require('../data/store.js');
+      const store = getStore();
       const athleteIds = users.filter(u => u.role === 'athlete').map(u => u.id);
       store.store.users = store.store.users.filter(u => u.role === 'admin');
       store.store.completedRoutes = store.store.completedRoutes.filter(cr => 
