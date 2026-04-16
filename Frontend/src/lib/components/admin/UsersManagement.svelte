@@ -175,7 +175,7 @@
   
   {#if showModal}
     <div class="modal-overlay" role="dialog" aria-modal="true" onclick={closeModal} onkeydown={(e) => e.key === 'Escape' && closeModal()} tabindex="-1" aria-label="Dialog">
-      <div class="modal" role="document" onkeydown={(e) => e.stopPropagation()}>
+      <div class="modal" role="document">
         <h3>{editingId ? 'Athlet bearbeiten' : 'Neuer Athlet'}</h3>
         
         <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
