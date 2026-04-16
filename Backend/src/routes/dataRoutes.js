@@ -74,7 +74,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
     if (mode === 'replace') {
       const idsToDelete = routes.map(r => r.id);
       const store = getStore();
-      store.store.routes = store.store.routes.filter(r => !idsToDelete.includes(r.id));
+      store.routes = store.routes.filter(r => !idsToDelete.includes(r.id));
     }
     
     const results = [];
@@ -159,8 +159,8 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
     if (mode === 'replace') {
       const store = getStore();
       const athleteIds = users.filter(u => u.role === 'athlete').map(u => u.id);
-      store.store.users = store.store.users.filter(u => u.role === 'admin');
-      store.store.completedRoutes = store.store.completedRoutes.filter(cr => 
+      store.users = store.users.filter(u => u.role === 'admin');
+      store.completedRoutes = store.completedRoutes.filter(cr => 
         users.find(u => u.id === cr.userId && u.role === 'admin')
       );
     }
@@ -220,8 +220,8 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
     
     if (mode === 'replace') {
       const store = getStore();
-      store.store.groups = store.store.groups.filter(g => {
-        const hasAthletes = store.store.users.some(u => u.groupId === g.id && u.role === 'athlete');
+      store.groups = store.groups.filter(g => {
+        const hasAthletes = store.users.some(u => u.groupId === g.id && u.role === 'athlete');
         return hasAthletes;
       });
     }
