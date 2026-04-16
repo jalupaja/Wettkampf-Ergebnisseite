@@ -137,7 +137,7 @@ function createDefaultData() {
       finaleMaxAthletes: 8,
       finaleSmallGroupMaxAthletes: 6,
       finaleSmallGroupThreshold: 10,
-      competitionState: 'qualification'
+      competitionState: 'setup'
     }
   };
 }
