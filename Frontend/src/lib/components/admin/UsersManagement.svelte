@@ -167,8 +167,8 @@
         <tbody>
           {#each filteredUsers as user}
             <tr class:admin-row={user.role === 'admin'}>
-              <td class="username">
-                {user.username}
+              <td>
+                <span class="username-text">{user.username}</span>
                 {#if user.role === 'admin'}
                   <span class="badge admin">Admin</span>
                 {/if}
@@ -320,6 +320,7 @@
   .data-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
   }
   
   .data-table th,
@@ -327,6 +328,18 @@
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+  }
+  
+  .data-table th:first-child,
+  .data-table td:first-child {
+    width: auto;
+  }
+  
+  .data-table th:last-child,
+  .data-table td:last-child {
+    width: 180px;
+    text-align: right;
   }
   
   .data-table th {
@@ -344,11 +357,9 @@
     opacity: 0.7;
   }
   
-  .username {
+  .username-text {
     font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-right: 8px;
   }
   
   .badge {
