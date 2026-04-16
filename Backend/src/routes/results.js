@@ -48,10 +48,31 @@ router.get('/', (req, res) => {
       
       const finaleResults = finaleRoutes.map(route => {
         const completedEntry = userCompleted.find(cr => cr.routeName === route.name);
+        let points = 0;
+        let isTop = false;
+        let zoneName = null;
+        let zonePoints = 0;
+        
+        if (completedEntry?.result === 'top') {
+          isTop = true;
+          points = route.topPoints;
+        } else if (completedEntry?.result && completedEntry.result !== 'top') {
+          const zone = (route.zones || []).find(z => z.name === completedEntry.result);
+          if (zone) {
+            zoneName = completedEntry.result;
+            zonePoints = zone.points;
+            points = zone.points;
+          }
+        }
+        
         return {
           name: route.name,
           topPoints: route.topPoints,
-          isTop: completedEntry?.result === 'top'
+          zones: route.zones,
+          isTop,
+          zoneName,
+          zonePoints,
+          points
         };
       });
       
@@ -91,7 +112,8 @@ router.get('/', (req, res) => {
       const bonusPoints = bonusTops * 50;
       
       const finaleTops = finaleResults.filter(r => r.isTop).length;
-      const finalePoints = finaleResults.reduce((sum, r) => sum + (r.isTop ? r.topPoints : 0), 0);
+      const finaleZones = finaleResults.filter(r => r.zonePoints > 0 && !r.isTop).length;
+      const finalePoints = finaleResults.reduce((sum, r) => sum + r.points, 0);
       
       const totalTops = qualTops + bonusTops;
       const totalPoints = qualPoints + bonusPoints + finalePoints;
@@ -104,6 +126,7 @@ router.get('/', (req, res) => {
         bonusTops,
         bonusPoints,
         finaleTops,
+        finaleZones,
         finalePoints,
         totalPoints,
         routes: qualResults,

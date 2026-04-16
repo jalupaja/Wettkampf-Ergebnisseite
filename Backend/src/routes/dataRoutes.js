@@ -50,15 +50,14 @@ router.post('/config', authenticate, requireAdmin, (req, res) => {
 
 router.get('/routes', authenticate, requireAdmin, (req, res) => {
   const routes = getRoutes();
-  const headers = ['name', 'category', 'topPoints', 'zones', 'order'];
+  const headers = ['name', 'category', 'topPoints', 'zones'];
   const csv = [
     headers.join(','),
     ...routes.map(r => [
       `"${r.name}"`,
       r.category,
       r.topPoints,
-      `"${JSON.stringify(r.zones || [])}"`,
-      r.order
+      `"${JSON.stringify(r.zones || [])}"`
     ].join(','))
   ].join('\n');
   res.setHeader('Content-Type', 'text/csv');
@@ -78,7 +77,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
     }
     
     const results = [];
-    for (const row of data) {
+    data.forEach((row, index) => {
       try {
         let zones = [];
         if (row.zones) {
@@ -95,7 +94,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
             const updated = updateRoute(existing.id, {
               topPoints: parseInt(row.topPoints) || 100,
               zones,
-              order: parseInt(row.order) || null
+              order: index + 1
             });
             results.push({ name: row.name, action: 'updated' });
           } else {
@@ -104,7 +103,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
               category: row.category || 'qualification',
               topPoints: parseInt(row.topPoints) || 100,
               zones,
-              order: parseInt(row.order) || null
+              order: index + 1
             });
             results.push({ name: row.name, action: 'created' });
           }
@@ -112,7 +111,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
       } catch (err) {
         results.push({ name: row.name || 'Unknown', error: err.message });
       }
-    }
+    });
     
     res.json({ success: true, results });
   } catch (error) {
@@ -122,7 +121,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
 });
 
 router.get('/users', authenticate, requireAdmin, (req, res) => {
-  const users = getUsers();
+  const users = getUsers().filter(u => u.role !== 'admin');
   const groups = getGroups();
   const completed = getCompletedRoutes();
   
@@ -205,8 +204,8 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
 router.get('/groups', authenticate, requireAdmin, (req, res) => {
   const groups = getGroups();
   const csv = [
-    'name,description,order',
-    ...groups.map(g => `"${g.name}","${g.description || ''}",${g.order}`)
+    'name,description',
+    ...groups.map(g => `"${g.name}","${g.description || ''}"`)
   ].join('\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="groups.csv"');
@@ -227,21 +226,21 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
     }
     
     const results = [];
-    for (const row of data) {
+    data.forEach((row, index) => {
       try {
         if (mode === 'replace' || mode === 'append') {
           const existing = groups.find(g => g.name === row.name);
           if (existing) {
             updateGroup(existing.id, {
               description: row.description || '',
-              order: parseInt(row.order) || existing.order
+              order: index + 1
             });
             results.push({ name: row.name, action: 'updated' });
           } else {
             createGroup(
               row.name,
               row.description || '',
-              parseInt(row.order) || null
+              index + 1
             );
             results.push({ name: row.name, action: 'created' });
           }
@@ -249,7 +248,7 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
       } catch (err) {
         results.push({ name: row.name || 'Unknown', error: err.message });
       }
-    }
+    });
     
     res.json({ success: true, results });
   } catch (error) {
