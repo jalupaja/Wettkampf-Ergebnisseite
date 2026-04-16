@@ -325,19 +325,57 @@
           <div class="routes-grid">
             {#each finaleRoutes as route}
               {@const disabled = isRouteDisabled(route)}
-              <button 
-                class="route-card finale-card"
-                class:disabled={disabled}
-                class:completed={route.result === 'top'}
-                disabled={disabled}
-                onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}
-              >
-                <div class="route-name">{route.name}</div>
-                <div class="route-points">Top</div>
-                {#if route.result === 'top'}
-                  <div class="check-mark">✓</div>
-                {/if}
-              </button>
+              {@const hasZones = route.zones && route.zones.length > 0}
+              {#if hasZones}
+                <div class="route-card finale-card" class:disabled={disabled}>
+                  <div class="route-name">{route.name}</div>
+                  <div class="route-buttons">
+                    <button 
+                      class="result-btn zone-btn" 
+                      class:active={route.result === null}
+                      class:disabled={disabled}
+                      disabled={disabled}
+                      onclick={() => checkStateAndSetResult(route.id, null)}
+                    >
+                      Versuch
+                    </button>
+                    {#each route.zones as zone}
+                      <button 
+                        class="result-btn zone-btn" 
+                        class:active={route.result === zone.name}
+                        class:disabled={disabled}
+                        disabled={disabled}
+                        onclick={() => checkStateAndSetResult(route.id, route.result === zone.name ? null : zone.name)}
+                      >
+                        {zone.name}
+                      </button>
+                    {/each}
+                    <button 
+                      class="result-btn top-btn" 
+                      class:active={route.result === 'top'}
+                      class:disabled={disabled}
+                      disabled={disabled}
+                      onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}
+                    >
+                      Top
+                    </button>
+                  </div>
+                </div>
+              {:else}
+                <button 
+                  class="route-card finale-card"
+                  class:disabled={disabled}
+                  class:completed={route.result === 'top'}
+                  disabled={disabled}
+                  onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}
+                >
+                  <div class="route-name">{route.name}</div>
+                  <div class="route-points">Top</div>
+                  {#if route.result === 'top'}
+                    <div class="check-mark">✓</div>
+                  {/if}
+                </button>
+              {/if}
             {/each}
           </div>
         </section>

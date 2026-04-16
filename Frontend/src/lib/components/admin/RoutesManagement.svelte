@@ -333,7 +333,7 @@
             />
           </div>
           
-          {#if formData.category === 'qualification'}
+          {#if formData.category === 'qualification' || formData.category === 'finale'}
             <div class="form-group">
               <div class="zone-header">
                 <span class="zone-label">Zonen</span>
