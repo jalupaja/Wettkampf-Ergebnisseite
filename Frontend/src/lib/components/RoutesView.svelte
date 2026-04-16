@@ -3,26 +3,46 @@
   import { api } from '../api.js';
   
   let routes = $state([]);
+  let competitionState = $state('setup');
   let loading = $state(true);
   let error = $state('');
   
+  const canEdit = $derived(competitionState !== 'setup');
+  
   onMount(async () => {
-    await loadRoutes();
+    await loadData();
   });
   
-  async function loadRoutes() {
+  async function loadData() {
     loading = true;
     error = '';
     try {
-      const data = await api.routes.list();
-      routes = data.routes;
+      const [routesData, configData] = await Promise.all([
+        api.routes.list(),
+        api.config.get()
+      ]);
+      routes = routesData.routes;
+      competitionState = configData.config.competitionState || 'setup';
     } catch (err) {
       error = err.message;
     }
     loading = false;
   }
   
+  async function loadRoutes() {
+    try {
+      const data = await api.routes.list();
+      routes = data.routes;
+    } catch (err) {
+      error = err.message;
+    }
+  }
+  
   async function setResult(routeId, result) {
+    if (!canEdit) {
+      error = 'Wettkampf noch nicht gestartet';
+      return;
+    }
     try {
       await api.routes.setResult(routeId, result);
       routes = routes.map(r => 
@@ -34,6 +54,10 @@
   }
   
   async function incrementBonus(routeId, currentCount) {
+    if (!canEdit) {
+      error = 'Wettkampf noch nicht gestartet';
+      return;
+    }
     try {
       await api.routes.setBonusResult(routeId, currentCount + 1);
       await loadRoutes();
@@ -43,6 +67,10 @@
   }
   
   async function decrementBonus(routeId, currentCount) {
+    if (!canEdit) {
+      error = 'Wettkampf noch nicht gestartet';
+      return;
+    }
     if (currentCount <= 0) return;
     try {
       await api.routes.setBonusResult(routeId, currentCount - 1);
@@ -63,6 +91,12 @@
 </script>
 
 <div class="routes-view">
+  {#if !canEdit && !loading}
+    <div class="setup-banner">
+      Wettkampf noch nicht gestartet. Ergebnisse können noch nicht eingetragen werden.
+    </div>
+  {/if}
+  
   {#if error}
     <div class="error-message">{error}</div>
   {/if}
@@ -206,6 +240,17 @@
     padding: 12px;
     border-radius: 8px;
     margin-bottom: 20px;
+  }
+  
+  .setup-banner {
+    background: rgba(243, 156, 18, 0.1);
+    border: 1px solid #f39c12;
+    color: #f39c12;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 500;
   }
   
   .loading {

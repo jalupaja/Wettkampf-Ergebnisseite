@@ -50,6 +50,10 @@
         {loading ? 'Anmelden...' : 'Anmelden'}
       </button>
     </form>
+    
+    <div class="ranking-link">
+      <a href="/results" target="_blank">Zur aktuellen Rangliste</a>
+    </div>
   </div>
 </div>
 
@@ -119,5 +123,23 @@
   button {
     width: 100%;
     margin-top: 8px;
+  }
+  
+  .ranking-link {
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-border);
+  }
+  
+  .ranking-link a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+  }
+  
+  .ranking-link a:hover {
+    color: var(--color-primary);
   }
 </style>

@@ -18,6 +18,7 @@ router.get('/', (req, res) => {
   
   const qualificationRoutes = routes.filter(r => r.category === 'qualification');
   const bonusRoutes = routes.filter(r => r.category === 'bonus');
+  const finaleRoutes = routes.filter(r => r.category === 'finale');
   const bestCount = config.qualificationBestCount;
   
   const results = groups.map(group => {
@@ -47,7 +48,16 @@ router.get('/', (req, res) => {
         };
       });
       
-      // Calculate points for qualification routes
+      const finaleResults = finaleRoutes.map(route => {
+        const completedEntry = userCompleted.find(cr => cr.routeId === route.id);
+        return {
+          routeId: route.id,
+          name: route.name,
+          topPoints: route.topPoints,
+          isTop: completedEntry?.result === 'top'
+        };
+      });
+      
       const qualWithResults = qualResults.map(r => {
         let points = 0;
         let isTop = false;
@@ -58,7 +68,6 @@ router.get('/', (req, res) => {
           isTop = true;
           points = r.topPoints;
         } else if (r.result && r.result !== 'top') {
-          // It's a zone name
           const zone = r.zones.find(z => z.name === r.result);
           if (zone) {
             zoneName = r.result;
@@ -67,16 +76,9 @@ router.get('/', (req, res) => {
           }
         }
         
-        return {
-          ...r,
-          isTop,
-          zoneName,
-          zonePoints,
-          points
-        };
+        return { ...r, isTop, zoneName, zonePoints, points };
       });
       
-      // Sort: tops first (by topPoints desc), then zones (by zonePoints desc)
       const sortedQual = [...qualWithResults].sort((a, b) => {
         if (a.isTop && !b.isTop) return -1;
         if (!a.isTop && b.isTop) return 1;
@@ -84,17 +86,18 @@ router.get('/', (req, res) => {
         return b.topPoints - a.topPoints;
       });
       
-      // Take best routes for scoring
       const bestQual = sortedQual.slice(0, bestCount);
       const qualTops = bestQual.filter(r => r.isTop).length;
       const qualPoints = bestQual.reduce((sum, r) => sum + r.points, 0);
       
-      // Bonus routes: sum of counts
       const bonusTops = bonusResults.reduce((sum, r) => sum + r.count, 0);
       const bonusPoints = bonusTops * 50;
       
+      const finaleTops = finaleResults.filter(r => r.isTop).length;
+      const finalePoints = finaleResults.reduce((sum, r) => sum + (r.isTop ? r.topPoints : 0), 0);
+      
       const totalTops = qualTops + bonusTops;
-      const totalPoints = qualPoints + bonusPoints;
+      const totalPoints = qualPoints + bonusPoints + finalePoints;
       
       return {
         userId: user.id,
@@ -103,8 +106,11 @@ router.get('/', (req, res) => {
         qualPoints,
         bonusTops,
         bonusPoints,
+        finaleTops,
+        finalePoints,
         totalPoints,
-        routes: qualResults
+        routes: qualResults,
+        finaleRoutes: finaleResults
       };
     });
     

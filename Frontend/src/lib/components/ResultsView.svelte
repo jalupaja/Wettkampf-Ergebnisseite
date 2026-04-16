@@ -62,6 +62,7 @@
                   <th class="stat-col">Tops</th>
                   <th class="stat-col">Zonen</th>
                   <th class="stat-col">Bonus</th>
+                  <th class="stat-col">Finale</th>
                   <th class="points-col">Punkte</th>
                 </tr>
               </thead>
@@ -83,6 +84,9 @@
                     </td>
                     <td class="stat-col">
                       <span class="stat-value bonus">{athlete.bonusTops}</span>
+                    </td>
+                    <td class="stat-col">
+                      <span class="stat-value finale">{athlete.finaleTops || 0}</span>
                     </td>
                     <td class="points-col total">{athlete.totalPoints}</td>
                   </tr>
@@ -213,6 +217,10 @@
   
   .stat-value.bonus {
     color: var(--color-secondary);
+  }
+  
+  .stat-value.finale {
+    color: #9b59b6;
   }
   
   .points-col.total {
