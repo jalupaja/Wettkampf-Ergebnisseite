@@ -2,14 +2,15 @@
   import { onMount } from 'svelte';
   import { api } from '../../api.js';
   
-  let competitionState = $state('setup'); // 'setup', 'qualification', 'finale'
+  let competitionState = $state('setup');
   let loading = $state(true);
   let error = $state('');
   
   const states = [
     { value: 'setup', label: 'Setup', description: 'Routen und Athleten werden vorbereitet' },
     { value: 'qualification', label: 'Qualifikation', description: 'Athleten klettern Qualifikation und Bonus' },
-    { value: 'finale', label: 'Finale', description: 'Finalisten klettern die Finalrouten' }
+    { value: 'finale', label: 'Finale', description: 'Finalisten klettern die Finalrouten' },
+    { value: 'finished', label: 'Beendet', description: 'Wettkampf beendet, Ergebnisse einsehbar' }
   ];
   
   onMount(async () => {

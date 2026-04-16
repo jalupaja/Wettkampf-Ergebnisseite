@@ -93,7 +93,18 @@
     if (competitionState === 'finale') {
       return route.category === 'finale' && isFinalist();
     }
+    if (competitionState === 'finished') return false;
     return false;
+  }
+  
+  function isRouteDisabled(route) {
+    if (competitionState === 'setup') return true;
+    if (competitionState === 'qualification') return false;
+    if (competitionState === 'finale') {
+      return route.category !== 'finale' || !isFinalist();
+    }
+    if (competitionState === 'finished') return true;
+    return true;
   }
   
   async function checkStateAndSetResult(routeId, result) {
@@ -177,6 +188,10 @@
     <div class="setup-banner finale">
       Finale läuft. Nur Finalisten können ihre Ergebnisse bearbeiten.
     </div>
+  {:else if competitionState === 'finished' && !loading}
+    <div class="setup-banner finished">
+      Wettkampf beendet. Ergebnisse können nicht mehr bearbeitet werden.
+    </div>
   {/if}
   
   {#if error}
@@ -216,12 +231,15 @@
           <h2>Qualifikation</h2>
           <div class="routes-grid">
             {#each qualRoutes as route}
-              <div class="route-card" class:top={route.result === 'top'} class:zone={route.result && route.result !== 'top'}>
+              {@const disabled = isRouteDisabled(route)}
+              <div class="route-card" class:top={route.result === 'top'} class:zone={route.result && route.result !== 'top'} class:disabled={disabled}>
                 <div class="route-name">{route.name}</div>
                 <div class="route-buttons">
                   <button 
                     class="result-btn zone-btn" 
                     class:active={route.result === null}
+                    class:disabled={disabled}
+                    disabled={disabled}
                     onclick={() => checkStateAndSetResult(route.id, null)}
                   >
                     Versuch
@@ -230,6 +248,8 @@
                     <button 
                       class="result-btn zone-btn" 
                       class:active={route.result === zone.name}
+                      class:disabled={disabled}
+                      disabled={disabled}
                       onclick={() => checkStateAndSetResult(route.id, route.result === zone.name ? null : zone.name)}
                     >
                       {zone.name}
@@ -238,6 +258,8 @@
                   <button 
                     class="result-btn top-btn" 
                     class:active={route.result === 'top'}
+                    class:disabled={disabled}
+                    disabled={disabled}
                     onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}
                   >
                     Top
@@ -254,14 +276,15 @@
           <h2>Bonus</h2>
           <div class="routes-grid">
             {#each bonusRoutes as route}
+              {@const disabled = isRouteDisabled(route)}
               {@const count = typeof route.result === 'number' ? route.result : (route.result === 'top' ? 1 : 0)}
-              <div class="route-card bonus-card">
+              <div class="route-card bonus-card" class:disabled={disabled}>
                 <div class="route-name">{route.name}</div>
                 <div class="bonus-counter">
                   <button 
                     class="counter-btn minus" 
                     onclick={() => checkStateAndDecrementBonus(route.id, count)}
-                    disabled={count <= 0}
+                    disabled={disabled || count <= 0}
                   >
                     -
                   </button>
@@ -269,6 +292,7 @@
                   <button 
                     class="counter-btn plus"
                     onclick={() => checkStateAndIncrementBonus(route.id, count)}
+                    disabled={disabled}
                   >
                     +
                   </button>
@@ -284,9 +308,12 @@
           <h2>Finale</h2>
           <div class="routes-grid">
             {#each finaleRoutes as route}
+              {@const disabled = isRouteDisabled(route)}
               <button 
                 class="route-card finale-card"
+                class:disabled={disabled}
                 class:completed={route.result === 'top'}
+                disabled={disabled}
                 onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}
               >
                 <div class="route-name">{route.name}</div>
@@ -339,6 +366,12 @@
     background: rgba(155, 89, 182, 0.1);
     border-color: #9b59b6;
     color: #9b59b6;
+  }
+  
+  .setup-banner.finished {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: #3498db;
+    color: #3498db;
   }
   
   .loading {
@@ -477,6 +510,17 @@
     color: white;
   }
   
+  .result-btn.disabled,
+  .result-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  .route-card.disabled {
+    opacity: 0.5;
+  }
+  
   .bonus-card {
     cursor: default;
   }
@@ -534,6 +578,12 @@
     background: #9b59b6;
     border-color: #9b59b6;
     color: white;
+  }
+  
+  .route-card.finale-card.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
   }
   
   .route-points {
