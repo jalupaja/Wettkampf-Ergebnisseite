@@ -19,6 +19,15 @@ import {
 
 const router = Router();
 
+function generatePassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let result = '';
+  for (let i = 0; i < 5; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 router.get('/config', authenticate, requireAdmin, (req, res) => {
   const config = getConfig();
   const csv = `key,value\n${Object.entries(config).map(([k, v]) => `${k},${v}`).join('\n')}`;
@@ -171,22 +180,22 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
         
         if (mode === 'replace' || mode === 'append') {
           const existing = users.find(u => u.username === row.username);
+          const password = row.password ? row.password : generatePassword();
           if (existing) {
             const updates = { groupId: group?.id || null };
             if (row.password) {
-              updates.password = row.password;
-              updates.hashed = false;
+              updates.password = password;
             }
             updateUser(existing.id, updates);
-            results.push({ username: row.username, action: 'updated' });
+            results.push({ username: row.username, password: row.password ? undefined : password, action: 'updated' });
           } else {
             createUser(
               row.username,
-              row.password || '',
+              password,
               row.role || 'athlete',
               group?.id || null
             );
-            results.push({ username: row.username, action: 'created' });
+            results.push({ username: row.username, password: row.password ? undefined : password, action: 'created' });
           }
         }
       } catch (err) {

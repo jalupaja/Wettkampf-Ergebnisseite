@@ -82,9 +82,15 @@
       const text = await file.text();
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
-      await api.data.importUsers('append', data);
+      const result = await api.data.importUsers('append', data);
       await loadData();
-      alert(`Import erfolgreich!`);
+      
+      const generatedPasswords = result.results?.filter(r => r.password).map(r => `${r.username}: ${r.password}`).join('\n');
+      if (generatedPasswords) {
+        alert(`Import erfolgreich!\n\nGenerierte Passwörter:\n${generatedPasswords}`);
+      } else {
+        alert(`Import erfolgreich!`);
+      }
     } catch (err) {
       error = err.message;
     }
