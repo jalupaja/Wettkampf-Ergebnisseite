@@ -1,0 +1,240 @@
+import { Router } from 'express';
+import { authenticate, requireAdmin } from '../middleware/auth.js';
+import {
+  getConfig,
+  getRoutes,
+  getUsers,
+  getGroups,
+  getCompletedRoutes,
+  updateConfig,
+  createRoute,
+  updateRoute,
+  createUser,
+  updateUser,
+  getGroupById
+} from '../data/store.js';
+
+const router = Router();
+
+router.get('/config', authenticate, requireAdmin, (req, res) => {
+  const config = getConfig();
+  const csv = `key,value\n${Object.entries(config).map(([k, v]) => `${k},${v}`).join('\n')}`;
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="config.csv"');
+  res.send(csv);
+});
+
+router.post('/config', authenticate, requireAdmin, (req, res) => {
+  try {
+    const config = getConfig();
+    const updates = {};
+    Object.keys(config).forEach(key => {
+      if (req.body[key] !== undefined) {
+        if (typeof config[key] === 'number') {
+          updates[key] = parseInt(req.body[key]) || 0;
+        } else {
+          updates[key] = req.body[key];
+        }
+      }
+    });
+    const updated = updateConfig(updates);
+    res.json({ success: true, config: updated });
+  } catch (error) {
+    console.error('Import config error:', error);
+    res.status(500).json({ error: 'Serverfehler' });
+  }
+});
+
+router.get('/routes', authenticate, requireAdmin, (req, res) => {
+  const routes = getRoutes();
+  const headers = ['name', 'category', 'topPoints', 'zones', 'order'];
+  const csv = [
+    headers.join(','),
+    ...routes.map(r => [
+      `"${r.name}"`,
+      r.category,
+      r.topPoints,
+      `"${JSON.stringify(r.zones || [])}"`,
+      r.order
+    ].join(','))
+  ].join('\n');
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="routes.csv"');
+  res.send(csv);
+});
+
+router.post('/routes', authenticate, requireAdmin, (req, res) => {
+  try {
+    const { mode, data } = req.body;
+    const routes = getRoutes();
+    
+    if (mode === 'replace') {
+      const idsToDelete = routes.map(r => r.id);
+      const store = require('../data/store.js');
+      store.store.routes = store.store.routes.filter(r => !idsToDelete.includes(r.id));
+    }
+    
+    const results = [];
+    for (const row of data) {
+      try {
+        let zones = [];
+        if (row.zones) {
+          try {
+            zones = JSON.parse(row.zones);
+          } catch {
+            zones = [];
+          }
+        }
+        
+        if (mode === 'replace' || mode === 'append') {
+          const existing = routes.find(r => r.name === row.name && r.category === row.category);
+          if (existing) {
+            const updated = updateRoute(existing.id, {
+              topPoints: parseInt(row.topPoints) || 100,
+              zones,
+              order: parseInt(row.order) || null
+            });
+            results.push({ name: row.name, action: 'updated' });
+          } else {
+            const created = createRoute({
+              name: row.name,
+              category: row.category || 'qualification',
+              topPoints: parseInt(row.topPoints) || 100,
+              zones,
+              order: parseInt(row.order) || null
+            });
+            results.push({ name: row.name, action: 'created' });
+          }
+        }
+      } catch (err) {
+        results.push({ name: row.name || 'Unknown', error: err.message });
+      }
+    }
+    
+    res.json({ success: true, results });
+  } catch (error) {
+    console.error('Import routes error:', error);
+    res.status(500).json({ error: 'Serverfehler' });
+  }
+});
+
+router.get('/users', authenticate, requireAdmin, (req, res) => {
+  const users = getUsers();
+  const groups = getGroups();
+  const completed = getCompletedRoutes();
+  
+  const headers = ['username', 'password', 'role', 'groupName', 'results'];
+  const csvRows = [headers.join(',')];
+  
+  for (const user of users) {
+    const group = user.groupId ? groups.find(g => g.id === user.groupId) : null;
+    const userResults = completed.filter(cr => cr.userId === user.id);
+    const resultsStr = JSON.stringify(userResults.map(r => ({ routeId: r.routeId, result: r.result })));
+    
+    csvRows.push([
+      `"${user.username}"`,
+      user.password || '',
+      user.role,
+      `"${group?.name || ''}"`,
+      `"${resultsStr.replace(/"/g, '""')}"`
+    ].join(','));
+  }
+  
+  const csv = csvRows.join('\n');
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="users.csv"');
+  res.send(csv);
+});
+
+router.post('/users', authenticate, requireAdmin, (req, res) => {
+  try {
+    const { mode, data } = req.body;
+    const users = getUsers();
+    const groups = getGroups();
+    const completed = getCompletedRoutes();
+    
+    if (mode === 'replace') {
+      const store = require('../data/store.js');
+      const athleteIds = users.filter(u => u.role === 'athlete').map(u => u.id);
+      store.store.users = store.store.users.filter(u => u.role === 'admin');
+      store.store.completedRoutes = store.store.completedRoutes.filter(cr => 
+        users.find(u => u.id === cr.userId && u.role === 'admin')
+      );
+    }
+    
+    const results = [];
+    for (const row of data) {
+      try {
+        const group = groups.find(g => g.name === row.groupName);
+        
+        if (mode === 'replace' || mode === 'append') {
+          const existing = users.find(u => u.username === row.username);
+          if (existing) {
+            const updates = { groupId: group?.id || null };
+            if (row.password) {
+              updates.password = row.password;
+              updates.hashed = false;
+            }
+            updateUser(existing.id, updates);
+            results.push({ username: row.username, action: 'updated' });
+          } else {
+            createUser(
+              row.username,
+              row.password || '',
+              row.role || 'athlete',
+              group?.id || null
+            );
+            results.push({ username: row.username, action: 'created' });
+          }
+        }
+      } catch (err) {
+        results.push({ username: row.username || 'Unknown', error: err.message });
+      }
+    }
+    
+    res.json({ success: true, results });
+  } catch (error) {
+    console.error('Import users error:', error);
+    res.status(500).json({ error: 'Serverfehler' });
+  }
+});
+
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  
+  const headers = lines[0].split(',').map(h => h.trim());
+  const data = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (const char of lines[i]) {
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim());
+    
+    const row = {};
+    headers.forEach((h, idx) => {
+      let val = values[idx] || '';
+      if (val.startsWith('"') && val.endsWith('"')) {
+        val = val.slice(1, -1).replace(/""/g, '"');
+      }
+      row[h] = val;
+    });
+    data.push(row);
+  }
+  
+  return data;
+}
+
+export default router;

@@ -68,5 +68,20 @@ export const api = {
   config: {
     get: () => request('/config'),
     update: (data) => request('/config', { method: 'PUT', body: JSON.stringify(data) })
+  },
+  
+  data: {
+    exportConfig: () => {
+      window.open(`${API_BASE}/admin/data/config`, '_blank');
+    },
+    exportRoutes: () => {
+      window.open(`${API_BASE}/admin/data/routes`, '_blank');
+    },
+    exportUsers: () => {
+      window.open(`${API_BASE}/admin/data/users`, '_blank');
+    },
+    importConfig: (data) => request('/admin/data/config', { method: 'POST', body: JSON.stringify(data) }),
+    importRoutes: (mode, data) => request('/admin/data/routes', { method: 'POST', body: JSON.stringify({ mode, data }) }),
+    importUsers: (mode, data) => request('/admin/data/users', { method: 'POST', body: JSON.stringify({ mode, data }) })
   }
 };

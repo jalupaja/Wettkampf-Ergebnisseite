@@ -13,6 +13,7 @@ import adminGroupsRoutes from './routes/adminGroups.js';
 import adminRoutesRoutes from './routes/adminRoutes.js';
 import resultsRoutes from './routes/results.js';
 import configRoutes from './routes/config.js';
+import dataRoutes from './routes/dataRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -44,6 +45,7 @@ app.use('/api/admin/Routes', adminRoutesRoutes);
 app.use('/api/Routes', routesRoutes);
 app.use('/api/results', resultsRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/admin/data', dataRoutes);
 
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
