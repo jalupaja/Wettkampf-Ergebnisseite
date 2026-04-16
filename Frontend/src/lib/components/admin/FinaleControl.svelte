@@ -135,7 +135,7 @@
           </div>
           
           <div class="form-group finalist-config">
-            <label>Finalisten</label>
+            <span class="config-label">Finalisten</span>
             <div class="finalist-inputs">
               <div class="finalist-input-group">
                 <input 
@@ -327,13 +327,6 @@
     margin-bottom: 6px;
   }
   
-  .settings-box .hint {
-    display: block;
-    font-size: 12px;
-    color: var(--color-text-muted);
-    margin-top: 4px;
-  }
-  
   .groups-preview {
     background: var(--color-bg-lighter);
     border-radius: 8px;
@@ -364,6 +357,12 @@
   
   .finalist-config {
     margin-bottom: 16px;
+  }
+  
+  .config-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 6px;
   }
   
   .finalist-inputs {
