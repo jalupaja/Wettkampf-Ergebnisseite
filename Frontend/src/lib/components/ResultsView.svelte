@@ -2,14 +2,19 @@
   import { onMount, onDestroy } from 'svelte';
   import { api } from '../api.js';
   import { userStore } from '../stores/user.js';
+  import { themeStore } from '../stores/theme.js';
+  import RankingsTable from './RankingsTable.svelte';
   
-  let { admin = false } = $props();
+  let { admin = false, onLogin } = $props();
+  let isDark = $state(true);
   
   let results = $state([]);
   let config = $state(null);
   let loading = $state(true);
   let error = $state('');
   let refreshInterval;
+  
+  themeStore.subscribe(value => { isDark = value; });
   
   onMount(async () => {
     await loadResults();
@@ -30,230 +35,94 @@
     }
     loading = false;
   }
-  
-  function isCurrentUser(userId) {
-    const user = $userStore;
-    return user && user.id === userId;
-  }
 </script>
 
 <div class="results-view">
-  {#if error}
-    <div class="error-message">{error}</div>
+  {#if !$userStore}
+    <div class="header">
+      <div class="title-section">
+        <h2>Rangliste</h2>
+        {#if config?.rulesUrl}
+          <a class="rules-link" href="{config.rulesUrl}" target="_blank">
+            Regeln
+          </a>
+        {/if}
+      </div>
+      <div class="button-group">
+        <button class="theme-btn" onclick={() => themeStore.toggle()} title={isDark ? 'Light mode' : 'Dark mode'}>
+          {isDark ? '☀️' : '🌙'}
+        </button>
+        {#if onLogin}
+          <button class="login-btn" onclick={onLogin}>Anmelden</button>
+        {/if}
+      </div>
+    </div>
   {/if}
   
-  {#if loading}
-    <div class="loading">Rangliste wird geladen...</div>
-  {:else}
-    <div class="results-header">
-      <h2>Rangliste</h2>
-      {#if config}
-        <span class="config-info">
-          Top {config.qualificationBestCount} Routen gewertet
-        </span>
-      {/if}
-    </div>
-    
-    {#if results.length}
-      {#each results as groupResult}
-        <div class="group-results card">
-          <h3 class="group-title">{groupResult.groupName}</h3>
-          
-          {#if groupResult.athletes.length}
-            <table class="results-table">
-              <thead>
-                <tr>
-                  <th class="rank-col">Platz</th>
-                  <th class="name-col">Name</th>
-                  <th class="stat-col">Tops</th>
-                  <th class="stat-col">Zonen</th>
-                  <th class="stat-col">Bonus</th>
-                  <th class="stat-col">Finale</th>
-                  <th class="points-col">Punkte</th>
-                </tr>
-              </thead>
-              <tbody>
-                {#each groupResult.athletes as athlete, index}
-                  <tr class:gold={index === 0} class:silver={index === 1} class:bronze={index === 2} class:me={isCurrentUser(athlete.userId)}>
-                    <td class="rank-col">
-                      {#if index === 0}🥇
-                      {:else if index === 1}🥈
-                      {:else if index === 2}🥉
-                      {:else}{index + 1}{/if}
-                    </td>
-                    <td class="name-col">{athlete.username}</td>
-                    <td class="stat-col">
-                      <span class="stat-value top">{athlete.qualTops}</span>
-                    </td>
-                    <td class="stat-col">
-                      <span class="stat-value zone">{athlete.qualZones}</span>
-                    </td>
-                    <td class="stat-col">
-                      <span class="stat-value bonus">{athlete.bonusTops}</span>
-                    </td>
-                    <td class="stat-col">
-                      <span class="stat-value finale">{athlete.finaleTops || 0}</span>
-                    </td>
-                    <td class="points-col total">{athlete.totalPoints}</td>
-                  </tr>
-                {/each}
-              </tbody>
-            </table>
-          {:else}
-            <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
-          {/if}
-        </div>
-      {/each}
-    {:else}
-      <div class="empty-state">
-        <p>Keine Ergebnisse verfügbar.</p>
-      </div>
-    {/if}
-  {/if}
+  <RankingsTable {results} {loading} {error} />
 </div>
 
 <style>
-  .results-view {
-    max-width: 1000px;
+  .results-view { 
+    max-width: 1000px; 
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 0 16px;
   }
   
-  .error-message {
-    background: rgba(231, 76, 60, 0.1);
-    border: 1px solid var(--color-error);
-    color: var(--color-error);
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+  .button-group { display: flex; gap: 8px; }
+  .header {
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between; align-items: flex-start;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
   }
   
-  .loading {
-    text-align: center;
-    padding: 40px;
-    color: var(--color-text-muted);
-  }
-  
-  .results-header {
+  .title-section {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
+    gap: 16px;
   }
   
-  .results-header h2 {
-    font-size: 24px;
-  }
+  .title-section h2 { font-size: 24px; }
   
-  .config-info {
+  .rules-link {
+    background: var(--color-bg-lighter);
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    text-decoration: none;
     font-size: 14px;
-    color: var(--color-text-muted);
+    cursor: pointer;
+    opacity: 1;
   }
   
-  .group-results {
-    margin-bottom: 24px;
+  .rules-link:hover {
+    background: var(--color-bg-light);
+    border-color: var(--color-primary);
+    opacity: 1;
   }
   
-  .group-title {
-    font-size: 20px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid var(--color-primary);
-  }
-  
-  .results-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .results-table th,
-  .results-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--color-border);
-  }
-  
-  .results-table th {
-    font-size: 12px;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-    font-weight: 600;
-  }
-  
-  .results-table tr:last-child td {
-    border-bottom: none;
-  }
-  
-  .results-table tr.gold {
-    background: rgba(255, 215, 0, 0.1);
-  }
-  
-  .results-table tr.silver {
-    background: rgba(192, 192, 192, 0.1);
-  }
-  
-  .results-table tr.bronze {
-    background: rgba(205, 127, 50, 0.1);
-  }
-  
-  .results-table tr.me {
-    background: rgba(255, 107, 0, 0.1);
-    font-weight: 700;
-  }
-  
-  .results-table tr.me td.name-col {
-    font-weight: 700;
-  }
-  
-  .rank-col {
-    width: 60px;
-    text-align: center;
-    font-size: 18px;
-  }
-  
-  .name-col {
+  .login-btn {
+    background: var(--color-primary);
+    color: var(--color-text);
+    padding: 10px 20px;
+    border-radius: 8px;
     font-weight: 500;
+    cursor: pointer;
   }
   
-  .stat-col {
-    text-align: center;
-  }
-  
-  .stat-value {
-    font-weight: 700;
-    font-size: 16px;
-  }
-  
-  .stat-value.top {
-    color: var(--color-primary);
-  }
-  
-  .stat-value.zone {
-    color: #f39c12;
-  }
-  
-  .stat-value.bonus {
-    color: var(--color-secondary);
-  }
-  
-  .stat-value.finale {
-    color: #9b59b6;
-  }
-  
-  .points-col.total {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--color-primary);
-    text-align: right;
-  }
-  
-  .no-athletes {
-    text-align: center;
-    color: var(--color-text-muted);
-    padding: 20px;
-  }
-  
-  .empty-state {
-    text-align: center;
-    padding: 60px;
-    color: var(--color-text-muted);
+  @media (max-width: 640px) {
+    .results-view { padding: 0 12px; }
+    .button-group { display: flex; gap: 8px; }
+    .header { padding-top: 24px; flex-direction: row; }
+    .title-section { flex-direction: row; gap: 8px; }
+    .title-section h2 { font-size: 20px; }
+    .rules-link { padding: 6px 12px; font-size: 12px; }
+    .login-btn { padding: 8px 16px; font-size: 13px; }
   }
 </style>

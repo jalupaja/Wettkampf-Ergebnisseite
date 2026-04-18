@@ -1,0 +1,31 @@
+<script>
+  import { onMount, onDestroy } from 'svelte';
+  import { api } from '../api.js';
+  import RankingsTable from './RankingsTable.svelte';
+  
+  let results = $state([]);
+  let loading = $state(true);
+  let error = $state('');
+  let refreshInterval;
+  
+  onMount(async () => {
+    await loadResults();
+    refreshInterval = setInterval(loadResults, 10000);
+  });
+  
+  onDestroy(() => {
+    if (refreshInterval) clearInterval(refreshInterval);
+  });
+  
+  async function loadResults() {
+    try {
+      const data = await api.results.get();
+      results = data.results;
+    } catch (err) {
+      error = err.message;
+    }
+    loading = false;
+  }
+</script>
+
+<RankingsTable {results} {loading} {error} />

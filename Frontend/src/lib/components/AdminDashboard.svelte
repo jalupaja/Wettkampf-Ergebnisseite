@@ -5,7 +5,7 @@
   import GroupsManagement from './admin/GroupsManagement.svelte';
   import RoutesManagement from './admin/RoutesManagement.svelte';
   import ConfigManagement from './admin/ConfigManagement.svelte';
-  import ResultsView from './ResultsView.svelte';
+  import AdminResultsView from './AdminResultsView.svelte';
   import FinaleControl from './admin/FinaleControl.svelte';
   
   let activeTab = $state('results');
@@ -55,7 +55,7 @@
     {:else if activeTab === 'config'}
       <ConfigManagement />
     {:else if activeTab === 'results'}
-      <ResultsView admin={true} />
+      <AdminResultsView />
     {:else if activeTab === 'status'}
       <FinaleControl />
     {/if}
@@ -64,24 +64,25 @@
 
 <style>
   .admin-dashboard {
-    margin-top: 20px;
+    margin-top: 16px;
   }
   
   .warning-banner {
     background: rgba(243, 156, 18, 0.15);
-    border: 1px solid #f39c12;
-    color: #f39c12;
+    border: 1px solid var(--color-zone);
+    color: var(--color-zone);
     padding: 12px 16px;
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 500;
+    flex-wrap: wrap;
   }
   
   .warning-banner span:first-child {
-    font-size: 18px;
+    font-size: 16px;
   }
   
   .link-btn {
@@ -101,23 +102,27 @@
   
   .tabs {
     display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
+    gap: 6px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
   }
   
   .tabs button {
     background: var(--color-bg-light);
     border: 1px solid var(--color-border);
-    padding: 12px 24px;
+    padding: 10px 16px;
     color: var(--color-text);
     font-weight: 500;
+    font-size: 13px;
+    white-space: nowrap;
   }
   
   .tabs button.active {
     background: var(--color-primary);
     border-color: var(--color-primary);
-    color: white;
+    color: var(--color-white);
   }
   
   .tab-content {
@@ -127,5 +132,16 @@
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+  
+  @media (max-width: 640px) {
+    .tabs button {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    
+    .warning-banner {
+      font-size: 13px;
+    }
   }
 </style>
