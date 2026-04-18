@@ -294,21 +294,28 @@ function parseCSV(text) {
     let current = '';
     let inQuotes = false;
     
+    let prevChar = '';
     for (const char of lines[i]) {
-      if (char === '"') {
-        if (inQuotes && current.endsWith('"')) {
-          // This is an escaped quote ""
+      // Update prevChar for escaped quote check, but only if not processing an escape sequence
+      if (char !== '\\') {
+        // Handle escaped quote: two consecutive quotes inside quotes
+        if (char === '"' && inQuotes && prevChar === '"') {
           current += '"';
-          inQuotes = false;
-        } else {
+          prevChar = '"';
+          continue;
+        }
+        // Toggle quote state on unescaped quote
+        if (char === '"') {
           inQuotes = !inQuotes;
         }
-      } else if (char === ',' && !inQuotes) {
+      }
+      if (char === ',' && !inQuotes) {
         values.push(current.trim());
         current = '';
       } else {
         current += char;
       }
+      prevChar = char;
     }
     values.push(current.trim());
     
