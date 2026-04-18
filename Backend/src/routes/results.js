@@ -106,6 +106,7 @@ router.get('/', (req, res) => {
       
       const bestQual = sortedQual.slice(0, bestCount);
       const qualTops = bestQual.filter(r => r.isTop).length;
+      const qualZones = bestQual.filter(r => !r.isTop && r.zonePoints > 0).length;
       const qualPoints = bestQual.reduce((sum, r) => sum + r.points, 0);
       
       const bonusTops = bonusResults.reduce((sum, r) => sum + r.count, 0);
@@ -122,6 +123,7 @@ router.get('/', (req, res) => {
         userId: user.id,
         username: user.username,
         qualTops,
+        qualZones,
         qualPoints,
         bonusTops,
         bonusPoints,
