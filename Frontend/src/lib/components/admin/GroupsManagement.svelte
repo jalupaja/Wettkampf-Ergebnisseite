@@ -78,6 +78,7 @@
     if (!confirm('Wirklich alle Startklassen löschen? Athleten verlieren ihre Zuordnung!')) return;
     try {
       await api.data.importGroups('replace', []);
+      await loadGroups();
     } catch (err) {
       error = err.message;
     }
@@ -143,6 +144,7 @@
     
     try {
       await api.groups.admin.delete(id);
+      await loadGroups();
     } catch (err) {
       error = err.message;
     }

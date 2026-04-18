@@ -64,6 +64,7 @@
     if (!confirm('Wirklich alle Routen löschen?')) return;
     try {
       await api.data.importRoutes('replace', []);
+      await loadRoutes();
     } catch (err) {
       error = err.message;
     }
