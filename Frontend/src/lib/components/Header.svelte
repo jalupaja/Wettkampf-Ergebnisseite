@@ -131,8 +131,8 @@
   }
   
   nav button.outline {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
   }
   
   @media (max-width: 480px) {
