@@ -40,7 +40,7 @@ router.post('/result', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Route nicht gefunden' });
     }
     
-    const validResults = ['top', null];
+    const validResults = ['top', 'attempted', null];
     if (route.zones && route.zones.length > 0) {
       route.zones.forEach(z => validResults.push(z.name));
     }

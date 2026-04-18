@@ -11,6 +11,11 @@
   --color-border: #2a2a4a;
   --color-error: #e74c3c;
   --color-success: #2ecc71;
+  --color-zone: #f39c12;
+  --color-attempted: #95a5a6;
+  --color-finale: #9b59b6;
+  --color-finished: #3498db;
+  --color-white: #ffffff;
 }
 
 body.light,
@@ -21,6 +26,10 @@ body.light,
   --color-text: #1a1a2e;
   --color-text-muted: #666666;
   --color-border: #d0d0d0;
+  --color-zone: #e67e22;
+  --color-attempted: #7f8c8d;
+  --color-finale: #8e44ad;
+  --color-finished: #2980b9;
 }
 
 body.light {
@@ -32,6 +41,16 @@ body.light {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  word-wrap: break-word;
+}
+
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
 }
 
 body {
@@ -53,7 +72,7 @@ button {
 
 button.primary {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-white);
 }
 
 button.primary:hover {
@@ -62,7 +81,7 @@ button.primary:hover {
 
 button.secondary {
   background-color: var(--color-secondary);
-  color: white;
+  color: var(--color-white);
 }
 
 button.secondary:hover {
@@ -71,7 +90,7 @@ button.secondary:hover {
 
 button.danger {
   background-color: var(--color-error);
-  color: white;
+  color: var(--color-white);
 }
 
 button.danger:hover {
@@ -154,3 +173,46 @@ input::placeholder {
 .mt-4 { margin-top: 16px; }
 .mb-2 { margin-bottom: 8px; }
 .mb-4 { margin-bottom: 16px; }
+
+@media (max-width: 640px) {
+  button {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  
+  .btn-lg {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  
+  input, select {
+    padding: 12px 14px;
+    font-size: 16px;
+  }
+  
+  .card {
+    padding: 16px;
+    border-radius: 10px;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    font-size: 18px;
+  }
+  
+  .card {
+    padding: 28px;
+  }
+  
+  button {
+    padding: 12px 24px;
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 2560px) {
+  :root {
+    font-size: 20px;
+  }
+}

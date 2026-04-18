@@ -62,7 +62,7 @@ export const api = {
   },
   
   results: {
-    get: () => request('/results')
+    get: () => fetch(`${API_BASE}/results`).then(r => r.json())
   },
   
   config: {

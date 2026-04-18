@@ -237,8 +237,9 @@ export function updateGroup(id, updates) {
 
 export function deleteGroup(id) {
   const index = store.groups.findIndex(g => g.id === id);
-  if (index === -1) return false;
+  if (index === -1) return { success: false };
   
+  const affectedUsers = store.users.filter(u => u.groupId === id).length;
   store.groups.splice(index, 1);
   store.users.forEach(u => {
     if (u.groupId === id) {
@@ -246,7 +247,7 @@ export function deleteGroup(id) {
     }
   });
   saveStore();
-  return true;
+  return { success: true, affectedUsers };
 }
 
 export function getRoutes() {
@@ -305,12 +306,12 @@ export function setRouteResult(userId, routeName, result) {
     cr => cr.userId === userId && cr.routeName === routeName
   );
   
-  if (result === null) {
+  if (result === null || result === 'attempted') {
     if (existing) {
       store.completedRoutes = store.completedRoutes.filter(cr => cr !== existing);
     }
     saveStore();
-    return { result: null };
+    return { result: result };
   }
   
   if (existing) {

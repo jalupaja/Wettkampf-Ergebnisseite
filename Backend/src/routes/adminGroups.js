@@ -51,12 +51,16 @@ router.delete('/:id', authenticate, requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
     
-    const deleted = deleteGroup(id);
-    if (!deleted) {
+    const result = deleteGroup(id);
+    if (!result.success) {
       return res.status(404).json({ error: 'Startklasse nicht gefunden' });
     }
     
-    res.json({ message: 'Startklasse gelöscht' });
+    const message = result.affectedUsers > 0
+      ? `Startklasse gelöscht. ${result.affectedUsers} Athleten sind jetzt ohne Gruppe.`
+      : 'Startklasse gelöscht.';
+    
+    res.json({ message });
   } catch (error) {
     console.error('Delete group error:', error);
     res.status(500).json({ error: 'Serverfehler' });

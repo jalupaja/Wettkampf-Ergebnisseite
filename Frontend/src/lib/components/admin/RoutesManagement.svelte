@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { api } from '../../api.js';
   
   let routes = $state([]);
@@ -25,6 +25,7 @@
   ];
   
   onMount(async () => {
+    window.addEventListener('close-modal', closeModal);
     await loadRoutes();
   });
   
@@ -68,7 +69,6 @@
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
       await api.data.importRoutes('append', data);
-      await loadRoutes();
       alert(`Import erfolgreich!`);
     } catch (err) {
       error = err.message;
@@ -81,7 +81,6 @@
     if (!confirm('Wirklich alle Routen löschen?')) return;
     try {
       await api.data.importRoutes('replace', []);
-      await loadRoutes();
     } catch (err) {
       error = err.message;
     }
@@ -157,7 +156,6 @@
         await api.routes.admin.create(payload);
       }
       
-      await loadRoutes();
       closeModal();
     } catch (err) {
       error = err.message;
@@ -169,7 +167,6 @@
     
     try {
       await api.routes.admin.delete(id);
-      await loadRoutes();
     } catch (err) {
       error = err.message;
     }
@@ -188,7 +185,6 @@
     try {
       await api.routes.admin.update(id, { order: neighbor.order });
       await api.routes.admin.update(neighbor.id, { order: route.order });
-      await loadRoutes();
     } catch (err) {
       error = err.message;
     }
@@ -465,7 +461,7 @@
   }
   
   .route-card.finale {
-    border-left: 3px solid #9b59b6;
+    border-left: 3px solid var(--color-finale);
   }
   
   .route-order {

@@ -53,10 +53,11 @@
   header {
     background: var(--color-bg-light);
     border-bottom: 1px solid var(--color-border);
-    padding: 0 20px;
+    padding: 0 12px;
     position: sticky;
     top: 0;
     z-index: 100;
+    overflow-x: auto;
   }
   
   .header-content {
@@ -66,20 +67,23 @@
     align-items: center;
     justify-content: space-between;
     height: 64px;
+    gap: 12px;
+    min-width: max-content;
   }
   
   .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-shrink: 0;
   }
   
   .logo-icon {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     background: var(--color-primary);
-    color: white;
-    font-size: 20px;
+    color: var(--color-white);
+    font-size: 18px;
     font-weight: bold;
     border-radius: 50%;
     display: flex;
@@ -88,28 +92,30 @@
   }
   
   .logo span {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
   }
   
   nav {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
+    flex-shrink: 0;
   }
   
   .user-info {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    font-size: 13px;
   }
   
   .badge {
     background: var(--color-primary);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
+    color: var(--color-white);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
     font-weight: 600;
   }
   
@@ -120,7 +126,22 @@
   .icon-btn {
     background: transparent;
     border: 1px solid var(--color-border);
-    padding: 8px 12px;
-    font-size: 18px;
+    padding: 6px 10px;
+    font-size: 16px;
+  }
+  
+  nav button.outline {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    .logo span {
+      display: none;
+    }
+    
+    .user-info {
+      font-size: 12px;
+    }
   }
 </style>

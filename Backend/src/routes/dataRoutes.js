@@ -66,7 +66,7 @@ router.get('/routes', authenticate, requireAdmin, (req, res) => {
       `"${r.name}"`,
       r.category,
       r.topPoints,
-      `"${JSON.stringify(r.zones || [])}"`
+      `"${(JSON.stringify(r.zones || [])).replace(/"/g, '""')}"`
     ].join(','))
   ].join('\n');
   res.setHeader('Content-Type', 'text/csv');
@@ -225,13 +225,23 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
   try {
     const { mode, data } = req.body;
     const groups = getGroups();
+    const store = getStore();
+    
+    let preservedCount = 0;
+    let deletedCount = 0;
     
     if (mode === 'replace') {
-      const store = getStore();
-      store.groups = store.groups.filter(g => {
+      const toDelete = [];
+      store.groups.forEach(g => {
         const hasAthletes = store.users.some(u => u.groupId === g.id && u.role === 'athlete');
-        return hasAthletes;
+        if (hasAthletes) {
+          toDelete.push(g.id);
+        } else {
+          deletedCount++;
+        }
       });
+      store.groups = store.groups.filter(g => !toDelete.includes(g.id));
+      preservedCount = toDelete.length;
     }
     
     const results = [];
@@ -259,7 +269,13 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
       }
     });
     
-    res.json({ success: true, results });
+    const message = mode === 'replace' && data.length === 0
+      ? preservedCount > 0
+        ? `${preservedCount} Startklassen mit Athleten wurden beibehalten. ${deletedCount} leere Startklassen wurden gelöscht.`
+        : `${deletedCount} Startklassen wurden gelöscht.`
+      : undefined;
+    
+    res.json({ success: true, results, message });
   } catch (error) {
     console.error('Import groups error:', error);
     res.status(500).json({ error: 'Serverfehler' });
@@ -280,7 +296,13 @@ function parseCSV(text) {
     
     for (const char of lines[i]) {
       if (char === '"') {
-        inQuotes = !inQuotes;
+        if (inQuotes && current.endsWith('"')) {
+          // This is an escaped quote ""
+          current += '"';
+          inQuotes = false;
+        } else {
+          inQuotes = !inQuotes;
+        }
       } else if (char === ',' && !inQuotes) {
         values.push(current.trim());
         current = '';
@@ -293,8 +315,9 @@ function parseCSV(text) {
     const row = {};
     headers.forEach((h, idx) => {
       let val = values[idx] || '';
+      // Remove surrounding quotes if present
       if (val.startsWith('"') && val.endsWith('"')) {
-        val = val.slice(1, -1).replace(/""/g, '"');
+        val = val.slice(1, -1);
       }
       row[h] = val;
     });

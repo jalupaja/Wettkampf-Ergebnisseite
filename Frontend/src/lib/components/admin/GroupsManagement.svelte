@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { api } from '../../api.js';
   
   let groups = $state([]);
@@ -17,7 +17,12 @@
   let editingId = $state(null);
   
   onMount(async () => {
+    window.addEventListener('close-modal', closeModal);
     await loadGroups();
+  });
+
+  onDestroy(() => {
+    window.removeEventListener('close-modal', closeModal);
   });
   
   function handleExport() {
@@ -60,7 +65,6 @@
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
       await api.data.importGroups('append', data);
-      await loadGroups();
       alert(`Import erfolgreich!`);
     } catch (err) {
       error = err.message;
@@ -73,7 +77,6 @@
     if (!confirm('Wirklich alle Startklassen löschen? Athleten verlieren ihre Zuordnung!')) return;
     try {
       await api.data.importGroups('replace', []);
-      await loadGroups();
     } catch (err) {
       error = err.message;
     }
@@ -128,7 +131,6 @@
         await api.groups.admin.create(payload);
       }
       
-      await loadGroups();
       closeModal();
     } catch (err) {
       error = err.message;
@@ -140,7 +142,6 @@
     
     try {
       await api.groups.admin.delete(id);
-      await loadGroups();
     } catch (err) {
       error = err.message;
     }
@@ -159,7 +160,6 @@
     try {
       await api.groups.admin.update(id, { order: neighbor.order });
       await api.groups.admin.update(neighbor.id, { order: group.order });
-      await loadGroups();
     } catch (err) {
       error = err.message;
     }

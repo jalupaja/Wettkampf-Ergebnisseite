@@ -3,10 +3,11 @@
   import { api } from '../../api.js';
   
   let config = $state({
-    qualificationBestCount: 5,
-    finaleMaxAthletes: 8,
-    finaleSmallGroupMaxAthletes: 6,
-    finaleSmallGroupThreshold: 10
+    qualificationBestCount: 4,
+    finaleMaxAthletes: 5,
+    finaleSmallGroupMaxAthletes: 3,
+    finaleSmallGroupThreshold: 10,
+    rulesUrl: ''
   });
   let groups = $state([]);
   let loading = $state(true);
@@ -35,10 +36,11 @@
     success = '';
     try {
       await api.config.update({
-        qualificationBestCount: parseInt(config.qualificationBestCount) || 5,
-        finaleMaxAthletes: parseInt(config.finaleMaxAthletes) || 8,
-        finaleSmallGroupMaxAthletes: parseInt(config.finaleSmallGroupMaxAthletes) || 6,
-        finaleSmallGroupThreshold: parseInt(config.finaleSmallGroupThreshold) || 10
+        qualificationBestCount: parseInt(config.qualificationBestCount) || 4,
+        finaleMaxAthletes: parseInt(config.finaleMaxAthletes) || 5,
+        finaleSmallGroupMaxAthletes: parseInt(config.finaleSmallGroupMaxAthletes) || 3,
+        finaleSmallGroupThreshold: parseInt(config.finaleSmallGroupThreshold) || 10,
+        rulesUrl: config.rulesUrl || ''
       });
       success = 'Einstellungen gespeichert!';
       setTimeout(() => success = '', 3000);
@@ -49,8 +51,8 @@
   
   function getFinalistCount(groupSize) {
     const threshold = config.finaleSmallGroupThreshold || 10;
-    const maxAthletes = config.finaleMaxAthletes || 8;
-    const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
+    const maxAthletes = config.finaleMaxAthletes || 5;
+    const smallGroupMax = config.finaleSmallGroupMaxAthletes || 3;
     
     if (groupSize < threshold) {
       return Math.min(smallGroupMax, groupSize);
@@ -82,6 +84,17 @@
   {:else}
     <div class="card config-form">
       <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+        <div class="form-group">
+          <label for="rulesUrl">
+            Link zu den Regeln
+          </label>
+          <input
+            type="url"
+            id="rulesUrl"
+            bind:value={config.rulesUrl}
+            placeholder="https://..."
+          />
+        </div>
         <div class="form-group">
           <label for="qualificationBestCount">
             Anzahl gewertete Qualifikationsrouten

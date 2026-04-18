@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { api } from '../../api.js';
   import { userStore } from '../../stores/user.js';
   
@@ -40,6 +40,8 @@
   }
   
   onMount(async () => {
+    window.addEventListener('close-modal', closeModal);
+    
     await loadData();
   });
   
@@ -446,7 +448,7 @@
   
   .badge {
     background: var(--color-secondary);
-    color: white;
+    color: var(--color-white);
     padding: 4px 10px;
     border-radius: 12px;
     font-size: 12px;

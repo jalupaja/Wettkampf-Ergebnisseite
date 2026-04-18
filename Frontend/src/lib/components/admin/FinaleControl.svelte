@@ -134,7 +134,7 @@
   
   .state-badge {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
     padding: 2px 10px;
     border-radius: 12px;
     font-size: 12px;

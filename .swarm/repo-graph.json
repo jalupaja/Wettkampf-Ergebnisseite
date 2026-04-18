@@ -1,0 +1,501 @@
+{
+  "schema_version": "1.0.0",
+  "workspaceRoot": "/home/user/repos/Wettkampf",
+  "nodes": {
+    "/home/user/repos/Wettkampf/Backend/src/data/store.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "moduleName": "Backend/src/data/store.js",
+      "exports": [
+        "getStore",
+        "saveStore",
+        "getUsers",
+        "getUserByUsername",
+        "getUserById",
+        "createUser",
+        "updateUser",
+        "deleteUser",
+        "verifyPassword",
+        "getGroups",
+        "getGroupById",
+        "createGroup",
+        "updateGroup",
+        "deleteGroup",
+        "getRoutes",
+        "getRouteById",
+        "createRoute",
+        "updateRoute",
+        "deleteRoute",
+        "getCompletedRoutes",
+        "setRouteResult",
+        "setBonusResult",
+        "getConfig",
+        "updateConfig",
+        "resetData"
+      ],
+      "imports": [
+        "uuid"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-16T11:38:32.500Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "moduleName": "Backend/src/middleware/auth.js",
+      "exports": [
+        "generateToken",
+        "verifyToken",
+        "authenticate",
+        "requireAdmin",
+        "requireAthlete"
+      ],
+      "imports": [
+        "jsonwebtoken",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-15T19:06:46.116Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/adminGroups.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/adminGroups.js",
+      "moduleName": "Backend/src/routes/adminGroups.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../middleware/auth.js",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-16T11:38:37.174Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/adminRoutes.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/adminRoutes.js",
+      "moduleName": "Backend/src/routes/adminRoutes.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../middleware/auth.js",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-15T22:28:50.455Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/auth.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/auth.js",
+      "moduleName": "Backend/src/routes/auth.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../data/store.js",
+        "../middleware/auth.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-16T10:16:39.326Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/config.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/config.js",
+      "moduleName": "Backend/src/routes/config.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../middleware/auth.js",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-16T09:36:38.213Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/dataRoutes.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/dataRoutes.js",
+      "moduleName": "Backend/src/routes/dataRoutes.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../middleware/auth.js",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-18T11:32:34.393Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/finale.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/finale.js",
+      "moduleName": "Backend/src/routes/finale.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../middleware/auth.js",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-15T14:58:49.688Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/groups.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/groups.js",
+      "moduleName": "Backend/src/routes/groups.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../middleware/auth.js",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-15T14:58:42.379Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/results.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/results.js",
+      "moduleName": "Backend/src/routes/results.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-16T11:15:20.409Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/routes.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/routes.js",
+      "moduleName": "Backend/src/routes/routes.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../middleware/auth.js",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-16T11:02:26.117Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/routes/users.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/routes/users.js",
+      "moduleName": "Backend/src/routes/users.js",
+      "exports": [
+        "router"
+      ],
+      "imports": [
+        "express",
+        "../middleware/auth.js",
+        "../data/store.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-15T19:06:35.150Z"
+    },
+    "/home/user/repos/Wettkampf/Backend/src/server.js": {
+      "filePath": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "moduleName": "Backend/src/server.js",
+      "exports": [],
+      "imports": [
+        "express",
+        "cors",
+        "cookie-parser",
+        "url",
+        "path",
+        "./routes/auth.js",
+        "./routes/users.js",
+        "./routes/groups.js",
+        "./routes/routes.js",
+        "./routes/finale.js",
+        "./routes/adminGroups.js",
+        "./routes/adminRoutes.js",
+        "./routes/results.js",
+        "./routes/config.js",
+        "./routes/dataRoutes.js"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-16T10:29:13.902Z"
+    },
+    "/home/user/repos/Wettkampf/Frontend/src/lib/api.js": {
+      "filePath": "/home/user/repos/Wettkampf/Frontend/src/lib/api.js",
+      "moduleName": "Frontend/src/lib/api.js",
+      "exports": [
+        "api"
+      ],
+      "imports": [],
+      "language": "javascript",
+      "mtime": "2026-04-17T17:48:24.667Z"
+    },
+    "/home/user/repos/Wettkampf/Frontend/src/lib/stores/theme.js": {
+      "filePath": "/home/user/repos/Wettkampf/Frontend/src/lib/stores/theme.js",
+      "moduleName": "Frontend/src/lib/stores/theme.js",
+      "exports": [
+        "themeStore"
+      ],
+      "imports": [
+        "svelte/store"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-15T14:59:51.442Z"
+    },
+    "/home/user/repos/Wettkampf/Frontend/src/lib/stores/user.js": {
+      "filePath": "/home/user/repos/Wettkampf/Frontend/src/lib/stores/user.js",
+      "moduleName": "Frontend/src/lib/stores/user.js",
+      "exports": [
+        "userStore"
+      ],
+      "imports": [
+        "svelte/store"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-16T10:17:29.528Z"
+    },
+    "/home/user/repos/Wettkampf/Frontend/src/lib/types/index.js": {
+      "filePath": "/home/user/repos/Wettkampf/Frontend/src/lib/types/index.js",
+      "moduleName": "Frontend/src/lib/types/index.js",
+      "exports": [
+        "User",
+        "Group",
+        "Route",
+        "Config",
+        "AthleteResult",
+        "GroupResult"
+      ],
+      "imports": [],
+      "language": "javascript",
+      "mtime": "2026-04-15T14:59:37.784Z"
+    },
+    "/home/user/repos/Wettkampf/Frontend/src/main.js": {
+      "filePath": "/home/user/repos/Wettkampf/Frontend/src/main.js",
+      "moduleName": "Frontend/src/main.js",
+      "exports": [
+        "app"
+      ],
+      "imports": [
+        "./App.svelte",
+        "svelte"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-15T14:59:33.370Z"
+    },
+    "/home/user/repos/Wettkampf/Frontend/svelte.config.js": {
+      "filePath": "/home/user/repos/Wettkampf/Frontend/svelte.config.js",
+      "moduleName": "Frontend/svelte.config.js",
+      "exports": [],
+      "imports": [
+        "@sveltejs/vite-plugin-svelte"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-15T14:59:26.199Z"
+    },
+    "/home/user/repos/Wettkampf/Frontend/vite.config.js": {
+      "filePath": "/home/user/repos/Wettkampf/Frontend/vite.config.js",
+      "moduleName": "Frontend/vite.config.js",
+      "exports": [
+        "defineConfig"
+      ],
+      "imports": [
+        "vite",
+        "@sveltejs/vite-plugin-svelte"
+      ],
+      "language": "javascript",
+      "mtime": "2026-04-15T18:42:22.613Z"
+    }
+  },
+  "edges": [
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/adminGroups.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/adminGroups.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "importSpecifier": "../middleware/auth.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/adminRoutes.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/adminRoutes.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "importSpecifier": "../middleware/auth.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/auth.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/auth.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "importSpecifier": "../middleware/auth.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/config.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/config.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "importSpecifier": "../middleware/auth.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/dataRoutes.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/dataRoutes.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "importSpecifier": "../middleware/auth.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/finale.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/finale.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "importSpecifier": "../middleware/auth.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/groups.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/groups.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "importSpecifier": "../middleware/auth.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/results.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/routes.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/routes.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "importSpecifier": "../middleware/auth.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/users.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/data/store.js",
+      "importSpecifier": "../data/store.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/routes/users.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/middleware/auth.js",
+      "importSpecifier": "../middleware/auth.js",
+      "importType": "named"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/adminGroups.js",
+      "importSpecifier": "./routes/adminGroups.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/adminRoutes.js",
+      "importSpecifier": "./routes/adminRoutes.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/auth.js",
+      "importSpecifier": "./routes/auth.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/config.js",
+      "importSpecifier": "./routes/config.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/dataRoutes.js",
+      "importSpecifier": "./routes/dataRoutes.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/finale.js",
+      "importSpecifier": "./routes/finale.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/groups.js",
+      "importSpecifier": "./routes/groups.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/results.js",
+      "importSpecifier": "./routes/results.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/routes.js",
+      "importSpecifier": "./routes/routes.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Backend/src/server.js",
+      "target": "/home/user/repos/Wettkampf/Backend/src/routes/users.js",
+      "importSpecifier": "./routes/users.js",
+      "importType": "default"
+    },
+    {
+      "source": "/home/user/repos/Wettkampf/Frontend/src/main.js",
+      "target": "/home/user/repos/Wettkampf/Frontend/src/App.svelte",
+      "importSpecifier": "./App.svelte",
+      "importType": "default"
+    }
+  ],
+  "metadata": {
+    "generatedAt": "2026-04-18T11:39:22.656Z",
+    "generator": "repo-graph",
+    "nodeCount": 20,
+    "edgeCount": 31
+  }
+}

@@ -1,10 +1,18 @@
 <script>
   import { api } from '../api.js';
   import { userStore } from '../stores/user.js';
+  import { onMount } from 'svelte';
+  
+  let { onLogin } = $props();
   
   let password = $state('');
   let error = $state('');
   let loading = $state(false);
+  let passwordInput;
+  
+  onMount(() => {
+    requestAnimationFrame(() => passwordInput?.focus());
+  });
   
   async function handleLogin(e) {
     e.preventDefault();
@@ -14,6 +22,7 @@
     try {
       const data = await api.auth.login(password);
       userStore.login(data.user);
+      if (onLogin) onLogin();
     } catch (err) {
       error = err.message;
     }
@@ -39,6 +48,7 @@
         <input
           type="password"
           id="password"
+          bind:this={passwordInput}
           bind:value={password}
           placeholder="Passwort eingeben"
           required
@@ -50,10 +60,6 @@
         {loading ? 'Anmelden...' : 'Anmelden'}
       </button>
     </form>
-    
-    <div class="ranking-link">
-      <a href="/results" target="_blank">Zur aktuellen Rangliste</a>
-    </div>
   </div>
 </div>
 
@@ -63,45 +69,45 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    padding: 20px;
+    padding: 16px;
   }
   
   .login-card {
     background: var(--color-bg-light);
     border-radius: 16px;
-    padding: 40px;
+    padding: 32px 24px;
     width: 100%;
-    max-width: 400px;
+    max-width: 360px;
     border: 1px solid var(--color-border);
   }
   
   .logo {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
   
   .logo-icon {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     background: var(--color-primary);
-    color: white;
-    font-size: 40px;
+    color: var(--color-white);
+    font-size: 32px;
     font-weight: bold;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 16px;
+    margin: 0 auto 14px;
   }
   
   .logo h1 {
-    font-size: 28px;
+    font-size: 24px;
     margin-bottom: 4px;
   }
   
   .logo p {
     color: var(--color-text-muted);
-    font-size: 14px;
+    font-size: 13px;
   }
   
   form {
@@ -120,26 +126,30 @@
     margin-bottom: 16px;
   }
   
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  
   button {
     width: 100%;
     margin-top: 8px;
   }
   
-  .ranking-link {
-    text-align: center;
-    margin-top: 24px;
-    padding-top: 24px;
-    border-top: 1px solid var(--color-border);
-  }
-  
-  .ranking-link a {
-    color: var(--color-text-muted);
-    text-decoration: none;
-    font-size: 14px;
-    transition: color 0.2s;
-  }
-  
-  .ranking-link a:hover {
-    color: var(--color-primary);
+  @media (max-width: 400px) {
+    .login-card {
+      padding: 24px 16px;
+    }
+    
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      font-size: 28px;
+    }
   }
 </style>
