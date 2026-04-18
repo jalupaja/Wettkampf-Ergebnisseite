@@ -7,7 +7,7 @@
   let error = $state('');
   let showModal = $state(false);
   let importing = $state(false);
-  let refreshInterval;
+  
   
   let formData = $state({
     name: '',
@@ -28,11 +28,6 @@
   onMount(async () => {
     window.addEventListener('close-modal', closeModal);
     await loadRoutes();
-    refreshInterval = setInterval(loadRoutes, 10000);
-  });
-  
-  onDestroy(() => {
-    if (refreshInterval) clearInterval(refreshInterval);
   });
   
   function handleExport() {
@@ -57,6 +52,7 @@
       if (!Array.isArray(data) || data.length === 0) { error = 'JSON-Datei ist leer oder kein Array'; importing = false; return; }
       await api.data.importRoutes('append', data);
       alert(`Import erfolgreich!`);
+      await loadRoutes();
     } catch (err) {
       error = err.message;
     }
@@ -144,6 +140,7 @@
       }
       
       closeModal();
+      await loadRoutes();
     } catch (err) {
       error = err.message;
     }
@@ -154,6 +151,7 @@
     
     try {
       await api.routes.admin.delete(id);
+      await loadRoutes();
     } catch (err) {
       error = err.message;
     }
