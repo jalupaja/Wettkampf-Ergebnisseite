@@ -80,10 +80,14 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
       try {
         let zones = [];
         if (row.zones) {
-          try {
-            zones = JSON.parse(row.zones);
-          } catch {
-            zones = [];
+          if (Array.isArray(row.zones)) {
+            zones = row.zones;
+          } else {
+            try {
+              zones = JSON.parse(row.zones);
+            } catch {
+              zones = [];
+            }
           }
         }
         
