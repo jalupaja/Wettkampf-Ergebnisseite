@@ -59,19 +59,9 @@ router.post('/config', authenticate, requireAdmin, (req, res) => {
 
 router.get('/routes', authenticate, requireAdmin, (req, res) => {
   const routes = getRoutes();
-  const headers = ['name', 'category', 'topPoints', 'zones'];
-  const csv = [
-    headers.join(','),
-    ...routes.map(r => [
-      `"${r.name}"`,
-      r.category,
-      r.topPoints,
-      `"${(JSON.stringify(r.zones || [])).replace(/"/g, '""')}"`
-    ].join(','))
-  ].join('\n');
-  res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="routes.csv"');
-  res.send(csv);
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', 'attachment; filename="routes.json"');
+  res.json(routes);
 });
 
 router.post('/routes', authenticate, requireAdmin, (req, res) => {
