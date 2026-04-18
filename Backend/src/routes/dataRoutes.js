@@ -323,9 +323,11 @@ function parseCSV(text) {
     headers.forEach((h, idx) => {
       let val = values[idx] || '';
       // Remove surrounding quotes if present
-      if (val.startsWith('"') && val.endsWith('"')) {
+      if (val.startsWith('"') && val.endsWith('"') && val.length >= 2) {
         val = val.slice(1, -1);
       }
+      // Unescape CSV-escaped quotes ("" -> ")
+      val = val.replace(/""/g, '"');
       row[h] = val;
     });
     data.push(row);
