@@ -42,10 +42,21 @@
       const values = [];
       let current = '';
       let inQuotes = false;
+      let prevChar = '';
       for (const char of lines[i]) {
-        if (char === '"') { inQuotes = !inQuotes; }
-        else if (char === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
-        else { current += char; }
+        if (char === '"') {
+          if (inQuotes && prevChar === '"') {
+            current += '"';
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          values.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+        prevChar = char;
       }
       values.push(current.trim());
       const row = {};
