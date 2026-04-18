@@ -7,6 +7,7 @@
   let error = $state('');
   let showModal = $state(false);
   let importing = $state(false);
+  let refreshInterval;
   
   let formData = $state({
     name: '',
@@ -27,6 +28,11 @@
   onMount(async () => {
     window.addEventListener('close-modal', closeModal);
     await loadRoutes();
+    refreshInterval = setInterval(loadRoutes, 10000);
+  });
+  
+  onDestroy(() => {
+    if (refreshInterval) clearInterval(refreshInterval);
   });
   
   function handleExport() {

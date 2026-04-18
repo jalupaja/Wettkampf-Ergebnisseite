@@ -5,6 +5,7 @@
   let groups = $state([]);
   let loading = $state(true);
   let error = $state('');
+  let refreshInterval;
   let showModal = $state(false);
   let importing = $state(false);
   
@@ -19,10 +20,12 @@
   onMount(async () => {
     window.addEventListener('close-modal', closeModal);
     await loadGroups();
+    refreshInterval = setInterval(loadGroups, 10000);
   });
 
   onDestroy(() => {
     window.removeEventListener('close-modal', closeModal);
+    if (refreshInterval) clearInterval(refreshInterval);
   });
   
   function handleExport() {

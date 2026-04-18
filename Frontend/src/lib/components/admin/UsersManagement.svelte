@@ -7,6 +7,7 @@
   let groups = $state([]);
   let loading = $state(true);
   let error = $state('');
+  let refreshInterval;
   let showModal = $state(false);
   let generatedPassword = $state('');
   let searchQuery = $state('');
@@ -43,6 +44,11 @@
     window.addEventListener('close-modal', closeModal);
     
     await loadData();
+    refreshInterval = setInterval(loadData, 10000);
+  });
+  
+  onDestroy(() => {
+    if (refreshInterval) clearInterval(refreshInterval);
   });
   
   function handleExport() {
