@@ -188,7 +188,7 @@
   const finaleRoutes = $derived(routes.filter(r => r.category === 'finale'));
   
   const qualTops = $derived(qualRoutes.filter(r => r.result === 'top').length);
-  const qualZones = $derived(qualRoutes.filter(r => r.result && r.result !== 'top').length);
+  const qualZones = $derived(qualRoutes.filter(r => r.result && r.result !== 'top' && r.result !== 'attempted').length);
   const totalBonusCount = $derived(bonusRoutes.reduce((sum, r) => sum + (typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0)), 0));
   const maxBonusCount = $derived(bonusRoutes.length);
   

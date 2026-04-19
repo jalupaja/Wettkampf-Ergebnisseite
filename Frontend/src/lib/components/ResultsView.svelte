@@ -103,7 +103,7 @@
     padding: 8px 16px;
     border-radius: 8px;
     border: 1px solid var(--color-border);
-    color: var(--color-text);
+    color: var(--color-white);
     text-decoration: none;
     font-size: 14px;
     cursor: pointer;
@@ -128,15 +128,6 @@
   @media (max-width: 640px) {
     .results-view { padding: 0 12px; }
     .button-group { display: flex; gap: 8px; }
-  .theme-btn {
-    background: var(--color-bg-light);
-    border: 1px solid var(--color-border);
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 18px;
-    cursor: pointer;
-  }
-  .theme-btn:hover { background: var(--color-bg-lighter); }
     .header { padding-top: 24px; flex-direction: row; }
     .title-section { flex-direction: row; gap: 8px; }
     .title-section h2 { font-size: 20px; }

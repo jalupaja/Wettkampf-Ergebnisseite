@@ -67,6 +67,7 @@
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
       await api.data.importGroups('append', data);
       alert(`Import erfolgreich!`);
+      await loadGroups();
     } catch (err) {
       error = err.message;
     }
@@ -134,6 +135,7 @@
       }
       
       closeModal();
+      await loadGroups();
     } catch (err) {
       error = err.message;
     }
@@ -163,6 +165,7 @@
     try {
       await api.groups.admin.update(id, { order: neighbor.order });
       await api.groups.admin.update(neighbor.id, { order: group.order });
+      await loadGroups();
     } catch (err) {
       error = err.message;
     }

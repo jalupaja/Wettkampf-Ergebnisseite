@@ -306,14 +306,14 @@ export function setRouteResult(userId, routeName, result) {
     cr => cr.userId === userId && cr.routeName === routeName
   );
   
-  if (result === null || result === 'attempted') {
+  if (result === null) {
     if (existing) {
       store.completedRoutes = store.completedRoutes.filter(cr => cr !== existing);
     }
     saveStore();
-    return { result: result };
+    return { result: null };
   }
-  
+
   if (existing) {
     existing.result = result;
     existing.completedAt = new Date().toISOString();

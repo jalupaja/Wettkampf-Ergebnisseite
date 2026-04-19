@@ -29,6 +29,10 @@
     window.addEventListener('close-modal', closeModal);
     await loadRoutes();
   });
+
+  onDestroy(() => {
+    window.removeEventListener('close-modal', closeModal);
+  });
   
   function handleExport() {
     window.open('/api/admin/data/routes', '_blank');
@@ -171,6 +175,7 @@
     try {
       await api.routes.admin.update(id, { order: neighbor.order });
       await api.routes.admin.update(neighbor.id, { order: route.order });
+      await loadRoutes();
     } catch (err) {
       error = err.message;
     }

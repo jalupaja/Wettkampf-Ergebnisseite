@@ -67,14 +67,12 @@ router.get('/routes', authenticate, requireAdmin, (req, res) => {
 router.post('/routes', authenticate, requireAdmin, (req, res) => {
   try {
     const { mode, data } = req.body;
-    const routes = getRoutes();
-    
+
     if (mode === 'replace') {
-      const idsToDelete = routes.map(r => r.id);
       const store = getStore();
-      store.routes = store.routes.filter(r => !idsToDelete.includes(r.id));
+      store.routes = [];
     }
-    
+
     const results = [];
     data.forEach((row, index) => {
       try {
@@ -90,21 +88,29 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
             }
           }
         }
-        
+
+        const topPointsNum = Number(row.topPoints);
+        const topPoints = Number.isFinite(topPointsNum) ? topPointsNum : 100;
+
         if (mode === 'replace' || mode === 'append') {
-          const existing = routes.find(r => r.name === row.name && r.category === row.category);
+          const currentRoutes = getRoutes();
+          const existing = currentRoutes.find(r => r.name === row.name && r.category === row.category);
           if (existing) {
             const updated = updateRoute(existing.id, {
-              topPoints: parseInt(row.topPoints) || 100,
+              topPoints,
               zones,
               order: index + 1
             });
-            results.push({ name: row.name, action: 'updated' });
+            if (updated) {
+              results.push({ name: row.name, action: 'updated' });
+            } else {
+              results.push({ name: row.name, error: 'Route konnte nicht aktualisiert werden' });
+            }
           } else {
-            const created = createRoute({
+            createRoute({
               name: row.name,
               category: row.category || 'qualification',
-              topPoints: parseInt(row.topPoints) || 100,
+              topPoints,
               zones,
               order: index + 1
             });
@@ -115,7 +121,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
         results.push({ name: row.name || 'Unknown', error: err.message });
       }
     });
-    
+
     res.json({ success: true, results });
   } catch (error) {
     console.error('Import routes error:', error);

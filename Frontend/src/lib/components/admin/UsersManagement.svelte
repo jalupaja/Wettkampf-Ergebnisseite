@@ -87,13 +87,12 @@
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
       const result = await api.data.importUsers('append', data);
       await loadData();
-      
+
       const generatedPasswords = result.results?.filter(r => r.password).map(r => `${r.username}: ${r.password}`).join('\n');
       if (generatedPasswords) {
         alert(`Import erfolgreich!\n\nGenerierte Passwörter:\n${generatedPasswords}`);
       } else {
         alert(`Import erfolgreich!`);
-      await loadData();
       }
     } catch (err) {
       error = err.message;
@@ -101,7 +100,7 @@
     importing = false;
     event.target.value = '';
   }
-  
+
   async function clearAllUsers() {
     if (!confirm('Wirklich alle Benutzer löschen? Admins bleiben erhalten.')) return;
     try {
