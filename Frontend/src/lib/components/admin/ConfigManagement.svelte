@@ -13,6 +13,7 @@
   let loading = $state(true);
   let error = $state('');
   let success = $state('');
+  let importing = $state(false);
   
   onMount(async () => {
     await loadConfig();
@@ -63,12 +64,60 @@
   function handleExport() {
     window.open('/api/admin/data/config', '_blank');
   }
+
+  function parseConfigCSV(text) {
+    const lines = text.split('\n').filter(l => l.trim());
+    if (lines.length < 2) return {};
+
+    const out = {};
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const commaIndex = line.indexOf(',');
+      if (commaIndex === -1) continue;
+      const key = line.slice(0, commaIndex).trim();
+      let value = line.slice(commaIndex + 1).trim();
+      if (value.startsWith('"') && value.endsWith('"')) {
+        value = value.slice(1, -1).replace(/""/g, '"');
+      }
+      out[key] = value;
+    }
+    return out;
+  }
+
+  async function handleImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    importing = true;
+    error = '';
+    success = '';
+    try {
+      const text = await file.text();
+      const data = parseConfigCSV(text);
+      if (Object.keys(data).length === 0) {
+        error = 'CSV-Datei ist leer';
+        importing = false;
+        return;
+      }
+      await api.data.importConfig(data);
+      await loadConfig();
+      success = 'Einstellungen importiert!';
+      setTimeout(() => success = '', 3000);
+    } catch (err) {
+      error = err.message;
+    }
+    importing = false;
+    event.target.value = '';
+  }
 </script>
 
 <div class="config-management">
   <div class="header">
     <h2>Einstellungen</h2>
-    <button type="button" class="outline btn-sm" onclick={handleExport}>Export</button>
+    <div class="header-actions">
+      <input type="file" accept=".csv" id="config-import" onchange={handleImport} disabled={importing} class="hidden-input" />
+      <label for="config-import" class="outline btn-sm">{importing ? 'Importieren...' : 'Import'}</label>
+      <button type="button" class="outline btn-sm" onclick={handleExport}>Export</button>
+    </div>
   </div>
   
   {#if error}
@@ -171,6 +220,16 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .hidden-input {
+    display: none;
   }
   
   h2 {
