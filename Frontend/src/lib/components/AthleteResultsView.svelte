@@ -4,6 +4,7 @@
   import RankingsTable from './RankingsTable.svelte';
   
   let results = $state([]);
+  let config = $state(null);
   let loading = $state(true);
   let error = $state('');
   let refreshInterval;
@@ -21,6 +22,7 @@
     try {
       const data = await api.results.get();
       results = data.results;
+      config = data.config;
     } catch (err) {
       error = err.message;
     }
@@ -28,4 +30,4 @@
   }
 </script>
 
-<RankingsTable {results} {loading} {error} />
+<RankingsTable {results} {loading} {error} {config} />

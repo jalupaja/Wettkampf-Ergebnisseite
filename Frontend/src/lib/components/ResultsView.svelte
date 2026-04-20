@@ -59,7 +59,7 @@
     </div>
   {/if}
   
-  <RankingsTable {results} {loading} {error} />
+  <RankingsTable {results} {loading} {error} {config} />
 </div>
 
 <style>

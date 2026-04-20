@@ -1,57 +1,132 @@
 <script>
   import { userStore } from '../stores/user.js';
+  import { formatPoints } from '../utils/formatters.js';
   
-  let { results = [], loading = false, error = '' } = $props();
+  let { results = [], loading = false, error = '', config = null } = $props();
   
   function isCurrentUser(userId) {
     const user = $userStore;
     return user && user.id === userId;
   }
+
+  function getNumFinalists(athleteCount) {
+    if (!config) return 0;
+    const threshold = config.finaleSmallGroupThreshold || 10;
+    const maxAthletes = config.finaleMaxAthletes || 8;
+    const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
+    return athleteCount >= threshold ? maxAthletes : smallGroupMax;
+  }
+
 </script>
 
 {#if error}
   <div class="error-message">{error}</div>
 {/if}
 
-{#if loading}
-  <div class="loading">Rangliste wird geladen...</div>
-{:else if results.length}
-  {#each results as groupResult}
-    <div class="group-results card">
-      <h3 class="group-title">{groupResult.groupName}</h3>
-      
-      {#if groupResult.athletes.length}
-        <table class="results-table">
-          <thead>
-            <tr>
-              <th class="rank-col">Platz</th>
-              <th class="name-col">Name</th>
-              <th class="points-col">Punkte</th>
-              <th class="stat-col">T</th>
-              <th class="stat-col">Z</th>
-              <th class="stat-col">B</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each groupResult.athletes as athlete, index}
-              <tr class:gold={index === 0} class:silver={index === 1} class:bronze={index === 2} class:me={isCurrentUser(athlete.userId)}>
-                <td class="rank-col">
-                  {#if index === 0}🥇{:else if index === 1}🥈{:else if index === 2}🥉{:else}{index + 1}{/if}
-                </td>
-                <td class="name-col">{athlete.username}</td>
-                <td class="points-col">{athlete.totalPoints}</td>
-                <td class="stat-col"><span class="stat-value top">{athlete.qualTops}</span></td>
-                <td class="stat-col"><span class="stat-value zone">{athlete.qualZones}</span></td>
-                <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops}</span></td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      {:else}
-        <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
-      {/if}
-    </div>
-  {/each}
+
+  {#if loading}
+    <div class="loading">Rangliste wird geladen...</div>
+  {:else if results.length}
+    {#each results as groupResult}
+      <div class="group-results card">
+        <h3 class="group-title">{groupResult.groupName}</h3>
+        
+        {#if groupResult.athletes.length}
+          {#if config?.competitionState === 'finale' || config?.competitionState === 'finished'}
+            {@const numFinalists = getNumFinalists(groupResult.athletes.length)}
+            {@const finalists = groupResult.athletes.slice(0, numFinalists)}
+            
+            {#if finalists.length > 0}
+              <div class="round-section">
+                <h4 class="round-title finale">Finale</h4>
+                <table class="results-table">
+                  <thead>
+                    <tr>
+                      <th class="rank-col">Platz</th>
+                      <th class="name-col">Name</th>
+                      <th class="points-col">Punkte</th>
+                      <th class="stat-col">T</th>
+                      <th class="stat-col">Z</th>
+                      <th class="stat-col">B</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {#each finalists as athlete, index}
+                      <tr class:gold={index === 0} class:silver={index === 1} class:bronze={index === 2} class:me={isCurrentUser(athlete.userId)}>
+                        <td class="rank-col">
+                          {#if index === 0}🥇{:else if index === 1}🥈{:else if index === 2}🥉{:else}{index + 1}{/if}
+                        </td>
+                        <td class="name-col">{athlete.username}</td>
+                        <td class="points-col">{formatPoints(athlete.totalPoints)}</td>
+                        <td class="stat-col"><span class="stat-value top">{athlete.qualTops}</span></td>
+                        <td class="stat-col"><span class="stat-value zone">{athlete.qualZones}</span></td>
+                        <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops}</span></td>
+                      </tr>
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
+            {/if}
+            
+            <div class="round-section">
+              <h4 class="round-title qualifikation">Qualifikation</h4>
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th class="rank-col">Platz</th>
+                    <th class="name-col">Name</th>
+                    <th class="points-col">Punkte</th>
+                    <th class="stat-col">T</th>
+                    <th class="stat-col">Z</th>
+                    <th class="stat-col">B</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each groupResult.athletes as athlete, index}
+                    <tr class:me={isCurrentUser(athlete.userId)}>
+                      <td class="rank-col">{index + 1}</td>
+                      <td class="name-col">{athlete.username}</td>
+                      <td class="points-col">{formatPoints(athlete.totalPoints)}</td>
+                      <td class="stat-col"><span class="stat-value top">{athlete.qualTops}</span></td>
+                      <td class="stat-col"><span class="stat-value zone">{athlete.qualZones}</span></td>
+                      <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops}</span></td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {:else}
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th class="rank-col">Platz</th>
+                  <th class="name-col">Name</th>
+                  <th class="points-col">Punkte</th>
+                  <th class="stat-col">T</th>
+                  <th class="stat-col">Z</th>
+                  <th class="stat-col">B</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each groupResult.athletes as athlete, index}
+                  <tr class:me={isCurrentUser(athlete.userId)}>
+                    <td class="rank-col">{index + 1}</td>
+                    <td class="name-col">{athlete.username}</td>
+                    <td class="points-col">{formatPoints(athlete.totalPoints)}</td>
+                    <td class="stat-col"><span class="stat-value top">{athlete.qualTops}</span></td>
+                    <td class="stat-col"><span class="stat-value zone">{athlete.qualZones}</span></td>
+                    <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops}</span></td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          {/if}
+        {:else}
+          <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
+        {/if}
+      </div>
+    {/each}
+
 {:else}
   <div class="empty-state">
     <p>Keine Ergebnisse verfügbar.</p>
@@ -108,4 +183,9 @@
     .results-table th, .results-table td { padding: 10px 6px; }
     .stat-value, .points-col, .rank-col { font-size: 14px; }
   }
+
+  .round-section { margin-bottom: 24px; }
+  .round-title { font-size: 16px; margin-bottom: 12px; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .round-title.finale { color: var(--color-finale); }
+  .round-title.qualifikation { color: var(--color-primary); }
 </style>
