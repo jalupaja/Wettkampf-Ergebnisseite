@@ -20,7 +20,7 @@
     loading = true;
     
     try {
-      const data = await api.auth.login(password);
+      const data = await api.auth.login(password.toUpperCase());
       userStore.login(data.user);
       if (onLogin) onLogin();
     } catch (err) {
