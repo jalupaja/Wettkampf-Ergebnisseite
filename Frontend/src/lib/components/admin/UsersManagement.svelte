@@ -85,15 +85,8 @@
       const text = await file.text();
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
-      const result = await api.data.importUsers('append', data);
+      await api.data.importUsers('append', data);
       await loadData();
-
-      const generatedPasswords = result.results?.filter(r => r.password).map(r => `${r.username}: ${r.password}`).join('\n');
-      if (generatedPasswords) {
-        alert(`Import erfolgreich!\n\nGenerierte Passwörter:\n${generatedPasswords}`);
-      } else {
-        alert(`Import erfolgreich!`);
-      }
     } catch (err) {
       error = err.message;
     }
@@ -101,7 +94,7 @@
     event.target.value = '';
   }
 
-  async function clearAllUsers() {
+async function clearAllUsers() {
     if (!confirm('Wirklich alle Benutzer löschen? Admins bleiben erhalten.')) return;
     try {
       await api.data.importUsers('replace', []);
@@ -290,6 +283,7 @@
               type="text"
               id="username"
               bind:value={formData.username}
+              minlength="2"
               placeholder="z.B. Max Mustermann"
               required
               disabled={!!editingId}

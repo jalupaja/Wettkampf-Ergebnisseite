@@ -248,24 +248,23 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
     let deletedCount = 0;
     
     if (mode === 'replace') {
-      const toDelete = [];
-      store.groups.forEach(g => {
-        const hasAthletes = store.users.some(u => u.groupId === g.id && u.role === 'athlete');
-        if (hasAthletes) {
-          toDelete.push(g.id);
-        } else {
-          deletedCount++;
-        }
-      });
-      store.groups = store.groups.filter(g => !toDelete.includes(g.id));
-      preservedCount = toDelete.length;
+      const athleteGroupIds = new Set(
+        store.users
+          .filter(u => u.role === 'athlete' && u.groupId)
+          .map(u => u.groupId)
+      );
+
+      const originalCount = store.groups.length;
+      store.groups = store.groups.filter(g => athleteGroupIds.has(g.id));
+      preservedCount = store.groups.length;
+      deletedCount = originalCount - preservedCount;
     }
     
     const results = [];
     data.forEach((row, index) => {
       try {
         if (mode === 'replace' || mode === 'append') {
-          const existing = groups.find(g => g.name === row.name);
+          const existing = getGroups().find(g => g.name === row.name);
           if (existing) {
             updateGroup(existing.id, {
               description: row.description || '',

@@ -66,8 +66,7 @@
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
       await api.data.importGroups('append', data);
-      alert(`Import erfolgreich!`);
-      await loadGroups();
+            await loadGroups();
     } catch (err) {
       error = err.message;
     }

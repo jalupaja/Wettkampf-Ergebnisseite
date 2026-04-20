@@ -90,8 +90,7 @@ function parseCSV(text) {
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
       await api.data.importRoutes('append', data);
-      alert(`Import erfolgreich!`);
-      await loadRoutes();
+            await loadRoutes();
     } catch (err) {
       error = err.message;
     }
@@ -161,7 +160,7 @@ function parseCSV(text) {
   function updateZone(index, field, value) {
     formData.zones = formData.zones.map((zone, i) => {
       if (i === index) {
-        return { ...zone, [field]: field === 'points' ? parseInt(value) || 0 : value };
+        return { ...zone, [field]: field === 'points' ? Number(value) || 0 : value };
       }
       return zone;
     });
@@ -349,6 +348,7 @@ function parseCSV(text) {
             <input
               type="number"
               id="topPoints"
+              step="0.1"
               bind:value={formData.topPoints}
               min="0"
               required
@@ -379,7 +379,8 @@ function parseCSV(text) {
                         value={zone.points}
                         oninput={(e) => updateZone(index, 'points', e.target.value)}
                         placeholder="Punkte"
-                        class="zone-points-input"
+                        step="0.1"
+                      class="zone-points-input"
                       />
                       <button type="button" class="danger btn-sm" onclick={() => removeZone(index)}>×</button>
                     </div>

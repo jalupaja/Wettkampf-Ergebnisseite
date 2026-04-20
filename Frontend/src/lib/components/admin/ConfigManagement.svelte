@@ -100,9 +100,7 @@
       }
       await api.data.importConfig(data);
       await loadConfig();
-      success = 'Einstellungen importiert!';
-      setTimeout(() => success = '', 3000);
-    } catch (err) {
+          } catch (err) {
       error = err.message;
     }
     importing = false;

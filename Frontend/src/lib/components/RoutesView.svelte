@@ -203,7 +203,10 @@
     return sum;
   }, 0));
   
-  const bonusPoints = $derived(totalBonusCount * 50);
+  const bonusPoints = $derived(bonusRoutes.reduce((sum, r) => {
+    const count = typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0);
+    return sum + (count * (Number(r.topPoints) || 0));
+  }, 0));
   const totalPoints = $derived(qualPoints + bonusPoints);
 </script>
 

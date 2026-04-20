@@ -38,10 +38,10 @@ router.get('/', (req, res) => {
       });
       
       const bonusResults = bonusRoutes.map(route => {
-        const completedEntry = userCompleted.find(cr => cr.routeName === route.name);
+        const completedEntry = userCompleted.find(cr => cr.routeName === route.name && (typeof cr.result === 'number' || cr.result === 'top'));
         return {
           name: route.name,
-          topPoints: route.topPoints,
+          topPoints: Number(route.topPoints) || 0,
           count: typeof completedEntry?.result === 'number' ? completedEntry.result : (completedEntry?.result === 'top' ? 1 : 0)
         };
       });
@@ -110,7 +110,7 @@ router.get('/', (req, res) => {
       const qualPoints = bestQual.reduce((sum, r) => sum + r.points, 0);
       
       const bonusTops = bonusResults.reduce((sum, r) => sum + r.count, 0);
-      const bonusPoints = bonusTops * 50;
+      const bonusPoints = bonusResults.reduce((sum, r) => sum + (r.count * (Number(r.topPoints) || 0)), 0);
       
       const finaleTops = finaleResults.filter(r => r.isTop).length;
       const finaleZones = finaleResults.filter(r => r.zonePoints > 0 && !r.isTop).length;
@@ -132,6 +132,7 @@ router.get('/', (req, res) => {
         finalePoints,
         totalPoints,
         routes: qualResults,
+        bonusRoutes: bonusResults,
         finaleRoutes: finaleResults
       };
     });

@@ -32,8 +32,9 @@ router.get('/', authenticate, requireAdmin, (req, res) => {
 router.post('/', authenticate, requireAdmin, (req, res) => {
   try {
     const { username, password, role, groupId } = req.body;
+    const normalizedUsername = (username || '').trim();
     
-    if (!username || !password || !role) {
+    if (!normalizedUsername || !password || !role) {
       return res.status(400).json({ error: 'Benutzername, Passwort und Rolle erforderlich' });
     }
     
@@ -46,11 +47,11 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
     }
     
     const users = getUsers();
-    if (users.some(u => u.username === username)) {
+    if (users.some(u => u.username === normalizedUsername)) {
       return res.status(400).json({ error: 'Benutzername bereits vergeben' });
     }
     
-    const user = createUser(username, password, role, groupId);
+    const user = createUser(normalizedUsername, password, role, groupId);
     
     res.status(201).json({
       user: {
@@ -71,7 +72,11 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
 router.put('/:id', authenticate, requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const updates = { ...req.body };
+    if (typeof updates.username === 'string') {
+      updates.username = updates.username.trim();
+      if (!updates.username) return res.status(400).json({ error: 'Benutzername darf nicht leer sein' });
+    }
     const targetUser = getUserById(id);
     
     if (!targetUser) {

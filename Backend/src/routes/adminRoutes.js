@@ -27,11 +27,16 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
       return res.status(400).json({ error: 'Ungültige Kategorie' });
     }
     
+    const normalizedTopPoints = topPoints !== undefined ? Number(topPoints) : 100;
+    const normalizedZones = Array.isArray(zones)
+      ? zones.map(z => ({ ...z, points: Number(z.points) || 0 }))
+      : [];
+
     const routeData = {
       name,
       category,
-      topPoints: topPoints !== undefined ? topPoints : 100,
-      zones: zones || [],
+      topPoints: Number.isFinite(normalizedTopPoints) ? normalizedTopPoints : 100,
+      zones: normalizedZones,
       order
     };
     
@@ -46,8 +51,18 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
 router.put('/:id', authenticate, requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
-    
+    const updates = { ...req.body };
+
+    if (updates.topPoints !== undefined) {
+      const n = Number(updates.topPoints);
+      if (!Number.isFinite(n)) return res.status(400).json({ error: 'Ungültige Top-Punkte' });
+      updates.topPoints = n;
+    }
+
+    if (Array.isArray(updates.zones)) {
+      updates.zones = updates.zones.map(z => ({ ...z, points: Number(z.points) || 0 }));
+    }
+
     if (updates.category && !['qualification', 'bonus', 'finale'].includes(updates.category)) {
       return res.status(400).json({ error: 'Ungültige Kategorie' });
     }
