@@ -43,7 +43,7 @@ router.post('/config', authenticate, requireAdmin, (req, res) => {
     Object.keys(config).forEach(key => {
       if (req.body[key] !== undefined) {
         if (typeof config[key] === 'number') {
-          updates[key] = parseInt(req.body[key]) || 0;
+          updates[key] = Number(String(req.body[key]).replace(',', '.')) || 0;
         } else {
           updates[key] = req.body[key];
         }
@@ -104,10 +104,12 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
               zones = [];
             }
           }
+          zones = zones.map(z => ({ ...z, points: Number(String(z.points).replace(",", ".")) || 0 }));
         }
 
-        const topPointsNum = Number(row.topPoints);
-        const topPoints = Number.isFinite(topPointsNum) ? topPointsNum : 100;
+        let rawTopPoints = String(row.topPoints || '').replace(',', '.');
+        const topPointsNum = rawTopPoints ? Number(rawTopPoints) : NaN;
+        const topPoints = Number.isFinite(topPointsNum) ? topPointsNum : (row.category === 'bonus' ? 50 : (row.category === 'finale' ? 0 : 100));
 
         if (mode === 'replace' || mode === 'append') {
           const currentRoutes = getRoutes();
@@ -161,7 +163,7 @@ router.get('/users', authenticate, requireAdmin, (req, res) => {
     
     csvRows.push([
       `"${user.username}"`,
-      user.password || '',
+      user.password ? '******' : '',
       user.role,
       `"${group?.name || ''}"`,
       `"${resultsStr.replace(/"/g, '""')}"`
@@ -199,6 +201,7 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
           const existing = users.find(u => u.username === row.username);
           const password = row.password ? row.password : generatePassword();
           if (existing) {
+            if (existing.role === 'admin') continue;
             const updates = { groupId: group?.id || null };
             if (row.password) {
               updates.password = password;
@@ -209,7 +212,7 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
             createUser(
               row.username,
               password,
-              row.role || 'athlete',
+              'athlete',
               group?.id || null
             );
             results.push({ username: row.username, password: row.password ? undefined : password, action: 'created' });
@@ -248,16 +251,16 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
     let deletedCount = 0;
     
     if (mode === 'replace') {
-      const athleteGroupIds = new Set(
-        store.users
-          .filter(u => u.role === 'athlete' && u.groupId)
-          .map(u => u.groupId)
-      );
-
       const originalCount = store.groups.length;
-      store.groups = store.groups.filter(g => athleteGroupIds.has(g.id));
-      preservedCount = store.groups.length;
-      deletedCount = originalCount - preservedCount;
+      store.groups = [];
+      // Unassign all athletes from groups
+      store.users.forEach(u => {
+        if (u.role === 'athlete') {
+          u.groupId = null;
+        }
+      });
+      preservedCount = 0;
+      deletedCount = originalCount;
     }
     
     const results = [];
@@ -285,11 +288,7 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
       }
     });
     
-    const message = mode === 'replace' && data.length === 0
-      ? preservedCount > 0
-        ? `${preservedCount} Startklassen mit Athleten wurden beibehalten. ${deletedCount} leere Startklassen wurden gelöscht.`
-        : `${deletedCount} Startklassen wurden gelöscht.`
-      : undefined;
+    const message = undefined; // success messages disabled per requirements
     
     res.json({ success: true, results, message });
   } catch (error) {

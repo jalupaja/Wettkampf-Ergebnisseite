@@ -22,7 +22,7 @@ router.get('/', authenticate, requireAdmin, (req, res) => {
     isSuperAdmin: u.isSuperAdmin || false,
     groupId: u.groupId,
     groupName: u.groupId ? groups.find(g => g.id === u.groupId)?.name : null,
-    password: u.role === 'athlete' ? u.password : undefined,
+    password: undefined,
     createdAt: u.createdAt
   }));
   
@@ -40,6 +40,9 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
     
     if (!['admin', 'athlete'].includes(role)) {
       return res.status(400).json({ error: 'Ungültige Rolle' });
+    }
+    if (role === 'admin' && !req.user.isSuperAdmin) {
+      return res.status(403).json({ error: 'Nur Super-Admin kann Admins erstellen' });
     }
     
     if (role === 'athlete' && !groupId) {
@@ -60,7 +63,7 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
         role: user.role,
         isSuperAdmin: false,
         groupId: user.groupId,
-        password: user.role === 'athlete' ? user.password : undefined
+        password: undefined
       }
     });
   } catch (error) {
@@ -72,7 +75,11 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
 router.put('/:id', authenticate, requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
-    const updates = { ...req.body };
+    const allowedFields = ['username', 'password', 'role', 'groupId', 'isSuperAdmin', 'needsPasswordChange'];
+    const updates = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
     if (typeof updates.username === 'string') {
       updates.username = updates.username.trim();
       if (!updates.username) return res.status(400).json({ error: 'Benutzername darf nicht leer sein' });
@@ -89,6 +96,10 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
       if (!req.user.isSuperAdmin) {
         return res.status(403).json({ error: 'Nur Super-Admin kann Admin-Passwörter ändern' });
       }
+    }
+    
+    if (updates.role === 'admin' && !req.user.isSuperAdmin && targetUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Nur Super-Admin kann zu Admin befördern' });
     }
     
     // Regular admins cannot change super-admin password
@@ -110,7 +121,7 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
         role: user.role,
         isSuperAdmin: user.isSuperAdmin || false,
         groupId: user.groupId,
-        password: user.role === 'athlete' ? user.password : undefined
+        password: undefined
       }
     });
   } catch (error) {

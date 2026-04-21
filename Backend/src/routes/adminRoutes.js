@@ -27,15 +27,15 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
       return res.status(400).json({ error: 'Ungültige Kategorie' });
     }
     
-    const normalizedTopPoints = topPoints !== undefined ? Number(topPoints) : 100;
+    const normalizedTopPoints = topPoints !== undefined ? Number(String(topPoints).replace(',', '.')) : NaN;
     const normalizedZones = Array.isArray(zones)
-      ? zones.map(z => ({ ...z, points: Number(z.points) || 0 }))
+      ? zones.map(z => ({ ...z, points: Number(String(z.points).replace(',', '.')) || 0 }))
       : [];
 
     const routeData = {
       name,
       category,
-      topPoints: Number.isFinite(normalizedTopPoints) ? normalizedTopPoints : 100,
+      topPoints: Number.isFinite(normalizedTopPoints) ? normalizedTopPoints : (category === 'bonus' ? 50 : (category === 'finale' ? 0 : 100)),
       zones: normalizedZones,
       order
     };
@@ -54,13 +54,13 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
     const updates = { ...req.body };
 
     if (updates.topPoints !== undefined) {
-      const n = Number(updates.topPoints);
+      const n = Number(String(updates.topPoints).replace(',', '.'));
       if (!Number.isFinite(n)) return res.status(400).json({ error: 'Ungültige Top-Punkte' });
       updates.topPoints = n;
     }
 
     if (Array.isArray(updates.zones)) {
-      updates.zones = updates.zones.map(z => ({ ...z, points: Number(z.points) || 0 }));
+      updates.zones = updates.zones.map(z => ({ ...z, points: Number(String(z.points).replace(',', '.')) || 0 }));
     }
 
     if (updates.category && !['qualification', 'bonus', 'finale'].includes(updates.category)) {
