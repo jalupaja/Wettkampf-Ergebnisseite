@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
 
 function createDefaultData() {
-  const adminPassword = 'admin';
+  const adminPassword = 'ADMIN';
   
   const groups = [
     { id: uuidv4(), name: 'Herren', description: 'Männer allgemein', order: 1, createdAt: new Date().toISOString() },
@@ -25,14 +26,14 @@ function createDefaultData() {
   ];
   
   const athletes = [
-    { name: 'Klaus Müller', password: 'klaus123' },
-    { name: 'Thomas Weber', password: 'thomas123' },
-    { name: 'Stefan Bauer', password: 'stefan123' },
-    { name: 'Maria Schmidt', password: 'maria123' },
-    { name: 'Anna Fischer', password: 'anna123' },
-    { name: 'Lisa Wagner', password: 'lisa123' },
-    { name: 'Tim Hoffmann', password: 'tim123' },
-    { name: 'Lena Klein', password: 'lena123' }
+    { name: 'Klaus Müller', password: 'KLAUS123' },
+    { name: 'Thomas Weber', password: 'THOMAS123' },
+    { name: 'Stefan Bauer', password: 'STEFAN123' },
+    { name: 'Maria Schmidt', password: 'MARIA123' },
+    { name: 'Anna Fischer', password: 'ANNA123' },
+    { name: 'Lisa Wagner', password: 'LISA123' },
+    { name: 'Tim Hoffmann', password: 'TIM123' },
+    { name: 'Lena Klein', password: 'LENA123' }
   ];
 
   const athleteResults = {
@@ -50,7 +51,7 @@ function createDefaultData() {
     {
       id: uuidv4(),
       username: 'admin',
-      password: adminPassword,
+      password: bcrypt.hashSync(adminPassword, 4),
       hashed: true,
       role: 'admin',
       isSuperAdmin: true,
@@ -78,8 +79,8 @@ function createDefaultData() {
     users.push({
       id: userId,
       username: name,
-      password: athleteData.password,
-      hashed: false,
+      password: bcrypt.hashSync(athleteData.password, 4),
+      hashed: true,
       role: 'athlete',
       groupId: group.id,
       createdAt: new Date().toISOString()
@@ -165,7 +166,8 @@ export function createUser(username, password, role, groupId = null) {
   const user = {
     id: uuidv4(),
     username,
-    password: password,
+    password: password ? bcrypt.hashSync(password, 4) : undefined,
+    hashed: true,
     role,
     groupId: role === 'athlete' ? groupId : null,
     createdAt: new Date().toISOString()
@@ -181,6 +183,8 @@ export function updateUser(id, updates) {
   
   if (updates.password) {
     updates.needsPasswordChange = false;
+    updates.password = bcrypt.hashSync(updates.password, 4);
+    updates.hashed = true;
   }
   
   store.users[index] = { ...store.users[index], ...updates };
@@ -199,7 +203,8 @@ export function deleteUser(id) {
 }
 
 export function verifyPassword(user, password) {
-  return user.password === password;
+  if (!user.hashed) return user.password === password;
+  return bcrypt.compareSync(password, user.password);
 }
 
 export function getGroups() {
@@ -258,7 +263,7 @@ export function getRouteById(id) {
   return store.routes.find(r => r.id === id);
 }
 
-export function createRoute({ name, category, topPoints = 100, zones = [], order = null }) {
+export function createRoute({ name, category, topPoints = (category === 'bonus' ? 50 : (category === 'finale' ? 0 : 100)), zones = [], order = null }) {
   if (order === null) {
     order = Math.max(...store.routes.map(r => r.order), 0) + 1;
   }

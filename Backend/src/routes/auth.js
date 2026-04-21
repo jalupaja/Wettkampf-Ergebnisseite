@@ -6,14 +6,19 @@ const router = Router();
 
 router.post('/login', (req, res) => {
   try {
-    const { password } = req.body;
+    const { username, password } = req.body;
     
     if (!password) {
       return res.status(400).json({ error: 'Passwort erforderlich' });
     }
     
     const users = getUsers();
-    let user = users.find(u => verifyPassword(u, password));
+    let user = null;
+    if (username) {
+      user = users.find(u => u.username === username && verifyPassword(u, password));
+    } else {
+      user = users.find(u => verifyPassword(u, password));
+    }
     
     if (!user) {
       return res.status(401).json({ error: 'Ungültiges Passwort' });

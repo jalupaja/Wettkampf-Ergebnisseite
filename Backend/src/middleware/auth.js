@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { getUserById } from '../data/store.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'wettkampf-secret-key-2024';
+import crypto from 'crypto';
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 
 export function generateToken(user) {
   return jwt.sign(
