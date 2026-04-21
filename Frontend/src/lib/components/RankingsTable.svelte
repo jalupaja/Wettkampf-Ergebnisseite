@@ -57,34 +57,46 @@
   {#if loading}
     <div class="loading">Rangliste wird geladen...</div>
   {:else if results.length}
-    {#each results as groupResult}
-      <div class="group-results card">
-        <h3 class="group-title">{groupResult.groupName}</h3>
-        
-        {#if groupResult.athletes.length}
-          {#if config?.competitionState === 'finale' || config?.competitionState === 'finished'}
-            {@const numFinalists = getNumFinalists(groupResult.athletes.length)}
-            {@const finalists = groupResult.athletes.slice(0, numFinalists)}
-            
-            {#if finalists.length > 0}
-              <div class="round-section">
-                <h4 class="round-title finale">Finale</h4>
-                {@render resultsTable(finalists, true)}
-              </div>
-            {/if}
-            
-            <div class="round-section">
-              <h4 class="round-title qualifikation">Qualifikation</h4>
-              {@render resultsTable(groupResult.athletes, false)}
+    {#if config?.competitionState === 'finale' || config?.competitionState === 'finished'}
+      <div class="round-section finale-phase">
+        <h2 class="round-title finale phase-heading">Finale</h2>
+        {#each results as groupResult}
+          {@const numFinalists = getNumFinalists(groupResult.athletes.length)}
+          {@const finalists = groupResult.athletes.slice(0, numFinalists)}
+          {#if finalists.length > 0}
+            <div class="group-results card">
+              <h3 class="group-title">{groupResult.groupName}</h3>
+              {@render resultsTable(finalists, true)}
             </div>
-          {:else}
-            {@render resultsTable(groupResult.athletes, false)}
           {/if}
-        {:else}
-          <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
-        {/if}
+        {/each}
       </div>
-    {/each}
+
+      <div class="round-section qualifikation-phase">
+        <h2 class="round-title qualifikation phase-heading">Qualifikation</h2>
+        {#each results as groupResult}
+          <div class="group-results card">
+            <h3 class="group-title">{groupResult.groupName}</h3>
+            {#if groupResult.athletes.length}
+              {@render resultsTable(groupResult.athletes, false)}
+            {:else}
+              <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    {:else}
+      {#each results as groupResult}
+        <div class="group-results card">
+          <h3 class="group-title">{groupResult.groupName}</h3>
+          {#if groupResult.athletes.length}
+            {@render resultsTable(groupResult.athletes, false)}
+          {:else}
+            <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
+          {/if}
+        </div>
+      {/each}
+    {/if}
 
 {:else}
   <div class="empty-state">
@@ -113,7 +125,7 @@
     border-bottom: 2px solid var(--color-primary);
   }
   
-  .results-table { width: 100%; border-collapse: collapse; min-width: 400px; }
+  .results-table { width: 100%; border-collapse: collapse; min-width: 400px; table-layout: fixed; }
   
   .results-table th, .results-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
   
@@ -126,10 +138,10 @@
   .results-table tr.me { background: rgba(255, 107, 0, 0.1); font-weight: 700; }
   .results-table tr.me td.name-col { font-weight: 700; }
   
-  .rank-col { width: 50px; text-align: center; font-size: 16px; }
-  .name-col { font-weight: 500; min-width: 100px; }
-  .points-col { text-align: right; font-weight: 700; font-size: 16px; color: var(--color-primary); min-width: 60px; }
-  .stat-col { text-align: center; }
+  .rank-col { width: 65px; text-align: center; font-size: 16px; }
+  .name-col { font-weight: 500; width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .points-col { text-align: left; font-weight: 700; font-size: 16px; color: var(--color-primary); width: auto; }
+  .stat-col { text-align: center; width: 45px; }
   .stat-value { font-weight: 700; font-size: 15px; }
   .stat-value.top { color: var(--color-primary); }
   .stat-value.zone { color: var(--color-zone); }
@@ -141,10 +153,15 @@
   @media (max-width: 640px) {
     .results-table th, .results-table td { padding: 10px 6px; }
     .stat-value, .points-col, .rank-col { font-size: 14px; }
+    .name-col { width: 120px; }
   }
 
   .round-section { margin-bottom: 24px; }
   .round-title { font-size: 16px; margin-bottom: 12px; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
   .round-title.finale { color: var(--color-finale); }
   .round-title.qualifikation { color: var(--color-primary); }
+
+  .phase-heading { font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid; padding-bottom: 8px; }
+  .round-title.finale.phase-heading { border-bottom-color: var(--color-finale); }
+  .round-title.qualifikation.phase-heading { border-bottom-color: var(--color-primary); }
 </style>

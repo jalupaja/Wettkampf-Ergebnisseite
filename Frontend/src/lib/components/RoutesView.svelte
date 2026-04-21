@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { api } from '../api.js';
   import { userStore } from '../stores/user.js';
+  import { formatPoints } from '../utils/formatters.js';
   
   let routes = $state([]);
   let competitionState = $state('setup');
@@ -229,7 +230,7 @@
     <div class="stats">
       <div class="stat-card total">
         <div class="stat-label">Deine Punkte</div>
-        <div class="stat-value">{totalPoints} Pkt</div>
+        <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
       </div>
     </div>
     
