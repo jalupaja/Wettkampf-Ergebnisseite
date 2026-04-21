@@ -138,7 +138,7 @@
   .results-table tr.me { background: rgba(255, 107, 0, 0.1); font-weight: 700; }
   .results-table tr.me td.name-col { font-weight: 700; }
   
-  .rank-col { width: 65px; text-align: center; font-size: 16px; }
+  .rank-col { width: 75px; text-align: center; font-size: 16px; white-space: nowrap; }
   .name-col { font-weight: 500; width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .points-col { text-align: left; font-weight: 700; font-size: 16px; color: var(--color-primary); width: auto; }
   .stat-col { text-align: center; width: 45px; }
