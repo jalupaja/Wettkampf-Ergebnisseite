@@ -248,7 +248,7 @@
   {#if competitionState === 'setup' && !loading}
     <div class="setup-banner">Wettkampf noch nicht gestartet.</div>
   {:else if competitionState === 'finale' && !isFinalist() && !loading}
-    <div class="setup-banner finale">Finale läuft. Nur Finalisten können ihre Ergebnisse bearbeiten.</div>
+    <div class="setup-banner finale">Finale läuft!</div>
   {:else if competitionState === 'finished' && !loading}
     <div class="setup-banner finished">Wettkampf beendet.</div>
   {/if}
