@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import bcrypt from 'bcryptjs';
 
 function createDefaultData() {
   const adminPassword = 'ADMIN';
@@ -51,8 +50,8 @@ function createDefaultData() {
     {
       id: uuidv4(),
       username: 'admin',
-      password: bcrypt.hashSync(adminPassword, 4),
-      hashed: true,
+      password: adminPassword,
+      hashed: false,
       role: 'admin',
       isSuperAdmin: true,
       groupId: null,
@@ -79,8 +78,8 @@ function createDefaultData() {
     users.push({
       id: userId,
       username: name,
-      password: bcrypt.hashSync(athleteData.password, 4),
-      hashed: true,
+      password: athleteData.password,
+      hashed: false,
       role: 'athlete',
       groupId: group.id,
       createdAt: new Date().toISOString()
@@ -166,10 +165,10 @@ export function createUser(username, password, role, groupId = null) {
   const user = {
     id: uuidv4(),
     username,
-    password: password ? bcrypt.hashSync(password, 4) : undefined,
-    hashed: true,
+    password,
+    hashed: false,
     role,
-    groupId: role === 'athlete' ? groupId : null,
+    groupId: ['athlete', 'finalist'].includes(role) ? groupId : null,
     createdAt: new Date().toISOString()
   };
   store.users.push(user);
@@ -183,8 +182,7 @@ export function updateUser(id, updates) {
   
   if (updates.password) {
     updates.needsPasswordChange = false;
-    updates.password = bcrypt.hashSync(updates.password, 4);
-    updates.hashed = true;
+    updates.hashed = false;
   }
   
   store.users[index] = { ...store.users[index], ...updates };
@@ -203,8 +201,7 @@ export function deleteUser(id) {
 }
 
 export function verifyPassword(user, password) {
-  if (!user.hashed) return user.password === password;
-  return bcrypt.compareSync(password, user.password);
+  return user.password === password;
 }
 
 export function getGroups() {
@@ -366,6 +363,15 @@ export function setBonusResult(userId, routeName, count) {
 
 export function getConfig() {
   return store.config;
+}
+
+export function updateUserRole(userId, newRole) {
+  const user = store.users.find(u => u.id === userId);
+  if (user) {
+    user.role = newRole;
+    saveStore();
+  }
+  return user;
 }
 
 export function updateConfig(updates) {

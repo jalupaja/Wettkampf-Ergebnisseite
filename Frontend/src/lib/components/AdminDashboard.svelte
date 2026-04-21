@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { api } from '../api.js';
   import { userStore } from '../stores/user.js';
   import UsersManagement from './admin/UsersManagement.svelte';
   import GroupsManagement from './admin/GroupsManagement.svelte';
@@ -7,11 +8,17 @@
   import ConfigManagement from './admin/ConfigManagement.svelte';
   import AdminResultsView from './AdminResultsView.svelte';
   import FinaleControl from './admin/FinaleControl.svelte';
+  import RoutesView from './RoutesView.svelte';
   
   let activeTab = $state('results');
+  let users = $state([]);
+  let selectedUserId = $state('');
+  let loadingUsers = $state(true);
+  let userError = $state('');
   
   const tabs = [
     { id: 'results', label: 'Rangliste' },
+    { id: 'entry', label: 'Ergebniseingabe' },
     { id: 'users', label: 'Benutzer' },
     { id: 'groups', label: 'Startklassen' },
     { id: 'routes', label: 'Routen' },
@@ -20,9 +27,30 @@
   ];
   
   const showPasswordWarning = $derived($userStore?.needsPasswordChange === true);
+  const selectedUser = $derived(users.find(user => user.id === selectedUserId) || $userStore || null);
   
   function goToUsers() {
     activeTab = 'users';
+  }
+  
+  onMount(async () => {
+    selectedUserId = $userStore?.id || '';
+    await loadUsers();
+  });
+  
+  async function loadUsers() {
+    loadingUsers = true;
+    userError = '';
+    try {
+      const data = await api.users.list();
+      users = data.users;
+      if (users.length && !users.some(user => user.id === selectedUserId)) {
+        selectedUserId = users[0].id;
+      }
+    } catch (err) {
+      userError = err.message;
+    }
+    loadingUsers = false;
   }
 </script>
 
@@ -56,6 +84,31 @@
       <ConfigManagement />
     {:else if activeTab === 'results'}
       <AdminResultsView />
+    {:else if activeTab === 'entry'}
+      <div class="route-entry-panel">
+        <div class="route-entry-toolbar">
+          <label for="route-target-user">Benutzer</label>
+          <select id="route-target-user" bind:value={selectedUserId} disabled={loadingUsers}>
+            {#each users as user}
+              <option value={user.id}>{user.username} ({user.role})</option>
+            {/each}
+          </select>
+        </div>
+        
+        {#if userError}
+          <div class="error-message">{userError}</div>
+        {/if}
+        
+        {#if loadingUsers}
+          <div class="loading">Laden...</div>
+        {:else if selectedUser}
+          {#key selectedUser.id}
+            <RoutesView targetUser={selectedUser} finalOnly={true} />
+          {/key}
+        {:else}
+          <div class="loading">Kein Benutzer ausgewählt</div>
+        {/if}
+      </div>
     {:else if activeTab === 'status'}
       <FinaleControl />
     {/if}
@@ -132,6 +185,33 @@
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+  
+  .route-entry-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .route-entry-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 360px;
+  }
+  
+  .error-message {
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid var(--color-error);
+    color: var(--color-error);
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 24px;
+    color: var(--color-text-muted);
   }
   
   @media (max-width: 640px) {

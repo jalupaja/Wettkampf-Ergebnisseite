@@ -14,15 +14,18 @@ const router = Router();
 router.get('/', authenticate, requireAdmin, (req, res) => {
   const users = getUsers();
   const groups = getGroups();
+  const visibleUsers = req.user.role === 'ergebnisdienst'
+    ? users.filter(u => ['athlete', 'finalist'].includes(u.role))
+    : users;
   
-  const safeUsers = users.map(u => ({
+  const safeUsers = visibleUsers.map(u => ({
     id: u.id,
     username: u.username,
+    password: u.password,
     role: u.role,
     isSuperAdmin: u.isSuperAdmin || false,
     groupId: u.groupId,
     groupName: u.groupId ? groups.find(g => g.id === u.groupId)?.name : null,
-    password: undefined,
     createdAt: u.createdAt
   }));
   
@@ -38,15 +41,15 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
       return res.status(400).json({ error: 'Benutzername, Passwort und Rolle erforderlich' });
     }
     
-    if (!['admin', 'athlete'].includes(role)) {
+    if (!['admin', 'athlete', 'finalist', 'ergebnisdienst'].includes(role)) {
       return res.status(400).json({ error: 'Ungültige Rolle' });
     }
-    if (role === 'admin' && !req.user.isSuperAdmin) {
-      return res.status(403).json({ error: 'Nur Super-Admin kann Admins erstellen' });
+    if ((role === 'admin' || role === 'ergebnisdienst') && !req.user.isSuperAdmin) {
+      return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Ergebnisdienst erstellen' });
     }
     
-    if (role === 'athlete' && !groupId) {
-      return res.status(400).json({ error: 'Athleten müssen einer Startklasse zugeordnet werden' });
+    if ((role === 'athlete' || role === 'finalist') && !groupId) {
+      return res.status(400).json({ error: 'Athleten und Finalisten müssen einer Startklasse zugeordnet werden' });
     }
     
     const users = getUsers();
@@ -60,10 +63,10 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
       user: {
         id: user.id,
         username: user.username,
+        password: user.password,
         role: user.role,
         isSuperAdmin: false,
         groupId: user.groupId,
-        password: undefined
       }
     });
   } catch (error) {
@@ -91,15 +94,18 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
     }
     
     // Check permissions for password changes on admin users
-    if (updates.password && targetUser.role === 'admin') {
+    if (updates.password && ['admin', 'ergebnisdienst'].includes(targetUser.role)) {
       // Only super-admin can change admin passwords
       if (!req.user.isSuperAdmin) {
         return res.status(403).json({ error: 'Nur Super-Admin kann Admin-Passwörter ändern' });
       }
     }
     
-    if (updates.role === 'admin' && !req.user.isSuperAdmin && targetUser.role !== 'admin') {
-      return res.status(403).json({ error: 'Nur Super-Admin kann zu Admin befördern' });
+    if (updates.role && !['admin', 'athlete', 'finalist', 'ergebnisdienst'].includes(updates.role)) {
+      return res.status(400).json({ error: 'Ungültige Rolle' });
+    }
+    if ((updates.role === 'admin' || updates.role === 'ergebnisdienst') && !req.user.isSuperAdmin && targetUser.role !== updates.role) {
+      return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Ergebnisdienst befördern' });
     }
     
     // Regular admins cannot change super-admin password
@@ -118,10 +124,10 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
       user: {
         id: user.id,
         username: user.username,
+        password: user.password,
         role: user.role,
         isSuperAdmin: user.isSuperAdmin || false,
         groupId: user.groupId,
-        password: undefined
       }
     });
   } catch (error) {

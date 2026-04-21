@@ -4,6 +4,7 @@
   import { userStore } from '../stores/user.js';
   import { formatPoints } from '../utils/formatters.js';
   
+  let { targetUser = null, finalOnly = false } = $props();
   let routes = $state([]);
   let competitionState = $state('setup');
   let config = $state({});
@@ -11,6 +12,14 @@
   let error = $state('');
   let finalists = $state(new Set());
   let refreshInterval;
+  
+  function getActiveUser() {
+    return targetUser || $userStore;
+  }
+  
+  function getActiveUserId() {
+    return getActiveUser()?.id || null;
+  }
   
   onMount(async () => {
     await loadData();
@@ -40,6 +49,7 @@
       
       if (newState !== competitionState) {
         competitionState = newState;
+        finalists = new Set();
         if (competitionState === 'finale') {
           const resultsData = await api.results.get();
           updateFinalists(resultsData);
@@ -69,19 +79,15 @@
     loading = true;
     error = '';
     try {
-      const promises = [api.routes.list(), api.config.get()];
-      
-      if (competitionState === 'finale') {
-        promises.push(api.results.get());
-      }
-      
-      const results = await Promise.all(promises);
-      routes = results[0].routes;
-      config = results[1].config;
+      const configData = await api.config.get();
+      config = configData.config;
       competitionState = config.competitionState || 'setup';
-      
-      if (competitionState === 'finale' && results[2]) {
-        updateFinalists(results[2]);
+      await loadRoutes();
+      if (competitionState === 'finale') {
+        const resultsData = await api.results.get();
+        updateFinalists(resultsData);
+      } else {
+        finalists = new Set();
       }
     } catch (err) {
       error = err.message;
@@ -90,9 +96,9 @@
   }
   
   function isFinalist() {
-    const user = $userStore;
+    const user = getActiveUser();
     if (!user) return false;
-    return finalists.has(user.id);
+    return user.role === 'finalist' || finalists.has(user.id);
   }
   
   function canEditRoute(route) {
@@ -103,16 +109,6 @@
     }
     if (competitionState === 'finished') return false;
     return false;
-  }
-  
-  function isRouteDisabled(route) {
-    if (competitionState === 'setup') return true;
-    if (competitionState === 'qualification') return false;
-    if (competitionState === 'finale') {
-      return route.category !== 'finale' || !isFinalist();
-    }
-    if (competitionState === 'finished') return true;
-    return true;
   }
   
   async function checkStateAndSetResult(routeId, result) {
@@ -138,9 +134,16 @@
       error = 'Keine Berechtigung diese Route zu bearbeiten';
       return;
     }
+    
+    const userId = getActiveUserId();
+    if (!userId) {
+      error = 'Kein Benutzer ausgewählt';
+      return;
+    }
+    
     try {
-      await api.routes.setResult(routeId, result);
-      routes = routes.map(r => r.id === routeId ? { ...r, result } : r);
+      await api.routes.setResult(routeId, result, userId);
+      await loadRoutes();
     } catch (err) {
       error = err.message;
     }
@@ -152,8 +155,15 @@
       error = 'Keine Berechtigung diese Route zu bearbeiten';
       return;
     }
+    
+    const userId = getActiveUserId();
+    if (!userId) {
+      error = 'Kein Benutzer ausgewählt';
+      return;
+    }
+    
     try {
-      await api.routes.setBonusResult(routeId, currentCount + 1);
+      await api.routes.setBonusResult(routeId, currentCount + 1, userId);
       await loadRoutes();
     } catch (err) {
       error = err.message;
@@ -167,8 +177,15 @@
       return;
     }
     if (currentCount <= 0) return;
+    
+    const userId = getActiveUserId();
+    if (!userId) {
+      error = 'Kein Benutzer ausgewählt';
+      return;
+    }
+    
     try {
-      await api.routes.setBonusResult(routeId, currentCount - 1);
+      await api.routes.setBonusResult(routeId, currentCount - 1, userId);
       await loadRoutes();
     } catch (err) {
       error = err.message;
@@ -176,8 +193,14 @@
   }
   
   async function loadRoutes() {
+    const userId = getActiveUserId();
+    if (!userId) {
+      routes = [];
+      return;
+    }
+    
     try {
-      const data = await api.routes.list();
+      const data = await api.routes.list(userId);
       routes = data.routes;
     } catch (err) {
       error = err.message;
@@ -208,7 +231,17 @@
     const count = typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0);
     return sum + (count * (Number(r.topPoints) || 0));
   }, 0));
-  const totalPoints = $derived(qualPoints + bonusPoints);
+  
+  const finalePoints = $derived(finaleRoutes.reduce((sum, r) => {
+    if (r.result === 'top') return sum + (Number(r.topPoints) || 0);
+    if (r.result && r.result !== 'top') {
+      const zone = r.zones?.find(z => z.name === r.result);
+      return sum + (zone?.points || 0);
+    }
+    return sum;
+  }, 0));
+  
+  const totalPoints = $derived(competitionState === 'finale' ? finalePoints : qualPoints + bonusPoints);
 </script>
 
 <div class="routes-view">
@@ -229,13 +262,13 @@
   {:else}
     <div class="stats">
       <div class="stat-card total">
-        <div class="stat-label">Deine Punkte</div>
+        <div class="stat-label">{competitionState === 'finale' ? 'Finale-Punkte' : 'Deine Punkte'}</div>
         <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
       </div>
     </div>
     
     <div class="route-sections">
-      {#if qualRoutes.length}
+      {#if qualRoutes.length && !(finalOnly && competitionState === 'finale')}
         <section class="route-section">
           <h2>Qualifikation</h2>
           <div class="routes-grid">
@@ -256,7 +289,7 @@
         </section>
       {/if}
       
-      {#if bonusRoutes.length}
+      {#if bonusRoutes.length && !(finalOnly && competitionState === 'finale')}
         <section class="route-section">
           <h2>Bonus</h2>
           <div class="routes-grid bonus-routes">
@@ -276,7 +309,7 @@
         </section>
       {/if}
       
-      {#if finaleRoutes.length && competitionState === 'finale' && isFinalist()}
+      {#if finaleRoutes.length && competitionState === 'finale' && (targetUser || isFinalist())}
         <section class="route-section">
           <h2>Finale</h2>
           <div class="routes-grid">

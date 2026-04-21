@@ -135,7 +135,7 @@ async function clearAllUsers() {
     try {
       const payload = { ...formData };
       if (!payload.password) delete payload.password;
-      if (payload.role === 'admin') delete payload.groupId;
+      if (payload.role === 'admin' || payload.role === 'ergebnisdienst') delete payload.groupId;
       
       if (editingId) {
         await api.users.update(editingId, payload);
@@ -174,7 +174,7 @@ async function clearAllUsers() {
       <button class="outline btn-sm" onclick={handleExport}>Export</button>
       <button class="danger btn-sm" onclick={clearAllUsers}>Alle löschen</button>
       <button class="primary" onclick={() => openModal()}>
-        + Neuer Athlet
+        + Neuer Benutzer
       </button>
     </div>
   </div>
@@ -214,6 +214,10 @@ async function clearAllUsers() {
                 <span class="username-text">{user.username}</span>
                 {#if user.role === 'admin'}
                   <span class="badge admin">Admin</span>
+                {:else if user.role === 'ergebnisdienst'}
+                  <span class="badge ergebnisdienst">Ergebnisdienst</span>
+                {:else if user.role === 'finalist'}
+                  <span class="badge finalist">Finalist</span>
                 {/if}
               </td>
               <td class="password">
@@ -245,7 +249,7 @@ async function clearAllUsers() {
     <div class="modal-overlay" role="dialog" aria-modal="true" onclick={closeModal} onkeydown={(e) => e.key === 'Escape' && closeModal()} tabindex="-1" aria-label="Dialog">
       <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
       <div class="modal" role="document" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
-        <h3>{editingId ? 'Athlet bearbeiten' : 'Neuer Athlet'}</h3>
+        <h3>{editingId ? 'Benutzer bearbeiten' : 'Neuer Benutzer'}</h3>
         
         <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           {#if error}
@@ -261,7 +265,6 @@ async function clearAllUsers() {
               minlength="2"
               placeholder="z.B. Max Mustermann"
               required
-              disabled={!!editingId}
             />
           </div>
           
@@ -287,10 +290,12 @@ async function clearAllUsers() {
             <select id="role" bind:value={formData.role}>
               <option value="athlete">Athlet</option>
               <option value="admin">Admin</option>
+              <option value="ergebnisdienst">Ergebnisdienst</option>
+              <option value="finalist">Finalist</option>
             </select>
           </div>
           
-          {#if formData.role === 'athlete'}
+          {#if formData.role === 'athlete' || formData.role === 'finalist'}
             <div class="form-group">
               <label for="groupId">Startklasse</label>
               <select id="groupId" bind:value={formData.groupId}>
@@ -428,6 +433,14 @@ async function clearAllUsers() {
   
   .badge.admin {
     background: var(--color-primary);
+  }
+  
+  .badge.ergebnisdienst {
+    background: var(--color-success);
+  }
+  
+  .badge.finalist {
+    background: var(--color-warning);
   }
   
   .password code {
