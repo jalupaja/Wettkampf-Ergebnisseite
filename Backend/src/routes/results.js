@@ -7,13 +7,11 @@ import {
   getConfig
 } from '../data/store.js';
 
-const router = Router();
-
-router.get('/', (req, res) => {
+export function calculateResults() {
   const config = getConfig();
   const groups = getGroups();
   const routes = getRoutes();
-  const users = getUsers().filter(u => u.role === 'athlete' && u.groupId);
+  const users = getUsers().filter(u => ['athlete', 'finalist'].includes(u.role) && u.groupId);
   const completed = getCompletedRoutes();
   
   const qualificationRoutes = routes.filter(r => r.category === 'qualification');
@@ -117,7 +115,9 @@ router.get('/', (req, res) => {
       const finalePoints = finaleResults.reduce((sum, r) => sum + r.points, 0);
       
       const totalTops = qualTops + bonusTops;
-      const totalPoints = qualPoints + bonusPoints + finalePoints;
+      const totalPoints = config.competitionState === 'finale'
+        ? finalePoints
+        : qualPoints + bonusPoints + finalePoints;
       
       return {
         userId: user.id,
@@ -139,6 +139,10 @@ router.get('/', (req, res) => {
     
     const sortedAthletes = [...athleteResults].sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      if (config.competitionState === 'finale') {
+        if (b.finaleTops !== a.finaleTops) return b.finaleTops - a.finaleTops;
+        return b.finaleZones - a.finaleZones;
+      }
       if (b.qualTops !== a.qualTops) return b.qualTops - a.qualTops;
       return b.bonusTops - a.bonusTops;
     });
@@ -149,8 +153,14 @@ router.get('/', (req, res) => {
       athletes: sortedAthletes
     };
   });
-  
-  res.json({ results, config });
+
+  return { results, config };
+}
+
+const router = Router();
+
+router.get('/', (req, res) => {
+  res.json(calculateResults());
 });
 
 export default router;

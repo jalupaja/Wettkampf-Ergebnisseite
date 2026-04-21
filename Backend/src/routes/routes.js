@@ -4,52 +4,108 @@ import {
   getRoutes,
   getRouteById,
   getCompletedRoutes,
+  getUserById,
   setRouteResult,
-  setBonusResult
+  setBonusResult,
+  getConfig
 } from '../data/store.js';
 
 const router = Router();
 
 router.get('/', authenticate, (req, res) => {
+  const config = getConfig();
   const routes = getRoutes();
   const completed = getCompletedRoutes();
-  
-  const userCompleted = completed.filter(cr => cr.userId === req.user.id);
-  
-  const routesWithStatus = routes.map(r => {
-    const userResult = userCompleted.find(cr => cr.routeName === r.name);
+  const targetUserId = String(req.query.userId || req.user.id);
+  const targetUser = getUserById(targetUserId);
+
+  if (!targetUser) {
+    return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+  }
+
+  const isErgebnisdienstFinaleView =
+    req.user.role === 'ergebnisdienst' &&
+    config.competitionState === 'finale' &&
+    targetUser.role === 'finalist';
+
+  if (targetUserId !== req.user.id && req.user.role !== 'admin' && !isErgebnisdienstFinaleView) {
+    return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
+  }
+
+  const visibleRoutes = isErgebnisdienstFinaleView
+    ? routes.filter(route => route.category === 'finale')
+    : routes;
+
+  const userCompleted = completed.filter(cr => cr.userId === targetUserId);
+  const routesWithStatus = visibleRoutes.map(route => {
+    const userResult = userCompleted.find(cr => cr.routeName === route.name);
     return {
-      ...r,
+      ...route,
       result: userResult ? userResult.result : null
     };
   });
-  
+
   res.json({ routes: routesWithStatus });
 });
 
 router.post('/result', authenticate, (req, res) => {
   try {
-    const { routeId, result } = req.body;
-    
+    const { routeId, result, userId } = req.body;
+
     if (!routeId) {
       return res.status(400).json({ error: 'Route-ID erforderlich' });
     }
-    
+
+    const config = getConfig();
     const route = getRouteById(routeId);
     if (!route) {
       return res.status(404).json({ error: 'Route nicht gefunden' });
     }
-    
+
+    const targetUserId = String(userId || req.user.id);
+    const targetUser = getUserById(targetUserId);
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+    }
+
+    const isErgebnisdienstFinaleInput =
+      req.user.role === 'ergebnisdienst' &&
+      config.competitionState === 'finale' &&
+      targetUser.role === 'finalist' &&
+      route.category === 'finale';
+
+    if (req.user.role === 'ergebnisdienst' && !isErgebnisdienstFinaleInput) {
+      return res.status(403).json({ error: 'Ergebnisdienst darf nur Finalrouten für Finalisten bearbeiten' });
+    }
+
+    if (targetUserId !== req.user.id && req.user.role !== 'admin' && !isErgebnisdienstFinaleInput) {
+      return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
+    }
+
+    if (req.user.role !== 'admin' && req.user.role !== 'ergebnisdienst') {
+      if (config.competitionState === 'setup' || config.competitionState === 'finished') {
+        return res.status(403).json({ error: 'Wettkampf ist nicht aktiv' });
+      }
+      if (config.competitionState === 'finale') {
+        if (req.user.role !== 'finalist' || route.category !== 'finale') {
+          return res.status(403).json({ error: 'Nur Finalisten können Finalrouten bearbeiten' });
+        }
+      }
+      if (config.competitionState === 'qualification' && route.category === 'finale') {
+        return res.status(403).json({ error: 'Finalrouten können noch nicht bearbeitet werden' });
+      }
+    }
+
     const validResults = ['top', 'attempted', null];
     if (route.zones && route.zones.length > 0) {
       route.zones.forEach(z => validResults.push(z.name));
     }
-    
+
     if (result !== null && !validResults.includes(result)) {
       return res.status(400).json({ error: `Ungültiges Ergebnis: ${result}` });
     }
-    
-    const result_data = setRouteResult(req.user.id, route.name, result);
+
+    const result_data = setRouteResult(targetUserId, route.name, result);
     res.json(result_data);
   } catch (error) {
     console.error('Set route result error:', error);
@@ -59,22 +115,49 @@ router.post('/result', authenticate, (req, res) => {
 
 router.post('/bonus', authenticate, (req, res) => {
   try {
-    const { routeId, count } = req.body;
-    
+    const { routeId, count, userId } = req.body;
+
     if (!routeId) {
       return res.status(400).json({ error: 'Route-ID erforderlich' });
     }
-    
-    if (typeof count !== 'number' || count < 0) {
-      return res.status(400).json({ error: 'Ungültige Anzahl' });
+
+    if (req.user.role === 'ergebnisdienst') {
+      return res.status(403).json({ error: 'Ergebnisdienst darf keine Bonusdaten erfassen' });
     }
-    
+
+    const config = getConfig();
     const route = getRouteById(routeId);
     if (!route) {
       return res.status(404).json({ error: 'Route nicht gefunden' });
     }
-    
-    const result_data = setBonusResult(req.user.id, route.name, count);
+
+    const targetUserId = String(userId || req.user.id);
+    const targetUser = getUserById(targetUserId);
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+    }
+
+    if (targetUserId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
+    }
+
+    if (req.user.role !== 'admin') {
+      if (config.competitionState === 'setup' || config.competitionState === 'finished') {
+        return res.status(403).json({ error: 'Wettkampf ist nicht aktiv' });
+      }
+      if (config.competitionState === 'finale') {
+        return res.status(403).json({ error: 'Bonusdaten sind im Finale nicht erlaubt' });
+      }
+      if (route.category === 'finale') {
+        return res.status(403).json({ error: 'Finalrouten können nicht als Bonusdaten erfasst werden' });
+      }
+    }
+
+    if (typeof count !== 'number' || count < 0) {
+      return res.status(400).json({ error: 'Ungültige Anzahl' });
+    }
+
+    const result_data = setBonusResult(targetUserId, route.name, count);
     res.json(result_data);
   } catch (error) {
     console.error('Set bonus result error:', error);

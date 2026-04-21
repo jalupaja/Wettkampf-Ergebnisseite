@@ -49,7 +49,7 @@ export function requireAdmin(req, res, next) {
 }
 
 export function requireAthlete(req, res, next) {
-  if (req.user.role !== 'athlete') {
+  if (!['athlete', 'finalist'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Athleten-Rechte erforderlich' });
   }
   next();

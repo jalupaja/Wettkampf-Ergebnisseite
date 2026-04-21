@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
-import { getConfig, updateConfig, getGroups, getUsers } from '../data/store.js';
+import { getConfig, updateConfig, getGroups, getUsers, updateUserRole } from '../data/store.js';
+import { calculateResults } from './results.js';
 
 const router = Router();
 
 router.get('/', authenticate, (req, res) => {
   const config = getConfig();
   const groups = getGroups();
-  const athletes = getUsers().filter(u => u.role === 'athlete');
+  const athletes = getUsers().filter(u => ['athlete', 'finalist'].includes(u.role));
   
   const groupsWithCounts = groups.map(g => ({
     ...g,
@@ -45,7 +46,44 @@ router.put('/', authenticate, requireAdmin, (req, res) => {
       }
     }
     
+    const previousConfig = getConfig();
     const config = updateConfig(updates);
+    const transitionedToFinale = updates.competitionState === 'finale' && previousConfig.competitionState !== 'finale';
+    const transitionedOutOfFinale = previousConfig.competitionState === 'finale' && updates.competitionState && updates.competitionState !== 'finale';
+    
+    if (transitionedOutOfFinale) {
+      getUsers()
+        .filter(u => u.role === 'finalist')
+        .forEach(u => updateUserRole(u.id, 'athlete'));
+    }
+    
+    if (transitionedToFinale) {
+      getUsers()
+        .filter(u => u.role === 'finalist')
+        .forEach(u => updateUserRole(u.id, 'athlete'));
+
+      const { results } = calculateResults();
+      
+      const threshold = config.finaleSmallGroupThreshold || 10;
+      const maxAthletes = config.finaleMaxAthletes || 8;
+      const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
+      
+      for (const group of results) {
+        const groupSize = group.athletes.length;
+        let finalistCount = 0;
+        
+        if (groupSize < threshold) {
+          finalistCount = Math.min(smallGroupMax, groupSize);
+        } else {
+          finalistCount = Math.min(maxAthletes, groupSize);
+        }
+        
+        group.athletes.slice(0, finalistCount).forEach(athlete => {
+          updateUserRole(athlete.userId, 'finalist');
+        });
+      }
+    }
+    
     res.json({ config });
   } catch (error) {
     console.error('Update config error:', error);
