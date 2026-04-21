@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { api } from '../../api.js';
+  import { readCsvFile, parseConfigCSV } from '../../utils/csv.js';
   
   let config = $state({
     qualificationBestCount: 4,
@@ -12,7 +13,6 @@
   let groups = $state([]);
   let loading = $state(true);
   let error = $state('');
-  let success = $state('');
   let importing = $state(false);
   
   onMount(async () => {
@@ -34,7 +34,6 @@
   
   async function handleSubmit() {
     error = '';
-    success = '';
     try {
       await api.config.update({
         qualificationBestCount: parseInt(config.qualificationBestCount) || 4,
@@ -43,8 +42,6 @@
         finaleSmallGroupThreshold: parseInt(config.finaleSmallGroupThreshold) || 10,
         rulesUrl: config.rulesUrl || ''
       });
-      success = 'Einstellungen gespeichert!';
-      setTimeout(() => success = '', 3000);
     } catch (err) {
       error = err.message;
     }
@@ -65,33 +62,13 @@
     window.open('/api/admin/data/config', '_blank');
   }
 
-  function parseConfigCSV(text) {
-    const lines = text.split('\n').filter(l => l.trim());
-    if (lines.length < 2) return {};
-
-    const out = {};
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      const commaIndex = line.indexOf(',');
-      if (commaIndex === -1) continue;
-      const key = line.slice(0, commaIndex).trim();
-      let value = line.slice(commaIndex + 1).trim();
-      if (value.startsWith('"') && value.endsWith('"')) {
-        value = value.slice(1, -1).replace(/""/g, '"');
-      }
-      out[key] = value;
-    }
-    return out;
-  }
-
   async function handleImport(event) {
     const file = event.target.files[0];
     if (!file) return;
     importing = true;
     error = '';
-    success = '';
     try {
-      const text = await file.text();
+      const text = await readCsvFile(file);
       const data = parseConfigCSV(text);
       if (Object.keys(data).length === 0) {
         error = 'CSV-Datei ist leer';
@@ -122,9 +99,6 @@
     <div class="error-message">{error}</div>
   {/if}
   
-  {#if success}
-    <div class="success-message">{success}</div>
-  {/if}
   
   {#if loading}
     <div class="loading">Laden...</div>
@@ -243,14 +217,6 @@
     margin-bottom: 16px;
   }
   
-  .success-message {
-    background: rgba(46, 204, 113, 0.1);
-    border: 1px solid var(--color-success);
-    color: var(--color-success);
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-  }
   
   .loading {
     text-align: center;

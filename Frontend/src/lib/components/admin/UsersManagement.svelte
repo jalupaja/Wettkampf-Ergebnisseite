@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { api } from '../../api.js';
   import { userStore } from '../../stores/user.js';
+  import { readCsvFile, parseCSV } from '../../utils/csv.js';
   
   let users = $state([]);
   let groups = $state([]);
@@ -32,9 +33,9 @@
   );
   
   function generatePassword() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let result = '';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
@@ -50,39 +51,13 @@
     window.open('/api/admin/data/users', '_blank');
   }
   
-  function parseCSV(text) {
-    const lines = text.split('\n').filter(l => l.trim());
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(',').map(h => h.trim());
-    const data = [];
-    for (let i = 1; i < lines.length; i++) {
-      const values = [];
-      let current = '';
-      let inQuotes = false;
-      for (const char of lines[i]) {
-        if (char === '"') { inQuotes = !inQuotes; }
-        else if (char === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
-        else { current += char; }
-      }
-      values.push(current.trim());
-      const row = {};
-      headers.forEach((h, idx) => {
-        let val = values[idx] || '';
-        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1).replace(/""/g, '"');
-        row[h] = val;
-      });
-      data.push(row);
-    }
-    return data;
-  }
-  
   async function handleImport(event) {
     const file = event.target.files[0];
     if (!file) return;
     importing = true;
     error = '';
     try {
-      const text = await file.text();
+      const text = await readCsvFile(file);
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
       await api.data.importUsers('append', data);
@@ -297,6 +272,7 @@ async function clearAllUsers() {
                 type="text"
                 id="password"
                 bind:value={formData.password}
+                oninput={(e) => { e.target.value = e.target.value.toUpperCase(); formData.password = e.target.value; }}
                 placeholder="Passwort eingeben oder generieren"
                 required={!editingId}
               />

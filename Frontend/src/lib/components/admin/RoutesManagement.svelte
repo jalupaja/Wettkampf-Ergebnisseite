@@ -1,6 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { api } from '../../api.js';
+  import { formatPoints } from '../../utils/formatters.js';
+  import { readCsvFile, parseCSV } from '../../utils/csv.js';
   
   let routes = $state([]);
   let loading = $state(true);
@@ -38,55 +40,13 @@
     window.open('/api/admin/data/routes', '_blank');
   }
   
-function parseCSV(text) {
-    const lines = text.split('\n').filter(l => l.trim());
-    if (lines.length < 2) return [];
-
-    const headers = lines[0].split(',').map(h => h.trim());
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const values = [];
-      let current = '';
-      let inQuotes = false;
-
-      for (let j = 0; j < lines[i].length; j++) {
-        const char = lines[i][j];
-        const next = lines[i][j + 1];
-
-        if (char === '"') {
-          if (inQuotes && next === '"') {
-            current += '"';
-            j++;
-          } else {
-            inQuotes = !inQuotes;
-          }
-        } else if (char === ',' && !inQuotes) {
-          values.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      values.push(current.trim());
-
-      const row = {};
-      headers.forEach((h, idx) => {
-        row[h] = values[idx] || '';
-      });
-      data.push(row);
-    }
-
-    return data;
-  }
-  
-  async function handleImport(event) {
+async function handleImport(event) {
     const file = event.target.files[0];
     if (!file) return;
     importing = true;
     error = '';
     try {
-      const text = await file.text();
+      const text = await readCsvFile(file);
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
       await api.data.importRoutes('append', data);
@@ -250,7 +210,7 @@ function parseCSV(text) {
               <div class="route-order">{route.order}</div>
               <div class="route-info">
                 <span class="route-name">{route.name}</span>
-                <span class="route-meta">Top: {route.topPoints} Punkte | Zonen: {route.zones?.length || 0}</span>
+                <span class="route-meta">Top: {formatPoints(route.topPoints)} Punkte | Zonen: {route.zones?.length || 0}</span>
               </div>
               <div class="route-actions">
                 <button class="outline btn-sm" onclick={() => moveRoute(route.id, 'up')} disabled={index === 0}>↑</button>
@@ -271,7 +231,7 @@ function parseCSV(text) {
               <div class="route-order">{route.order}</div>
               <div class="route-info">
                 <span class="route-name">{route.name}</span>
-                <span class="route-meta">{route.topPoints} Punkte pro Top</span>
+                <span class="route-meta">{formatPoints(route.topPoints)} Punkte pro Top</span>
               </div>
               <div class="route-actions">
                 <button class="outline btn-sm" onclick={() => moveRoute(route.id, 'up')} disabled={index === 0}>↑</button>

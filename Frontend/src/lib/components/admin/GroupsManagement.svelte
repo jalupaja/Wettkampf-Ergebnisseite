@@ -1,6 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { api } from '../../api.js';
+  import { readCsvFile, parseCSV } from '../../utils/csv.js';
   
   let groups = $state([]);
   let loading = $state(true);
@@ -30,39 +31,13 @@
     window.open('/api/admin/data/groups', '_blank');
   }
   
-  function parseCSV(text) {
-    const lines = text.split('\n').filter(l => l.trim());
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(',').map(h => h.trim());
-    const data = [];
-    for (let i = 1; i < lines.length; i++) {
-      const values = [];
-      let current = '';
-      let inQuotes = false;
-      for (const char of lines[i]) {
-        if (char === '"') { inQuotes = !inQuotes; }
-        else if (char === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
-        else { current += char; }
-      }
-      values.push(current.trim());
-      const row = {};
-      headers.forEach((h, idx) => {
-        let val = values[idx] || '';
-        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1).replace(/""/g, '"');
-        row[h] = val;
-      });
-      data.push(row);
-    }
-    return data;
-  }
-  
   async function handleImport(event) {
     const file = event.target.files[0];
     if (!file) return;
     importing = true;
     error = '';
     try {
-      const text = await file.text();
+      const text = await readCsvFile(file);
       const data = parseCSV(text);
       if (data.length === 0) { error = 'CSV-Datei ist leer'; importing = false; return; }
       await api.data.importGroups('append', data);
