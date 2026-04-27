@@ -98,17 +98,24 @@
   function isFinalist() {
     const user = getActiveUser();
     if (!user) return false;
-    return user.role === 'finalist' || finalists.has(user.id);
+    return user.role === 'finalist';
   }
   
   function canEditRoute(route) {
     if (competitionState === 'setup') return false;
     if (competitionState === 'qualification') return true;
     if (competitionState === 'finale') {
-      return route.category === 'finale' && isFinalist();
+      if (route.category === 'finale') {
+        return ['admin', 'ergebnisdienst'].includes($userStore?.role);
+      }
+      return false;
     }
     if (competitionState === 'finished') return false;
     return false;
+  }
+
+  function isRouteDisabled(route) {
+    return !canEditRoute(route);
   }
   
   async function checkStateAndSetResult(routeId, result) {
@@ -242,12 +249,29 @@
   }, 0));
   
   const totalPoints = $derived(competitionState === 'finale' ? finalePoints : qualPoints + bonusPoints);
+
+  function parseFinaleInput(value) {
+    if (value === '' || value === null || value === undefined) return null;
+    const normalized = String(value).replace(',', '.');
+    const n = Number(normalized);
+    if (!Number.isFinite(n) || n < 0) return null;
+    return n;
+  }
+
+  async function setFinalePoints(routeId, rawValue) {
+    const parsed = parseFinaleInput(rawValue);
+    if (parsed === null) {
+      error = 'Bitte einen gültigen Zahlenwert >= 0 eingeben';
+      return;
+    }
+    await checkStateAndSetResult(routeId, parsed);
+  }
 </script>
 
 <div class="routes-view">
   {#if competitionState === 'setup' && !loading}
     <div class="setup-banner">Wettkampf noch nicht gestartet.</div>
-  {:else if competitionState === 'finale' && !isFinalist() && !loading}
+  {:else if competitionState === 'finale' && !['admin', 'ergebnisdienst'].includes($userStore?.role) && !loading}
     <div class="setup-banner finale">Finale läuft!</div>
   {:else if competitionState === 'finished' && !loading}
     <div class="setup-banner finished">Wettkampf beendet.</div>
@@ -309,33 +333,27 @@
         </section>
       {/if}
       
-      {#if finaleRoutes.length && competitionState === 'finale' && (targetUser || isFinalist())}
+      {#if finaleRoutes.length && competitionState === 'finale' && ['admin', 'ergebnisdienst'].includes($userStore?.role)}
         <section class="route-section">
           <h2>Finale</h2>
           <div class="routes-grid">
             {#each finaleRoutes as route}
               {@const disabled = isRouteDisabled(route)}
-              {@const hasZones = route.zones && route.zones.length > 0}
-              {#if hasZones}
-                <div class="route-card finale-card" class:disabled={disabled}>
-                  <div class="route-name">{route.name}</div>
-                  <div class="route-buttons">
-                    <button class="result-btn zone-btn" class:active={route.result === 'attempted'} class:disabled={disabled} disabled={disabled} onclick={() => checkStateAndSetResult(route.id, route.result === 'attempted' ? null : 'attempted')}>Versucht</button>
-                    {#each route.zones as zone}
-                      <button class="result-btn zone-btn" class:active={route.result === zone.name} class:disabled={disabled} disabled={disabled} onclick={() => checkStateAndSetResult(route.id, route.result === zone.name ? null : zone.name)}>{zone.name}</button>
-                    {/each}
-                    <button class="result-btn top-btn" class:active={route.result === 'top'} class:disabled={disabled} disabled={disabled} onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}>Top</button>
-                  </div>
+              <div class="route-card finale-card" class:disabled={disabled}>
+                <div class="route-name">{route.name}</div>
+                <div class="finale-input-row">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={route.result ?? ''}
+                    disabled={disabled}
+                    placeholder="Punkte"
+                    onblur={(e) => setFinalePoints(route.id, e.currentTarget.value)}
+                    onkeydown={(e) => e.key === 'Enter' && setFinalePoints(route.id, e.currentTarget.value)}
+                  />
                 </div>
-              {:else}
-                <button class="route-card finale-card" class:disabled={disabled} class:completed={route.result === 'top'} disabled={disabled} onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}>
-                  <div class="route-name">{route.name}</div>
-                  <div class="route-points">Top</div>
-                  {#if route.result === 'top'}
-                    <div class="check-mark">✓</div>
-                  {/if}
-                </button>
-              {/if}
+              </div>
             {/each}
           </div>
         </section>
@@ -406,10 +424,18 @@
   
   .route-card.finale-card { cursor: pointer; }
   .route-card.finale-card:hover { border-color: var(--color-finale); transform: translateY(-2px); }
-  .route-card.finale-card.completed { background: var(--color-finale); border-color: var(--color-finale); color: var(--color-white); }
   .route-card.finale-card.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
-  .route-points { font-size: 14px; opacity: 0.8; }
-  .check-mark { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; background: var(--color-white); color: var(--color-finale); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; }
+
+  .finale-input-row {
+    display: flex;
+    justify-content: center;
+  }
+
+  .finale-input-row input {
+    max-width: 120px;
+    text-align: center;
+    font-weight: 600;
+  }
   
   .empty-state { text-align: center; padding: 60px; color: var(--color-text-muted); }
   

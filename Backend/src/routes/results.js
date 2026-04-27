@@ -22,7 +22,7 @@ export function calculateResults() {
   const results = groups.map(group => {
     const groupUsers = users.filter(u => u.groupId === group.id);
     
-    const athleteResults = groupUsers.map(user => {
+      const athleteResults = groupUsers.map(user => {
       const userCompleted = completed.filter(cr => cr.userId === user.id);
       
       const qualResults = qualificationRoutes.map(route => {
@@ -51,7 +51,10 @@ export function calculateResults() {
         let zoneName = null;
         let zonePoints = 0;
         
-        if (completedEntry?.result === 'top') {
+        if (typeof completedEntry?.result === 'number') {
+          points = completedEntry.result;
+          isTop = Number(route.topPoints) > 0 ? completedEntry.result >= Number(route.topPoints) : false;
+        } else if (completedEntry?.result === 'top') {
           isTop = true;
           points = route.topPoints;
         } else if (completedEntry?.result && completedEntry.result !== 'top') {
@@ -122,6 +125,7 @@ export function calculateResults() {
       return {
         userId: user.id,
         username: user.username,
+        role: user.role,
         qualTops,
         qualZones,
         qualPoints,

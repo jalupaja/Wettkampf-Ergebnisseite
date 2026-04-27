@@ -17,6 +17,10 @@
     return athleteCount >= threshold ? maxAthletes : smallGroupMax;
   }
 
+  function getFinalistsByRole(athletes) {
+    return athletes.filter(a => a.role === 'finalist');
+  }
+
 </script>
 
 {#if error}
@@ -61,8 +65,7 @@
       <div class="round-section finale-phase">
         <h2 class="round-title finale phase-heading">Finale</h2>
         {#each results as groupResult}
-          {@const numFinalists = getNumFinalists(groupResult.athletes.length)}
-          {@const finalists = groupResult.athletes.slice(0, numFinalists)}
+          {@const finalists = getFinalistsByRole(groupResult.athletes)}
           {#if finalists.length > 0}
             <div class="group-results card">
               <h3 class="group-title">{groupResult.groupName}</h3>

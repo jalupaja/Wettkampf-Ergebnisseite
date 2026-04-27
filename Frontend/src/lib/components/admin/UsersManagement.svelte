@@ -221,7 +221,7 @@ async function clearAllUsers() {
                 {/if}
               </td>
               <td class="password">
-                {#if user.password}
+                {#if user.password && user.role !== 'admin'}
                   <code>{user.password}</code>
                 {:else}
                   <span class="muted">-</span>
