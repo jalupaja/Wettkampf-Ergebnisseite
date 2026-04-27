@@ -1,4 +1,4 @@
-# Wettkampf
+# Wettkampf-Ergebnisseite
 
 > This program has been fully coded by AI agents as a test and because it's application is not critical. Please be aware when reading the code or trying out the application.
 
