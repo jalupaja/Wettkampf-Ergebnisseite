@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate, requireAdmin } from '../middleware/auth.js';
+import { authenticate, requireAdminOrErgebnisdienst, requireAdmin } from '../middleware/auth.js';
 import {
   getUsers,
   getUserById,
@@ -11,7 +11,7 @@ import {
 
 const router = Router();
 
-router.get('/', authenticate, requireAdmin, (req, res) => {
+router.get('/', authenticate, requireAdminOrErgebnisdienst, (req, res) => {
   const users = getUsers();
   const groups = getGroups();
   const visibleUsers = req.user.role === 'ergebnisdienst'

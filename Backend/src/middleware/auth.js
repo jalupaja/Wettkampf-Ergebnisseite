@@ -48,6 +48,13 @@ export function requireAdmin(req, res, next) {
   next();
 }
 
+export function requireAdminOrErgebnisdienst(req, res, next) {
+  if (!['admin', 'ergebnisdienst'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Admin- oder Ergebnisdienst-Rechte erforderlich' });
+  }
+  next();
+}
+
 export function requireAthlete(req, res, next) {
   if (!['athlete', 'finalist'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Athleten-Rechte erforderlich' });

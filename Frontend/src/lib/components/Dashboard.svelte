@@ -4,7 +4,7 @@
   import AdminDashboard from './AdminDashboard.svelte';
 </script>
 
-{#if $userStore?.role === 'admin'}
+{#if ['admin', 'ergebnisdienst'].includes($userStore?.role)}
   <AdminDashboard />
 {:else}
   <AthleteDashboard />

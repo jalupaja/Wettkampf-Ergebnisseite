@@ -32,9 +32,19 @@ router.get('/', authenticate, (req, res) => {
     return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
   }
 
-  const visibleRoutes = isErgebnisdienstFinaleView
+  const isAthleteOrFinalistSelf =
+    targetUserId === req.user.id &&
+    ['athlete', 'finalist'].includes(req.user.role);
+
+  const isAdminOrErgebnisdienst = ['admin', 'ergebnisdienst'].includes(req.user.role);
+
+  const visibleRoutes = isAdminOrErgebnisdienst
+    ? routes
+    : isErgebnisdienstFinaleView
     ? routes.filter(route => route.category === 'finale')
-    : routes;
+    : isAthleteOrFinalistSelf
+      ? routes.filter(route => route.category !== 'finale')
+      : routes;
 
   const userCompleted = completed.filter(cr => cr.userId === targetUserId);
   const routesWithStatus = visibleRoutes.map(route => {
@@ -68,11 +78,21 @@ router.post('/result', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Benutzer nicht gefunden' });
     }
 
+    const isAdminFinaleInput =
+      req.user.role === 'admin' &&
+      config.competitionState === 'finale' &&
+      targetUser.role === 'finalist' &&
+      route.category === 'finale';
+
     const isErgebnisdienstFinaleInput =
       req.user.role === 'ergebnisdienst' &&
       config.competitionState === 'finale' &&
       targetUser.role === 'finalist' &&
       route.category === 'finale';
+
+    if (config.competitionState === 'finale' && route.category === 'finale' && !isAdminFinaleInput && !isErgebnisdienstFinaleInput) {
+      return res.status(403).json({ error: 'Nur Admin oder Ergebnisdienst dürfen Finalrouten bearbeiten' });
+    }
 
     if (req.user.role === 'ergebnisdienst' && !isErgebnisdienstFinaleInput) {
       return res.status(403).json({ error: 'Ergebnisdienst darf nur Finalrouten für Finalisten bearbeiten' });
@@ -80,6 +100,10 @@ router.post('/result', authenticate, (req, res) => {
 
     if (targetUserId !== req.user.id && req.user.role !== 'admin' && !isErgebnisdienstFinaleInput) {
       return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
+    }
+
+    if (req.user.role === 'finalist' && config.competitionState === 'finale' && route.category === 'finale') {
+      return res.status(403).json({ error: 'Finalisten dürfen Finalrouten nicht bearbeiten' });
     }
 
     if (req.user.role !== 'admin' && req.user.role !== 'ergebnisdienst') {
@@ -96,13 +120,19 @@ router.post('/result', authenticate, (req, res) => {
       }
     }
 
-    const validResults = ['top', 'attempted', null];
-    if (route.zones && route.zones.length > 0) {
-      route.zones.forEach(z => validResults.push(z.name));
-    }
+    if (route.category === 'finale') {
+      if (typeof result !== 'number' || !Number.isFinite(result) || result < 0) {
+        return res.status(400).json({ error: 'Für Finalrouten muss ein exakter Zahlenwert >= 0 erfasst werden' });
+      }
+    } else {
+      const validResults = ['top', 'attempted', null];
+      if (route.zones && route.zones.length > 0) {
+        route.zones.forEach(z => validResults.push(z.name));
+      }
 
-    if (result !== null && !validResults.includes(result)) {
-      return res.status(400).json({ error: `Ungültiges Ergebnis: ${result}` });
+      if (result !== null && !validResults.includes(result)) {
+        return res.status(400).json({ error: `Ungültiges Ergebnis: ${result}` });
+      }
     }
 
     const result_data = setRouteResult(targetUserId, route.name, result);
