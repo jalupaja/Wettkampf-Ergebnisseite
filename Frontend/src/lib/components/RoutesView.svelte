@@ -102,14 +102,10 @@
   }
   
   function canEditRoute(route) {
+    if (['admin', 'ergebnisdienst'].includes($userStore?.role)) return true;
     if (competitionState === 'setup') return false;
     if (competitionState === 'qualification') return true;
-    if (competitionState === 'finale') {
-      if (route.category === 'finale') {
-        return ['admin', 'ergebnisdienst'].includes($userStore?.role);
-      }
-      return false;
-    }
+    if (competitionState === 'finale') return false;
     if (competitionState === 'finished') return false;
     return false;
   }
@@ -248,7 +244,9 @@
     return sum;
   }, 0));
   
-  const totalPoints = $derived(competitionState === 'finale' ? finalePoints : qualPoints + bonusPoints);
+  const totalPoints = $derived(qualPoints + bonusPoints);
+
+  const pointsLabel = 'Deine Punkte';
 
   function parseFinaleInput(value) {
     if (value === '' || value === null || value === undefined) return null;
@@ -287,8 +285,8 @@
     {#if !finalOnly}
       <div class="stats">
         <div class="stat-card total">
-          <div class="stat-label">{competitionState === 'finale' ? 'Finale-Punkte' : 'Deine Punkte'}</div>
-          <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
+<div class="stat-label">{pointsLabel}</div>
+              <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
         </div>
       </div>
     {/if}
