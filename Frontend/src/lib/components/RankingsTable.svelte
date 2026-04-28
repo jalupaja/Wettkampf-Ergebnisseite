@@ -29,24 +29,6 @@
     return unsubscribe;
   });
 
-  const showQualificationPointsInFinaleRankings = $derived(
-    ['athlete', 'finalist'].includes(currentUserRole)
-  );
-
-  function getFinalistsForFinaleTable(athletes) {
-    const finalists = getFinalistsByRole(athletes);
-    if (!showQualificationPointsInFinaleRankings) return finalists;
-
-    return [...finalists].sort((a, b) => {
-      const aQualTotal = (a.qualPoints || 0) + (a.bonusPoints || 0);
-      const bQualTotal = (b.qualPoints || 0) + (b.bonusPoints || 0);
-
-      if (bQualTotal !== aQualTotal) return bQualTotal - aQualTotal;
-      if ((b.qualTops || 0) !== (a.qualTops || 0)) return (b.qualTops || 0) - (a.qualTops || 0);
-      return (b.bonusTops || 0) - (a.bonusTops || 0);
-    });
-  }
-  
 </script>
 
 {#if error}
@@ -95,11 +77,11 @@
       <div class="round-section finale-phase">
         <h2 class="round-title finale phase-heading">Finale</h2>
         {#each results as groupResult}
-          {@const finalists = getFinalistsForFinaleTable(groupResult.athletes)}
+          {@const finalists = getFinalistsByRole(groupResult.athletes)}
           {#if finalists.length > 0}
             <div class="group-results card">
               <h3 class="group-title">{groupResult.groupName}</h3>
-              {@render resultsTable(finalists, true, showQualificationPointsInFinaleRankings, false)}
+              {@render resultsTable(finalists, true, false, false)}
             </div>
           {/if}
         {/each}
