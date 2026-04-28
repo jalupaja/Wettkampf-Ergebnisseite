@@ -21,8 +21,16 @@
     return athletes.filter(a => a.role === 'finalist');
   }
 
+  let currentUserRole = $state(null);
+  $effect(() => {
+    const unsubscribe = userStore.subscribe(user => {
+      currentUserRole = user?.role ?? null;
+    });
+    return unsubscribe;
+  });
+
   const showQualificationPointsInFinaleRankings = $derived(
-    ['athlete', 'finalist'].includes($userStore?.role)
+    ['athlete', 'finalist'].includes(currentUserRole)
   );
 
   function getFinalistsForFinaleTable(athletes) {
@@ -68,11 +76,11 @@
             {#if showMedals && index === 0}🥇{:else if showMedals && index === 1}🥈{:else if showMedals && index === 2}🥉{:else}{index + 1}{/if}
           </td>
           <td class="name-col">{athlete.username}</td>
-          <td class="points-col">{formatPoints(useQualificationPoints ? (athlete.qualPoints + athlete.bonusPoints) : athlete.totalPoints)}</td>
+          <td class="points-col">{formatPoints(useQualificationPoints ? ((athlete.qualPoints ?? 0) + (athlete.bonusPoints ?? 0)) : (athlete.totalPoints ?? 0))}</td>
           {#if showStats}
-            <td class="stat-col"><span class="stat-value top">{athlete.qualTops}</span></td>
-            <td class="stat-col"><span class="stat-value zone">{athlete.qualZones}</span></td>
-            <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops}</span></td>
+            <td class="stat-col"><span class="stat-value top">{athlete.qualTops ?? 0}</span></td>
+            <td class="stat-col"><span class="stat-value zone">{athlete.qualZones ?? 0}</span></td>
+            <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops ?? 0}</span></td>
           {/if}
         </tr>
       {/each}

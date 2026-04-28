@@ -284,12 +284,14 @@
   {#if loading}
     <div class="loading">Routen werden geladen...</div>
   {:else}
-    <div class="stats">
-      <div class="stat-card total">
-        <div class="stat-label">{competitionState === 'finale' ? 'Finale-Punkte' : 'Deine Punkte'}</div>
-        <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
+    {#if !finalOnly}
+      <div class="stats">
+        <div class="stat-card total">
+          <div class="stat-label">{competitionState === 'finale' ? 'Finale-Punkte' : 'Deine Punkte'}</div>
+          <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
+        </div>
       </div>
-    </div>
+    {/if}
     
     <div class="route-sections">
       {#if qualRoutes.length && !(finalOnly && competitionState === 'finale')}
