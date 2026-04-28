@@ -21,6 +21,24 @@
     return athletes.filter(a => a.role === 'finalist');
   }
 
+  const showQualificationPointsInFinaleRankings = $derived(
+    ['athlete', 'finalist'].includes($userStore?.role)
+  );
+
+  function getFinalistsForFinaleTable(athletes) {
+    const finalists = getFinalistsByRole(athletes);
+    if (!showQualificationPointsInFinaleRankings) return finalists;
+
+    return [...finalists].sort((a, b) => {
+      const aQualTotal = (a.qualPoints || 0) + (a.bonusPoints || 0);
+      const bQualTotal = (b.qualPoints || 0) + (b.bonusPoints || 0);
+
+      if (bQualTotal !== aQualTotal) return bQualTotal - aQualTotal;
+      if ((b.qualTops || 0) !== (a.qualTops || 0)) return (b.qualTops || 0) - (a.qualTops || 0);
+      return (b.bonusTops || 0) - (a.bonusTops || 0);
+    });
+  }
+  
 </script>
 
 {#if error}
@@ -29,16 +47,18 @@
 
 
   
-{#snippet resultsTable(athletes, showMedals)}
+{#snippet resultsTable(athletes, showMedals, useQualificationPoints = false, showStats = true)}
   <table class="results-table">
     <thead>
       <tr>
         <th class="rank-col">Platz</th>
         <th class="name-col">Name</th>
         <th class="points-col">Punkte</th>
-        <th class="stat-col">T</th>
-        <th class="stat-col">Z</th>
-        <th class="stat-col">B</th>
+        {#if showStats}
+          <th class="stat-col">T</th>
+          <th class="stat-col">Z</th>
+          <th class="stat-col">B</th>
+        {/if}
       </tr>
     </thead>
     <tbody>
@@ -48,10 +68,12 @@
             {#if showMedals && index === 0}🥇{:else if showMedals && index === 1}🥈{:else if showMedals && index === 2}🥉{:else}{index + 1}{/if}
           </td>
           <td class="name-col">{athlete.username}</td>
-          <td class="points-col">{formatPoints(athlete.totalPoints)}</td>
-          <td class="stat-col"><span class="stat-value top">{athlete.qualTops}</span></td>
-          <td class="stat-col"><span class="stat-value zone">{athlete.qualZones}</span></td>
-          <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops}</span></td>
+          <td class="points-col">{formatPoints(useQualificationPoints ? (athlete.qualPoints + athlete.bonusPoints) : athlete.totalPoints)}</td>
+          {#if showStats}
+            <td class="stat-col"><span class="stat-value top">{athlete.qualTops}</span></td>
+            <td class="stat-col"><span class="stat-value zone">{athlete.qualZones}</span></td>
+            <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops}</span></td>
+          {/if}
         </tr>
       {/each}
     </tbody>
@@ -65,11 +87,11 @@
       <div class="round-section finale-phase">
         <h2 class="round-title finale phase-heading">Finale</h2>
         {#each results as groupResult}
-          {@const finalists = getFinalistsByRole(groupResult.athletes)}
+          {@const finalists = getFinalistsForFinaleTable(groupResult.athletes)}
           {#if finalists.length > 0}
             <div class="group-results card">
               <h3 class="group-title">{groupResult.groupName}</h3>
-              {@render resultsTable(finalists, true)}
+              {@render resultsTable(finalists, true, showQualificationPointsInFinaleRankings, false)}
             </div>
           {/if}
         {/each}
@@ -81,7 +103,7 @@
           <div class="group-results card">
             <h3 class="group-title">{groupResult.groupName}</h3>
             {#if groupResult.athletes.length}
-              {@render resultsTable(groupResult.athletes, false)}
+              {@render resultsTable(groupResult.athletes, false, true, true)}
             {:else}
               <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
             {/if}
@@ -93,7 +115,7 @@
         <div class="group-results card">
           <h3 class="group-title">{groupResult.groupName}</h3>
           {#if groupResult.athletes.length}
-            {@render resultsTable(groupResult.athletes, false)}
+            {@render resultsTable(groupResult.athletes, false, false, true)}
           {:else}
             <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
           {/if}

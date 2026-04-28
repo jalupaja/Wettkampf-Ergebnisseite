@@ -15,16 +15,24 @@
   let selectedUserId = $state('');
   let loadingUsers = $state(true);
   let userError = $state('');
+  const isErgebnisdienst = $derived($userStore?.role === 'ergebnisdienst');
   
-  const tabs = [
-    { id: 'results', label: 'Rangliste' },
-    { id: 'entry', label: 'Ergebniseingabe' },
-    { id: 'users', label: 'Benutzer' },
-    { id: 'groups', label: 'Startklassen' },
-    { id: 'routes', label: 'Routen' },
-    { id: 'config', label: 'Einstellungen' },
-    { id: 'status', label: 'Status' }
-  ];
+  const tabs = $derived(
+    isErgebnisdienst
+      ? [
+          { id: 'results', label: 'Rangliste' },
+          { id: 'entry', label: 'Ergebniseingabe' }
+        ]
+      : [
+          { id: 'results', label: 'Rangliste' },
+          { id: 'entry', label: 'Ergebniseingabe' },
+          { id: 'users', label: 'Benutzer' },
+          { id: 'groups', label: 'Startklassen' },
+          { id: 'routes', label: 'Routen' },
+          { id: 'config', label: 'Einstellungen' },
+          { id: 'status', label: 'Status' }
+        ]
+  );
   
   const showPasswordWarning = $derived($userStore?.needsPasswordChange === true);
   const selectedUser = $derived(users.find(user => user.id === selectedUserId) || $userStore || null);
@@ -43,9 +51,13 @@
     userError = '';
     try {
       const data = await api.users.list();
-      users = data.users;
+      users = data.users.filter(user => user.role === 'finalist');
       if (users.length && !users.some(user => user.id === selectedUserId)) {
         selectedUserId = users[0].id;
+      }
+
+      if (!users.length) {
+        selectedUserId = '';
       }
     } catch (err) {
       userError = err.message;
@@ -88,7 +100,7 @@
       <div class="route-entry-panel">
         <div class="route-entry-toolbar">
           <label for="route-target-user">Benutzer</label>
-          <select id="route-target-user" bind:value={selectedUserId} disabled={loadingUsers}>
+          <select id="route-target-user" bind:value={selectedUserId} disabled={loadingUsers || users.length === 0}>
             {#each users as user}
               <option value={user.id}>{user.username} ({user.role})</option>
             {/each}
@@ -106,7 +118,7 @@
             <RoutesView targetUser={selectedUser} finalOnly={true} />
           {/key}
         {:else}
-          <div class="loading">Kein Benutzer ausgewählt</div>
+          <div class="loading">Keine Finalisten verfügbar</div>
         {/if}
       </div>
     {:else if activeTab === 'status'}

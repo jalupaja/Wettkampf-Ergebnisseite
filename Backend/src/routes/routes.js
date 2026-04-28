@@ -121,9 +121,15 @@ router.post('/result', authenticate, (req, res) => {
     }
 
     if (route.category === 'finale') {
-      if (typeof result !== 'number' || !Number.isFinite(result) || result < 0) {
-        return res.status(400).json({ error: 'Für Finalrouten muss ein exakter Zahlenwert >= 0 erfasst werden' });
+      const parsedResult = typeof result === 'number'
+        ? result
+        : Number(String(result).replace(',', '.'));
+
+      if (!Number.isFinite(parsedResult) || parsedResult <= 0) {
+        return res.status(400).json({ error: 'Für Finalrouten muss ein positiver Zahlenwert (> 0) erfasst werden' });
       }
+
+      req.body.result = parsedResult;
     } else {
       const validResults = ['top', 'attempted', null];
       if (route.zones && route.zones.length > 0) {
@@ -135,7 +141,8 @@ router.post('/result', authenticate, (req, res) => {
       }
     }
 
-    const result_data = setRouteResult(targetUserId, route.name, result);
+    const finalResult = route.category === 'finale' ? req.body.result : result;
+    const result_data = setRouteResult(targetUserId, route.name, finalResult);
     res.json(result_data);
   } catch (error) {
     console.error('Set route result error:', error);
