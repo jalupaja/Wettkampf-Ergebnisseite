@@ -20,10 +20,11 @@
 <style>
   .toast-container {
     position: fixed;
-    top: 16px;
-    left: 16px;
-    right: 16px;
-    z-index: 2000;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: max(16px, env(safe-area-inset-top, 16px)) 16px max(16px, env(safe-area-inset-bottom, 16px));
+    z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -35,11 +36,11 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 14px 16px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     pointer-events: auto;
     animation: slideIn 0.2s ease-out;
   }
@@ -47,11 +48,22 @@
   @keyframes slideIn {
     from {
       opacity: 0;
-      transform: translateY(-16px);
+      transform: translateY(-20px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideOut {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-20px);
     }
   }
   
