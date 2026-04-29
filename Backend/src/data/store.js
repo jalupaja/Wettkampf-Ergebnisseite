@@ -627,7 +627,7 @@ export function getConfig() {
     finaleSmallGroupMaxAthletes: config.finaleSmallGroupMaxAthletes ?? 6,
     finaleSmallGroupThreshold: config.finaleSmallGroupThreshold ?? 10,
     competitionState: config.competitionState ?? 'setup',
-    rulesUrl: config.rulesURL ?? ''
+    rulesUrl: config.rulesUrl ?? config.rulesURL ?? ''
   };
 }
 
