@@ -23,12 +23,9 @@ router.get('/', authenticate, (req, res) => {
     return res.status(404).json({ error: 'Benutzer nicht gefunden' });
   }
 
-  const isErgebnisdienstFinaleView =
-    req.user.role === 'ergebnisdienst' &&
-    config.competitionState === 'finale' &&
-    targetUser.role === 'finalist';
+  const isErgebnisdienst = ['admin', 'ergebnisdienst'].includes(req.user.role);
 
-  if (targetUserId !== req.user.id && req.user.role !== 'admin' && !isErgebnisdienstFinaleView) {
+  if (targetUserId !== req.user.id && !isErgebnisdienst) {
     return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
   }
 
@@ -40,7 +37,7 @@ router.get('/', authenticate, (req, res) => {
 
   const visibleRoutes = isAdminOrErgebnisdienst
     ? routes
-    : isErgebnisdienstFinaleView
+    : isErgebnisdienst
     ? routes.filter(route => route.category === 'finale')
     : isAthleteOrFinalistSelf
       ? routes.filter(route => route.category !== 'finale')
