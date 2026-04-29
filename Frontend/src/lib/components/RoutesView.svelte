@@ -4,7 +4,7 @@
   import { userStore } from '../stores/user.js';
   import { formatPoints } from '../utils/formatters.js';
   
-  let { targetUser = null, finalOnly = false } = $props();
+  let { targetUser = null } = $props();
   let routes = $state([]);
   let competitionState = $state('setup');
   let config = $state({});
@@ -264,6 +264,7 @@
     }
     await checkStateAndSetResult(routeId, parsed);
   }
+  // TODO use $userStore?.role
 </script>
 
 <div class="routes-view">
@@ -282,17 +283,15 @@
   {#if loading}
     <div class="loading">Routen werden geladen...</div>
   {:else}
-    {#if !finalOnly}
       <div class="stats">
         <div class="stat-card total">
 <div class="stat-label">{pointsLabel}</div>
               <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
         </div>
       </div>
-    {/if}
     
     <div class="route-sections">
-      {#if qualRoutes.length && !(finalOnly && competitionState === 'finale')}
+      {#if qualRoutes.length && !(competitionState === 'finale')}
         <section class="route-section">
           <h2>Qualifikation</h2>
           <div class="routes-grid">
@@ -313,7 +312,7 @@
         </section>
       {/if}
       
-      {#if bonusRoutes.length && !(finalOnly && competitionState === 'finale')}
+      {#if bonusRoutes.length}
         <section class="route-section">
           <h2>Bonus</h2>
           <div class="routes-grid bonus-routes">
@@ -333,7 +332,7 @@
         </section>
       {/if}
       
-      {#if finaleRoutes.length && competitionState === 'finale' && ['admin', 'ergebnisdienst'].includes($userStore?.role)}
+      {#if finaleRoutes.length}
         <section class="route-section">
           <h2>Finale</h2>
           <div class="routes-grid">

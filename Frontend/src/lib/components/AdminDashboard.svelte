@@ -51,7 +51,7 @@
     userError = '';
     try {
       const data = await api.users.list();
-      users = data.users.filter(user => user.role === 'finalist');
+      users = data.users.filter(user => ['athlete', 'finalist'].includes(user.role));
       if (users.length && !users.some(user => user.id === selectedUserId)) {
         selectedUserId = users[0].id;
       }
@@ -115,10 +115,8 @@
           <div class="loading">Laden...</div>
         {:else if selectedUser}
           {#key selectedUser.id}
-            <RoutesView targetUser={selectedUser} finalOnly={true} />
+            <RoutesView targetUser={selectedUser} />
           {/key}
-        {:else}
-          <div class="loading">Keine Finalisten verfügbar</div>
         {/if}
       </div>
     {:else if activeTab === 'status'}
