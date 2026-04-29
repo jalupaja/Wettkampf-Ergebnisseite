@@ -51,18 +51,20 @@ export function calculateResults() {
         let zoneName = null;
         let zonePoints = 0;
         
-        if (typeof completedEntry?.result === 'number') {
-          points = completedEntry.result;
-          isTop = Number(route.topPoints) > 0 ? completedEntry.result >= Number(route.topPoints) : false;
-        } else if (completedEntry?.result === 'top') {
-          isTop = true;
-          points = route.topPoints;
-        } else if (completedEntry?.result && completedEntry.result !== 'top') {
-          const zone = (route.zones || []).find(z => z.name === completedEntry.result);
-          if (zone) {
-            zoneName = completedEntry.result;
-            zonePoints = zone.points;
-            points = zone.points;
+        const resultValue = completedEntry?.result;
+        
+        if (resultValue !== undefined && resultValue !== null) {
+          const numResult = typeof resultValue === 'number' ? resultValue : Number(String(resultValue).replace(',', '.'));
+          
+          if (typeof resultValue === 'number') {
+            points = numResult;
+            isTop = Number(route.topPoints) > 0 && numResult >= Number(route.topPoints);
+          } else if (resultValue === 'top') {
+            isTop = true;
+            points = Number(route.topPoints) || 0;
+          } else if (typeof resultValue === 'string' && resultValue !== 'top') {
+            points = numResult;
+            isTop = Number(route.topPoints) > 0 && numResult >= Number(route.topPoints);
           }
         }
         
