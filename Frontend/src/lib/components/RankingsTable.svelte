@@ -58,7 +58,7 @@
             {#if showMedals && index === 0}🥇{:else if showMedals && index === 1}🥈{:else if showMedals && index === 2}🥉{:else}{index + 1}{/if}
           </td>
           <td class="name-col">{athlete.username}</td>
-          <td class="points-col">{formatPoints(useQualificationPoints ? ((athlete.qualPoints ?? 0) + (athlete.bonusPoints ?? 0)) : (athlete.totalPoints ?? 0))}</td>
+          <td class="points-col">{formatPoints(useQualificationPoints ? (athlete.qualPoints ?? 0) : (athlete.totalPoints ?? 0))}</td>
           {#if showStats}
             <td class="stat-col"><span class="stat-value top">{athlete.qualTops ?? 0}</span></td>
             <td class="stat-col"><span class="stat-value zone">{athlete.qualZones ?? 0}</span></td>
