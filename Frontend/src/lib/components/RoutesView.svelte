@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { api } from '../api.js';
   import { userStore } from '../stores/user.js';
+  import { toastStore } from '../stores/toast.js';
   import { formatPoints } from '../utils/formatters.js';
   
   let { targetUser = null } = $props();
@@ -9,7 +10,6 @@
   let competitionState = $state('setup');
   let config = $state({});
   let loading = $state(true);
-  let error = $state('');
   let finalists = $state(new Set());
   let refreshInterval;
   
@@ -77,7 +77,6 @@
   
   async function loadData() {
     loading = true;
-    error = '';
     try {
       const configData = await api.config.get();
       config = configData.config;
@@ -90,7 +89,7 @@
         finalists = new Set();
       }
     } catch (err) {
-      error = err.message;
+      toastStore.error(err.message);
     }
     loading = false;
   }
@@ -134,13 +133,13 @@
     if (!route) return;
     
     if (!canEditRoute(route)) {
-      error = 'Keine Berechtigung diese Route zu bearbeiten';
+      toastStore.error('Keine Berechtigung diese Route zu bearbeiten');
       return;
     }
     
     const userId = getActiveUserId();
     if (!userId) {
-      error = 'Kein Benutzer ausgewählt';
+      toastStore.error('Kein Benutzer ausgewählt');
       return;
     }
     
@@ -148,20 +147,20 @@
       await api.routes.setResult(routeId, result, userId);
       await loadRoutes();
     } catch (err) {
-      error = err.message;
+      toastStore.error(err.message);
     }
   }
   
   async function incrementBonus(routeId, currentCount) {
     const route = routes.find(r => r.id === routeId);
     if (!route || !canEditRoute(route)) {
-      error = 'Keine Berechtigung diese Route zu bearbeiten';
+      toastStore.error('Keine Berechtigung diese Route zu bearbeiten');
       return;
     }
     
     const userId = getActiveUserId();
     if (!userId) {
-      error = 'Kein Benutzer ausgewählt';
+      toastStore.error('Kein Benutzer ausgewählt');
       return;
     }
     
@@ -169,21 +168,21 @@
       await api.routes.setBonusResult(routeId, currentCount + 1, userId);
       await loadRoutes();
     } catch (err) {
-      error = err.message;
+      toastStore.error(err.message);
     }
   }
   
   async function decrementBonus(routeId, currentCount) {
     const route = routes.find(r => r.id === routeId);
     if (!route || !canEditRoute(route)) {
-      error = 'Keine Berechtigung diese Route zu bearbeiten';
+      toastStore.error('Keine Berechtigung diese Route zu bearbeiten');
       return;
     }
     if (currentCount <= 0) return;
     
     const userId = getActiveUserId();
     if (!userId) {
-      error = 'Kein Benutzer ausgewählt';
+      toastStore.error('Kein Benutzer ausgewählt');
       return;
     }
     
@@ -191,7 +190,7 @@
       await api.routes.setBonusResult(routeId, currentCount - 1, userId);
       await loadRoutes();
     } catch (err) {
-      error = err.message;
+      toastStore.error(err.message);
     }
   }
   
@@ -206,7 +205,7 @@
       const data = await api.routes.list(userId);
       routes = data.routes;
     } catch (err) {
-      error = err.message;
+      toastStore.error(err.message);
     }
   }
   
@@ -259,7 +258,7 @@
   async function setFinalePoints(routeId, rawValue) {
     const parsed = parseFinaleInput(rawValue);
     if (parsed === null) {
-      error = 'Bitte einen gültigen Zahlenwert >= 0 eingeben';
+      toastStore.error('Bitte einen gültigen Zahlenwert >= 0 eingeben');
       return;
     }
     await checkStateAndSetResult(routeId, parsed);
@@ -274,10 +273,6 @@
     <div class="setup-banner finale">Finale läuft!</div>
   {:else if competitionState === 'finished' && !loading}
     <div class="setup-banner finished">Wettkampf beendet.</div>
-  {/if}
-  
-  {#if error}
-    <div class="error-message">{error}</div>
   {/if}
   
   {#if loading}
@@ -367,8 +362,6 @@
 
 <style>
   .routes-view { max-width: 1200px; }
-  
-  .error-message { background: rgba(231, 76, 60, 0.1); border: 1px solid var(--color-error); color: var(--color-error); padding: 12px; border-radius: 8px; margin-bottom: 20px; }
   
   .setup-banner { background: color-mix(in srgb, var(--color-zone) 10%, transparent); border: 1px solid var(--color-zone); color: var(--color-zone); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 500; }
   .setup-banner.finale { background: color-mix(in srgb, var(--color-finale) 10%, transparent); border-color: var(--color-finale); color: var(--color-finale); }
