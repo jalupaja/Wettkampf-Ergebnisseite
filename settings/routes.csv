@@ -1,0 +1,17 @@
+name,category,topPoints,zones
+Route 1,qualification,30,"[{""name"":""Zone 1"",""points"":5},{""name"":""Zone 2"",""points"":10},{""name"":""Zone 3"",""points"":15},{""name"":""Zone 4"",""points"":20},{""name"":""Zone 5"",""points"":25}]"
+Route 2,qualification,40,"[{""name"":""Zone 1"",""points"":6},{""name"":""Zone 2"",""points"":16},{""name"":""Zone 3"",""points"":22},{""name"":""Zone 4"",""points"":28},{""name"":""Zone 5"",""points"":34}]"
+Route 3,qualification,50,"[{""name"":""Zone 1"",""points"":6},{""name"":""Zone 2"",""points"":18},{""name"":""Zone 3"",""points"":26},{""name"":""Zone 4"",""points"":34},{""name"":""Zone 5"",""points"":42}]"
+Route 4,qualification,60,"[{""name"":""Zone 1"",""points"":7},{""name"":""Zone 2"",""points"":20},{""name"":""Zone 3"",""points"":30},{""name"":""Zone 4"",""points"":40},{""name"":""Zone 5"",""points"":50}]"
+Route 5,qualification,70,"[{""name"":""Zone 1"",""points"":7},{""name"":""Zone 2"",""points"":26},{""name"":""Zone 3"",""points"":37},{""name"":""Zone 4"",""points"":48},{""name"":""Zone 5"",""points"":59}]"
+Route 6,qualification,80,"[{""name"":""Zone 1"",""points"":8},{""name"":""Zone 2"",""points"":28},{""name"":""Zone 3"",""points"":41},{""name"":""Zone 4"",""points"":54},{""name"":""Zone 5"",""points"":67}]"
+Route 7,qualification,90,"[{""name"":""Zone 1"",""points"":8},{""name"":""Zone 2"",""points"":30},{""name"":""Zone 3"",""points"":45},{""name"":""Zone 4"",""points"":60},{""name"":""Zone 5"",""points"":75}]"
+Route 8,qualification,100,"[{""name"":""Zone 1"",""points"":9},{""name"":""Zone 2"",""points"":36},{""name"":""Zone 3"",""points"":52},{""name"":""Zone 4"",""points"":68},{""name"":""Zone 5"",""points"":84}]"
+Bonus 5/5+,bonus,1,[]
+Bonus 6-,bonus,1,[]
+Bonus 6+/7-,bonus,1,[]
+Bonus 7/7+,bonus,1,[]
+Bonus 8-/8,bonus,1,[]
+Bonus 8+/9-,bonus,1,[]
+Bonus 9/+,bonus,1,[]
+Finale 1,finale,1,[]

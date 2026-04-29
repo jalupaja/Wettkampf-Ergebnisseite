@@ -5,5 +5,3 @@ dist/
 *.db
 .DS_Store
 .swarm/
-/settings/
-/temp/
