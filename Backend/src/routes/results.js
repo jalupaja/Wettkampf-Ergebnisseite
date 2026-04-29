@@ -120,7 +120,9 @@ export function calculateResults() {
       const finalePoints = finaleResults.reduce((sum, r) => sum + r.points, 0);
       
       const totalTops = qualTops + bonusTops;
-      const totalPoints = qualPoints + bonusPoints + finalePoints;
+      const totalPoints = config.competitionState === 'finale'
+        ? finalePoints
+        : qualPoints + bonusPoints + finalePoints;
       
       return {
         userId: user.id,
@@ -143,6 +145,10 @@ export function calculateResults() {
     
     const sortedAthletes = [...athleteResults].sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      if (config.competitionState === 'finale') {
+        if (b.finaleTops !== a.finaleTops) return b.finaleTops - a.finaleTops;
+        return b.finaleZones - a.finaleZones;
+      }
       if (b.qualTops !== a.qualTops) return b.qualTops - a.qualTops;
       return b.bonusTops - a.bonusTops;
     });
