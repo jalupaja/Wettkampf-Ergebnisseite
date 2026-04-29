@@ -74,6 +74,19 @@
     <div class="loading">Rangliste wird geladen...</div>
   {:else if results.length}
     {#if config?.competitionState === 'finale' || config?.competitionState === 'finished'}
+      <div class="round-section finale-phase">
+        <h2 class="round-title finale phase-heading">Finale</h2>
+        {#each results as groupResult}
+          {@const finalists = getFinalistsByRole(groupResult.athletes)}
+          {#if finalists.length > 0}
+            <div class="group-results card">
+              <h3 class="group-title">{groupResult.groupName}</h3>
+              {@render resultsTable(finalists, true, false, false)}
+            </div>
+          {/if}
+        {/each}
+      </div>
+
       <div class="round-section qualifikation-phase">
         <h2 class="round-title qualifikation phase-heading">Qualifikation</h2>
         {#each results as groupResult}
