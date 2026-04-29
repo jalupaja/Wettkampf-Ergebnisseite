@@ -45,6 +45,17 @@
     selectedUserId = $userStore?.id || '';
     await loadUsers();
   });
+
+  $effect(() => {
+    if (activeTab === 'entry' || activeTab === 'results') {
+      loadUsers();
+    }
+  });
+
+  async function onUserChange(e) {
+    selectedUserId = e.target.value;
+    await loadUsers();
+  }
   
   async function loadUsers() {
     loadingUsers = true;
@@ -100,7 +111,7 @@
       <div class="route-entry-panel">
         <div class="route-entry-toolbar">
           <label for="route-target-user">Benutzer</label>
-          <select id="route-target-user" bind:value={selectedUserId} disabled={loadingUsers || users.length === 0}>
+          <select id="route-target-user" bind:value={selectedUserId} onchange={onUserChange} disabled={loadingUsers || users.length === 0}>
             {#each users as user}
               <option value={user.id}>{user.username} ({user.role})</option>
             {/each}
