@@ -53,7 +53,7 @@
     </thead>
     <tbody>
       {#each athletes as athlete, index}
-        <tr class:gold={showMedals && index === 0} class:silver={showMedals && index === 1} class:bronze={showMedals && index === 2} class:me={isCurrentUser(athlete.userId)}>
+        <tr class:me={isCurrentUser(athlete.userId)}>
           <td class="rank-col">
             {#if showMedals && index === 0}🥇{:else if showMedals && index === 1}🥈{:else if showMedals && index === 2}🥉{:else}{index + 1}{/if}
           </td>
@@ -147,11 +147,6 @@
   .results-table th { font-size: 12px; text-transform: uppercase; color: var(--color-text); font-weight: 600; }
   
   .results-table tr:last-child td { border-bottom: none; }
-  .results-table tr.gold { background: rgba(255, 215, 0, 0.1); }
-  .results-table tr.silver { background: rgba(192, 192, 192, 0.1); }
-  .results-table tr.bronze { background: rgba(205, 127, 50, 0.1); }
-  .results-table tr.me { background: rgba(255, 107, 0, 0.1); font-weight: 700; }
-  .results-table tr.me td.name-col { font-weight: 700; }
   
   .rank-col { width: 75px; text-align: center; font-size: 16px; white-space: nowrap; }
   .name-col { font-weight: 500; width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
