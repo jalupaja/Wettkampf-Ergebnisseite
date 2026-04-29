@@ -291,7 +291,7 @@
       </div>
     
     <div class="route-sections">
-      {#if qualRoutes.length && !(competitionState === 'finale')}
+      {#if qualRoutes.length}
         <section class="route-section">
           <h2>Qualifikation</h2>
           <div class="routes-grid">
