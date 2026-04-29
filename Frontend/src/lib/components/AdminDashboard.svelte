@@ -62,7 +62,15 @@
     userError = '';
     try {
       const data = await api.users.list();
-      users = data.users.filter(user => ['athlete', 'finalist'].includes(user.role));
+      let filtered = data.users.filter(user => ['athlete', 'finalist'].includes(user.role));
+      
+      filtered.sort((a, b) => {
+        if (a.role === 'finalist' && b.role !== 'finalist') return -1;
+        if (a.role !== 'finalist' && b.role === 'finalist') return 1;
+        return a.username.localeCompare(b.username, 'de');
+      });
+      
+      users = filtered;
       if (users.length && !users.some(user => user.id === selectedUserId)) {
         selectedUserId = users[0].id;
       }
