@@ -21,8 +21,8 @@ function loadDefaultData() {
     { id: uuidv4(), name: 'Bonus 1', category: 'bonus', topPoints: 50, zones: [], order: 7, createdAt: new Date().toISOString() },
     { id: uuidv4(), name: 'Bonus 2', category: 'bonus', topPoints: 50, zones: [], order: 8, createdAt: new Date().toISOString() },
     { id: uuidv4(), name: 'Bonus 3', category: 'bonus', topPoints: 50, zones: [], order: 9, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Finale 1', category: 'finale', topPoints: 100, zones: [], order: 10, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Finale 2', category: 'finale', topPoints: 100, zones: [], order: 11, createdAt: new Date().toISOString() }
+    { id: uuidv4(), name: 'Finale 1', category: 'finale', topPoints: 0, zones: [], order: 10, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Finale 2', category: 'finale', topPoints: 0, zones: [], order: 11, createdAt: new Date().toISOString() }
   ];
   
   const athletes = [
