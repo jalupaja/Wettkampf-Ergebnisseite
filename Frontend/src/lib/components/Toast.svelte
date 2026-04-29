@@ -1,5 +1,5 @@
 <script>
-  import { toastStore } from './stores/toast.js';
+  import { toastStore } from '../stores/toast.js';
   
   let toasts = $state([]);
   
