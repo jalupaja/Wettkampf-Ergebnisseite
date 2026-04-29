@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
+import { getDb, initDatabase, isDatabaseEmpty, migrateData, saveToFile } from './db.js';
 
-function createDefaultData() {
+function loadDefaultData() {
   const adminPassword = 'ADMIN';
   
   const groups = [
@@ -139,29 +140,106 @@ function createDefaultData() {
   };
 }
 
-let store = createDefaultData();
+export async function initialize() {
+  await initDatabase();
+  
+  if (isDatabaseEmpty()) {
+    const defaultData = loadDefaultData();
+    await migrateData(defaultData);
+  }
+}
 
 export function getStore() {
-  return store;
+  return {
+    getUsers: () => getUsers(),
+    getGroups: () => getGroups(),
+    getRoutes: () => getRoutes(),
+    getCompletedRoutes: () => getCompletedRoutes(),
+    getConfig: () => getConfig()
+  };
 }
 
 export function saveStore() {
-  // In a real app, persist to file/database
+  saveToFile();
 }
 
 export function getUsers() {
-  return store.users;
+  const db = getDb();
+  const result = db.exec('SELECT * FROM users');
+  if (!result[0]) return [];
+  
+  const columns = result[0].columns;
+  return result[0].values.map(row => {
+    const obj = {};
+    columns.forEach((col, i) => {
+      if (col === 'hashed' || col === 'is_super_admin' || col === 'needs_password_change') {
+        obj[col === 'hashed' ? 'hashed' : col === 'is_super_admin' ? 'isSuperAdmin' : 'needsPasswordChange'] = row[i] === 1;
+      } else if (col === 'group_id') {
+        obj.groupId = row[i];
+      } else if (col === 'created_at') {
+        obj.createdAt = row[i];
+      } else {
+        obj[col] = row[i];
+      }
+    });
+    return obj;
+  });
 }
 
 export function getUserByUsername(username) {
-  return store.users.find(u => u.username === username);
+  const db = getDb();
+  const stmt = db.prepare('SELECT * FROM users WHERE username = ?');
+  stmt.bind([username]);
+  
+  if (!stmt.step()) {
+    stmt.free();
+    return null;
+  }
+  
+  const row = stmt.getAsObject();
+  stmt.free();
+  
+  return {
+    id: row.id,
+    username: row.username,
+    password: row.password,
+    hashed: row.hashed === 1,
+    role: row.role,
+    isSuperAdmin: row.is_super_admin === 1,
+    groupId: row.group_id,
+    needsPasswordChange: row.needs_password_change === 1,
+    createdAt: row.created_at
+  };
 }
 
 export function getUserById(id) {
-  return store.users.find(u => u.id === id);
+  const db = getDb();
+  const stmt = db.prepare('SELECT * FROM users WHERE id = ?');
+  stmt.bind([id]);
+  
+  if (!stmt.step()) {
+    stmt.free();
+    return null;
+  }
+  
+  const row = stmt.getAsObject();
+  stmt.free();
+  
+  return {
+    id: row.id,
+    username: row.username,
+    password: row.password,
+    hashed: row.hashed === 1,
+    role: row.role,
+    isSuperAdmin: row.is_super_admin === 1,
+    groupId: row.group_id,
+    needsPasswordChange: row.needs_password_change === 1,
+    createdAt: row.created_at
+  };
 }
 
 export function createUser(username, password, role, groupId = null) {
+  const db = getDb();
   const user = {
     id: uuidv4(),
     username,
@@ -171,32 +249,64 @@ export function createUser(username, password, role, groupId = null) {
     groupId: ['athlete', 'finalist'].includes(role) ? groupId : null,
     createdAt: new Date().toISOString()
   };
-  store.users.push(user);
-  saveStore();
+  
+  db.run(
+    `INSERT INTO users (id, username, password, hashed, role, is_super_admin, group_id, needs_password_change, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      user.id,
+      user.username,
+      user.password,
+      user.hashed ? 1 : 0,
+      user.role,
+      user.isSuperAdmin ? 1 : 0,
+      user.groupId,
+      user.needsPasswordChange ? 1 : 0,
+      user.createdAt
+    ]
+  );
+  
+  saveToFile();
   return user;
 }
 
 export function updateUser(id, updates) {
-  const index = store.users.findIndex(u => u.id === id);
-  if (index === -1) return null;
+  const db = getDb();
+  const existing = getUserById(id);
+  if (!existing) return null;
   
   if (updates.password) {
     updates.needsPasswordChange = false;
     updates.hashed = false;
   }
   
-  store.users[index] = { ...store.users[index], ...updates };
-  saveStore();
-  return store.users[index];
+  const fields = [];
+  const values = [];
+  
+  if (updates.username !== undefined) { fields.push('username = ?'); values.push(updates.username); }
+  if (updates.password !== undefined) { fields.push('password = ?'); values.push(updates.password); }
+  if (updates.hashed !== undefined) { fields.push('hashed = ?'); values.push(updates.hashed ? 1 : 0); }
+  if (updates.role !== undefined) { fields.push('role = ?'); values.push(updates.role); }
+  if (updates.groupId !== undefined) { fields.push('group_id = ?'); values.push(updates.groupId); }
+  if (updates.needsPasswordChange !== undefined) { fields.push('needs_password_change = ?'); values.push(updates.needsPasswordChange ? 1 : 0); }
+  
+  if (fields.length === 0) return existing;
+  
+  values.push(id);
+  db.run(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+  
+  saveToFile();
+  return getUserById(id);
 }
 
 export function deleteUser(id) {
-  const index = store.users.findIndex(u => u.id === id);
-  if (index === -1) return false;
+  const db = getDb();
+  const existing = getUserById(id);
+  if (!existing) return false;
   
-  store.users.splice(index, 1);
-  store.completedRoutes = store.completedRoutes.filter(cr => cr.userId !== id);
-  saveStore();
+  db.run('DELETE FROM users WHERE id = ?', [id]);
+  db.run('DELETE FROM completed_routes WHERE user_id = ?', [id]);
+  saveToFile();
   return true;
 }
 
@@ -205,17 +315,56 @@ export function verifyPassword(user, password) {
 }
 
 export function getGroups() {
-  return [...store.groups].sort((a, b) => a.order - b.order);
+  const db = getDb();
+  const result = db.exec('SELECT * FROM groups ORDER BY sort_order');
+  if (!result[0]) return [];
+  
+  const columns = result[0].columns;
+  return result[0].values.map(row => {
+    const obj = {};
+    columns.forEach((col, i) => {
+      if (col === 'sort_order') {
+        obj.order = row[i];
+      } else if (col === 'created_at') {
+        obj.createdAt = row[i];
+      } else {
+        obj[col] = row[i];
+      }
+    });
+    return obj;
+  });
 }
 
 export function getGroupById(id) {
-  return store.groups.find(g => g.id === id);
+  const db = getDb();
+  const stmt = db.prepare('SELECT * FROM groups WHERE id = ?');
+  stmt.bind([id]);
+  
+  if (!stmt.step()) {
+    stmt.free();
+    return null;
+  }
+  
+  const row = stmt.getAsObject();
+  stmt.free();
+  
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    order: row.sort_order,
+    createdAt: row.created_at
+  };
 }
 
 export function createGroup(name, description = '', order = null) {
+  const db = getDb();
+  
   if (order === null) {
-    order = Math.max(...store.groups.map(g => g.order), 0) + 1;
+    const result = db.exec('SELECT MAX(sort_order) as max FROM groups');
+    order = (result[0]?.values[0]?.[0] || 0) + 1;
   }
+  
   const group = {
     id: uuidv4(),
     name,
@@ -223,47 +372,108 @@ export function createGroup(name, description = '', order = null) {
     order,
     createdAt: new Date().toISOString()
   };
-  store.groups.push(group);
-  saveStore();
+  
+  db.run(
+    'INSERT INTO groups (id, name, description, sort_order, created_at) VALUES (?, ?, ?, ?, ?)',
+    [group.id, group.name, group.description, group.order, group.createdAt]
+  );
+  
+  saveToFile();
   return group;
 }
 
 export function updateGroup(id, updates) {
-  const index = store.groups.findIndex(g => g.id === id);
-  if (index === -1) return null;
+  const db = getDb();
+  const existing = getGroupById(id);
+  if (!existing) return null;
   
-  store.groups[index] = { ...store.groups[index], ...updates };
-  saveStore();
-  return store.groups[index];
+  const fields = [];
+  const values = [];
+  
+  if (updates.name !== undefined) { fields.push('name = ?'); values.push(updates.name); }
+  if (updates.description !== undefined) { fields.push('description = ?'); values.push(updates.description); }
+  if (updates.order !== undefined) { fields.push('sort_order = ?'); values.push(updates.order); }
+  
+  if (fields.length === 0) return existing;
+  
+  values.push(id);
+  db.run(`UPDATE groups SET ${fields.join(', ')} WHERE id = ?`, values);
+  
+  saveToFile();
+  return getGroupById(id);
 }
 
 export function deleteGroup(id) {
-  const index = store.groups.findIndex(g => g.id === id);
-  if (index === -1) return { success: false };
+  const db = getDb();
+  const existing = getGroupById(id);
+  if (!existing) return { success: false };
   
-  const affectedUsers = store.users.filter(u => u.groupId === id).length;
-  store.groups.splice(index, 1);
-  store.users.forEach(u => {
-    if (u.groupId === id) {
-      u.groupId = null;
-    }
-  });
-  saveStore();
+  const countResult = db.exec('SELECT COUNT(*) as count FROM users WHERE group_id = ?', [id]);
+  const affectedUsers = countResult[0]?.values[0]?.[0] || 0;
+  
+  db.run('DELETE FROM groups WHERE id = ?', [id]);
+  db.run('UPDATE users SET group_id = NULL WHERE group_id = ?', [id]);
+  saveToFile();
+  
   return { success: true, affectedUsers };
 }
 
 export function getRoutes() {
-  return [...store.routes].sort((a, b) => a.order - b.order);
+  const db = getDb();
+  const result = db.exec('SELECT * FROM routes ORDER BY sort_order');
+  if (!result[0]) return [];
+  
+  const columns = result[0].columns;
+  return result[0].values.map(row => {
+    const obj = {};
+    columns.forEach((col, i) => {
+      if (col === 'top_points') {
+        obj.topPoints = row[i];
+      } else if (col === 'sort_order') {
+        obj.order = row[i];
+      } else if (col === 'created_at') {
+        obj.createdAt = row[i];
+      } else {
+        obj[col] = row[i];
+      }
+    });
+    obj.zones = JSON.parse(obj.zones || '[]');
+    return obj;
+  });
 }
 
 export function getRouteById(id) {
-  return store.routes.find(r => r.id === id);
+  const db = getDb();
+  const stmt = db.prepare('SELECT * FROM routes WHERE id = ?');
+  stmt.bind([id]);
+  
+  if (!stmt.step()) {
+    stmt.free();
+    return null;
+  }
+  
+  const row = stmt.getAsObject();
+  stmt.free();
+  
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    topPoints: row.top_points,
+    zones: JSON.parse(row.zones),
+    order: row.sort_order,
+    createdAt: row.created_at
+  };
 }
 
 export function createRoute({ name, category, topPoints = (category === 'bonus' ? 50 : (category === 'finale' ? 0 : 100)), zones = [], order = null }) {
+  const db = getDb();
+  
   if (order === null) {
-    order = Math.max(...store.routes.map(r => r.order), 0) + 1;
+    const result = db.exec('SELECT MAX(sort_order) as max FROM routes');
+    order = (result[0]?.values[0]?.[0] || 0) + 1;
   }
+  
   const route = {
     id: uuidv4(),
     name,
@@ -273,115 +483,175 @@ export function createRoute({ name, category, topPoints = (category === 'bonus' 
     order,
     createdAt: new Date().toISOString()
   };
-  store.routes.push(route);
-  saveStore();
+  
+  db.run(
+    'INSERT INTO routes (id, name, category, top_points, zones, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [route.id, route.name, route.category, route.topPoints, JSON.stringify(route.zones), route.order, route.createdAt]
+  );
+  
+  saveToFile();
   return route;
 }
 
 export function updateRoute(id, updates) {
-  const index = store.routes.findIndex(r => r.id === id);
-  if (index === -1) return null;
+  const db = getDb();
+  const existing = getRouteById(id);
+  if (!existing) return null;
   
-  store.routes[index] = { ...store.routes[index], ...updates };
-  saveStore();
-  return store.routes[index];
+  const fields = [];
+  const values = [];
+  
+  if (updates.name !== undefined) { fields.push('name = ?'); values.push(updates.name); }
+  if (updates.category !== undefined) { fields.push('category = ?'); values.push(updates.category); }
+  if (updates.topPoints !== undefined) { fields.push('top_points = ?'); values.push(updates.topPoints); }
+  if (updates.zones !== undefined) { fields.push('zones = ?'); values.push(JSON.stringify(updates.zones)); }
+  if (updates.order !== undefined) { fields.push('sort_order = ?'); values.push(updates.order); }
+  
+  if (fields.length === 0) return existing;
+  
+  values.push(id);
+  db.run(`UPDATE routes SET ${fields.join(', ')} WHERE id = ?`, values);
+  
+  saveToFile();
+  return getRouteById(id);
 }
 
 export function deleteRoute(id) {
-  const route = store.routes.find(r => r.id === id);
+  const db = getDb();
+  const route = getRouteById(id);
   if (!route) return false;
   
   const routeName = route.name;
-  const index = store.routes.findIndex(r => r.id === id);
-  store.routes.splice(index, 1);
-  store.completedRoutes = store.completedRoutes.filter(cr => cr.routeName !== routeName);
-  saveStore();
+  db.run('DELETE FROM routes WHERE id = ?', [id]);
+  db.run('DELETE FROM completed_routes WHERE route_name = ?', [routeName]);
+  saveToFile();
   return true;
 }
 
 export function getCompletedRoutes() {
-  return store.completedRoutes;
+  const db = getDb();
+  const result = db.exec('SELECT * FROM completed_routes');
+  if (!result[0]) return [];
+  
+  const columns = result[0].columns;
+  return result[0].values.map(row => {
+    const obj = {};
+    columns.forEach((col, i) => {
+      if (col === 'user_id') {
+        obj.userId = row[i];
+      } else if (col === 'route_name') {
+        obj.routeName = row[i];
+      } else if (col === 'completed_at') {
+        obj.completedAt = row[i];
+      } else {
+        obj[col] = row[i];
+      }
+    });
+    return obj;
+  });
 }
 
 export function setRouteResult(userId, routeName, result) {
-  const existing = store.completedRoutes.find(
-    cr => cr.userId === userId && cr.routeName === routeName
-  );
+  const db = getDb();
+  
+  const stmt = db.prepare('SELECT * FROM completed_routes WHERE user_id = ? AND route_name = ?');
+  stmt.bind([userId, routeName]);
+  const existing = stmt.step() ? stmt.getAsObject() : null;
+  stmt.free();
   
   if (result === null) {
     if (existing) {
-      store.completedRoutes = store.completedRoutes.filter(cr => cr !== existing);
+      db.run('DELETE FROM completed_routes WHERE id = ?', [existing.id]);
     }
-    saveStore();
+    saveToFile();
     return { result: null };
   }
-
+  
   if (existing) {
-    existing.result = result;
-    existing.completedAt = new Date().toISOString();
+    db.run('UPDATE completed_routes SET result = ?, completed_at = ? WHERE id = ?', [result, new Date().toISOString(), existing.id]);
   } else {
-    store.completedRoutes.push({
-      id: uuidv4(),
-      userId,
-      routeName,
-      result,
-      completedAt: new Date().toISOString()
-    });
+    db.run(
+      'INSERT INTO completed_routes (id, user_id, route_name, result, completed_at) VALUES (?, ?, ?, ?, ?)',
+      [uuidv4(), userId, routeName, result, new Date().toISOString()]
+    );
   }
-  saveStore();
+  
+  saveToFile();
   return { result };
 }
 
 export function setBonusResult(userId, routeName, count) {
-  const existing = store.completedRoutes.find(
-    cr => cr.userId === userId && cr.routeName === routeName
-  );
+  const db = getDb();
+  
+  const stmt = db.prepare('SELECT * FROM completed_routes WHERE user_id = ? AND route_name = ?');
+  stmt.bind([userId, routeName]);
+  const existing = stmt.step() ? stmt.getAsObject() : null;
+  stmt.free();
   
   if (count === 0 || count === null) {
     if (existing) {
-      store.completedRoutes = store.completedRoutes.filter(cr => cr !== existing);
+      db.run('DELETE FROM completed_routes WHERE id = ?', [existing.id]);
     }
-    saveStore();
+    saveToFile();
     return { count: 0 };
   }
   
   if (existing) {
-    existing.result = count;
-    existing.completedAt = new Date().toISOString();
+    db.run('UPDATE completed_routes SET result = ?, completed_at = ? WHERE id = ?', [count, new Date().toISOString(), existing.id]);
   } else {
-    store.completedRoutes.push({
-      id: uuidv4(),
-      userId,
-      routeName,
-      result: count,
-      completedAt: new Date().toISOString()
-    });
+    db.run(
+      'INSERT INTO completed_routes (id, user_id, route_name, result, completed_at) VALUES (?, ?, ?, ?, ?)',
+      [uuidv4(), userId, routeName, count, new Date().toISOString()]
+    );
   }
-  saveStore();
+  
+  saveToFile();
   return { count };
 }
 
 export function getConfig() {
-  return store.config;
+  const db = getDb();
+  const result = db.exec('SELECT * FROM config');
+  const config = {};
+  
+  if (result[0]) {
+    for (const row of result[0].values) {
+      config[row[0]] = JSON.parse(row[1]);
+    }
+  }
+  
+  return {
+    qualificationBestCount: config.qualificationBestCount ?? 5,
+    finaleMaxAthletes: config.finaleMaxAthletes ?? 8,
+    finaleSmallGroupMaxAthletes: config.finaleSmallGroupMaxAthletes ?? 6,
+    finaleSmallGroupThreshold: config.finaleSmallGroupThreshold ?? 10,
+    competitionState: config.competitionState ?? 'setup'
+  };
 }
 
 export function updateUserRole(userId, newRole) {
-  const user = store.users.find(u => u.id === userId);
-  if (user) {
-    user.role = newRole;
-    saveStore();
-  }
-  return user;
+  const db = getDb();
+  db.run('UPDATE users SET role = ? WHERE id = ?', [newRole, userId]);
+  saveToFile();
+  return getUserById(userId);
 }
 
 export function updateConfig(updates) {
-  store.config = { ...store.config, ...updates };
-  saveStore();
-  return store.config;
+  const db = getDb();
+  
+  for (const [key, value] of Object.entries(updates)) {
+    db.run(
+      'INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)',
+      [key, JSON.stringify(value)]
+    );
+  }
+  
+  saveToFile();
+  return getConfig();
 }
 
-export function resetData() {
-  store = createDefaultData();
-  saveStore();
-  return store;
+export async function resetData() {
+  const defaultData = loadDefaultData();
+  await migrateData(defaultData);
+  return defaultData;
 }

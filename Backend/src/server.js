@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+import { initialize } from './data/store.js';
 import authRoutes from './routes/auth.js';
 import usersRoutes from './routes/users.js';
 import groupsRoutes from './routes/groups.js';
@@ -36,28 +37,32 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api', authRoutes);
-app.use('/api/Users', usersRoutes);
-app.use('/api/Groups', groupsRoutes);
-app.use('/api/Finale', finaleRoutes);
-app.use('/api/admin/Groups', adminGroupsRoutes);
-app.use('/api/admin/Routes', adminRoutesRoutes);
-app.use('/api/Routes', routesRoutes);
-app.use('/api/results', resultsRoutes);
-app.use('/api/config', configRoutes);
-app.use('/api/admin/data', dataRoutes);
+initialize().then(() => {
+  console.log('Datenbank initialisiert');
+  
+  app.use('/api', authRoutes);
+  app.use('/api/Users', usersRoutes);
+  app.use('/api/Groups', groupsRoutes);
+  app.use('/api/Finale', finaleRoutes);
+  app.use('/api/admin/Groups', adminGroupsRoutes);
+  app.use('/api/admin/Routes', adminRoutesRoutes);
+  app.use('/api/Routes', routesRoutes);
+  app.use('/api/results', resultsRoutes);
+  app.use('/api/config', configRoutes);
+  app.use('/api/admin/data', dataRoutes);
+  
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+  });
 
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
-});
+  app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Serverfehler', details: err.message });
+  });
 
-app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-  res.status(500).json({ error: 'Serverfehler', details: err.message });
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server läuft auf http://0.0.0.0:${PORT}`);
-  console.log(`Erlaubte CORS Origins: ${CORS_ORIGINS.join(', ')}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server läuft auf http://0.0.0.0:${PORT}`);
+    console.log(`Erlaubte CORS Origins: ${CORS_ORIGINS.join(', ')}`);
+  });
 });
