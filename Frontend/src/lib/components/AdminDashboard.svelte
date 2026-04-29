@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { api } from '../api.js';
   import { userStore } from '../stores/user.js';
+  import { toastStore } from '../stores/toast.js';
   import UsersManagement from './admin/UsersManagement.svelte';
   import GroupsManagement from './admin/GroupsManagement.svelte';
   import RoutesManagement from './admin/RoutesManagement.svelte';
@@ -14,7 +15,6 @@
   let users = $state([]);
   let selectedUserId = $state('');
   let loadingUsers = $state(true);
-  let userError = $state('');
   const isErgebnisdienst = $derived($userStore?.role === 'ergebnisdienst');
   
   const tabs = $derived(
@@ -59,7 +59,6 @@
   
   async function loadUsers() {
     loadingUsers = true;
-    userError = '';
     try {
       const data = await api.users.list();
       let filtered = data.users.filter(user => ['athlete', 'finalist'].includes(user.role));
@@ -79,7 +78,7 @@
         selectedUserId = '';
       }
     } catch (err) {
-      userError = err.message;
+      toastStore.error(err.message);
     }
     loadingUsers = false;
   }
@@ -125,10 +124,6 @@
             {/each}
           </select>
         </div>
-        
-        {#if userError}
-          <div class="error-message">{userError}</div>
-        {/if}
         
         {#if loadingUsers}
           <div class="loading">Laden...</div>

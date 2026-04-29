@@ -7,6 +7,7 @@
   import Dashboard from './lib/components/Dashboard.svelte';
   import Header from './lib/components/Header.svelte';
   import ResultsView from './lib/components/ResultsView.svelte';
+  import Toast from './lib/components/Toast.svelte';
   import './lib/styles/global.css';
   
   let loading = $state(true);
@@ -48,6 +49,7 @@
 </script>
 
 <div class:dark={isDark} class:light={!isDark}>
+  <Toast />
   {#if loading}
     <div class="loading">
       <div class="spinner"></div>

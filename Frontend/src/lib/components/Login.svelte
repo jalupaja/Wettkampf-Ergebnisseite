@@ -1,6 +1,7 @@
 <script>
   import { api } from '../api.js';
   import { userStore } from '../stores/user.js';
+  import { toastStore } from '../stores/toast.js';
   import { onMount } from 'svelte';
   
   let { onLogin } = $props();
@@ -25,6 +26,7 @@
       if (onLogin) onLogin();
     } catch (err) {
       error = err.message;
+      toastStore.error(err.message);
     }
     loading = false;
   }
@@ -39,10 +41,6 @@
     </div>
     
     <form onsubmit={handleLogin}>
-      {#if error}
-        <div class="error-message">{error}</div>
-      {/if}
-      
       <div class="form-group">
         <label for="password">Passwort</label>
         <input

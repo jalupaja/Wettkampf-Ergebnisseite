@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { api } from '../../api.js';
   import { readCsvFile, parseConfigCSV } from '../../utils/csv.js';
+  import { toastStore } from '../../stores/toast.js';
   
   let config = $state({
     qualificationBestCount: 4,
@@ -27,7 +28,7 @@
       config = { ...config, ...data.config };
       groups = data.groups || [];
     } catch (err) {
-      error = err.message;
+      toastStore.error(err.message);
     }
     loading = false;
   }
@@ -42,8 +43,9 @@
         finaleSmallGroupThreshold: parseInt(config.finaleSmallGroupThreshold) || 10,
         rulesUrl: config.rulesUrl || ''
       });
+      toastStore.success('Einstellungen gespeichert');
     } catch (err) {
-      error = err.message;
+      toastStore.error(err.message);
     }
   }
   
@@ -71,14 +73,15 @@
       const text = await readCsvFile(file);
       const data = parseConfigCSV(text);
       if (Object.keys(data).length === 0) {
-        error = 'CSV-Datei ist leer';
+        toastStore.error('CSV-Datei ist leer');
         importing = false;
         return;
       }
       await api.data.importConfig(data);
       await loadConfig();
-          } catch (err) {
-      error = err.message;
+      toastStore.success('Konfiguration importiert');
+    } catch (err) {
+      toastStore.error(err.message);
     }
     importing = false;
     event.target.value = '';
@@ -94,10 +97,6 @@
       <button type="button" class="outline btn-sm" onclick={handleExport}>Export</button>
     </div>
   </div>
-  
-  {#if error}
-    <div class="error-message">{error}</div>
-  {/if}
   
   
   {#if loading}
