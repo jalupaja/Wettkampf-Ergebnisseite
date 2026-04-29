@@ -29,8 +29,6 @@
         {$userStore?.username}
         {#if $userStore?.role === 'admin'}
           <span class="badge">Admin</span>
-        {:else}
-          <span class="badge athlete">Athlet</span>
         {/if}
       </span>
       
