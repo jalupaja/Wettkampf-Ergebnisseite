@@ -163,7 +163,7 @@ router.get('/users', authenticate, requireAdmin, (req, res) => {
     
     csvRows.push([
       `"${user.username}"`,
-      user.password ? '******' : '',
+      user.password || '',
       user.role,
       `"${group?.name || ''}"`,
       `"${resultsStr.replace(/"/g, '""')}"`
