@@ -46,6 +46,13 @@ router.put('/', authenticate, requireAdmin, (req, res) => {
       }
     }
     
+    if (updates.rulesURL !== undefined || updates.rulesUrl !== undefined) {
+      const url = updates.rulesURL || updates.rulesUrl;
+      if (typeof url !== 'string') {
+        return res.status(400).json({ error: 'Ungültige URL für Regeln' });
+      }
+    }
+    
     const previousConfig = getConfig();
     const config = updateConfig(updates);
     const transitionedToFinale = updates.competitionState === 'finale' && previousConfig.competitionState !== 'finale';

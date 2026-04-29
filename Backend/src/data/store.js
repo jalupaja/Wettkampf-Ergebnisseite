@@ -135,7 +135,8 @@ function loadDefaultData() {
       finaleMaxAthletes: 8,
       finaleSmallGroupMaxAthletes: 6,
       finaleSmallGroupThreshold: 10,
-      competitionState: 'setup'
+      competitionState: 'setup',
+      rulesURL: ''
     }
   };
 }
@@ -625,7 +626,8 @@ export function getConfig() {
     finaleMaxAthletes: config.finaleMaxAthletes ?? 8,
     finaleSmallGroupMaxAthletes: config.finaleSmallGroupMaxAthletes ?? 6,
     finaleSmallGroupThreshold: config.finaleSmallGroupThreshold ?? 10,
-    competitionState: config.competitionState ?? 'setup'
+    competitionState: config.competitionState ?? 'setup',
+    rulesUrl: config.rulesURL ?? ''
   };
 }
 
