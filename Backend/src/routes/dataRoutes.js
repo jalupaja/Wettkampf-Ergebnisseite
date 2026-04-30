@@ -14,7 +14,10 @@ import {
   createGroup,
   updateGroup,
   getGroupById,
-  getStore
+  getStore,
+  saveStore,
+  deleteAllRoutes,
+  deleteAllGroups
 } from '../data/store.js';
 
 const router = Router();
@@ -86,8 +89,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
     const { mode, data } = req.body;
 
     if (mode === 'replace') {
-      const store = getStore();
-      store.routes = [];
+      deleteAllRoutes();
     }
 
     const results = [];
@@ -256,14 +258,8 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
     let deletedCount = 0;
     
     if (mode === 'replace') {
-      const originalCount = store.groups.length;
-      store.groups = [];
-      // Unassign all athletes from groups
-      store.users.forEach(u => {
-        if (['athlete', 'finalist'].includes(u.role)) {
-          u.groupId = null;
-        }
-      });
+      const originalCount = getGroups().length;
+      deleteAllGroups();
       preservedCount = 0;
       deletedCount = originalCount;
     }

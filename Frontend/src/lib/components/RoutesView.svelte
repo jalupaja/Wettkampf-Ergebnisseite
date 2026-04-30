@@ -348,7 +348,6 @@
   async function setFinaleTime(routeId, timeValue) {
     await checkStateAndSetResult(routeId, timeValue, 'time');
   }
-  // TODO use $userStore?.role
 </script>
 
 <div class="routes-view">

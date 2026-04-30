@@ -75,27 +75,19 @@ router.post('/result', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Benutzer nicht gefunden' });
     }
 
-    const isAdminFinaleInput =
-      req.user.role === 'admin' &&
-      config.competitionState === 'finale' &&
-      targetUser.role === 'finalist' &&
-      route.category === 'finale';
+    const isAdminOrErgebnisdienst = ['admin', 'ergebnisdienst'].includes(req.user.role);
+    const isAdmin = req.user.role === 'admin';
 
-    const isErgebnisdienstFinaleInput =
-      req.user.role === 'ergebnisdienst' &&
-      config.competitionState === 'finale' &&
-      targetUser.role === 'finalist' &&
-      route.category === 'finale';
-
-    if (config.competitionState === 'finale' && route.category === 'finale' && !isAdminFinaleInput && !isErgebnisdienstFinaleInput) {
+    if (isAdminOrErgebnisdienst && config.competitionState === 'finale') {
+    } else if (config.competitionState === 'finale' && route.category === 'finale') {
       return res.status(403).json({ error: 'Nur Admin oder Ergebnisdienst dürfen Finalrouten bearbeiten' });
     }
 
-    if (req.user.role === 'ergebnisdienst' && !isErgebnisdienstFinaleInput) {
-      return res.status(403).json({ error: 'Ergebnisdienst darf nur Finalrouten für Finalisten bearbeiten' });
+    if (req.user.role === 'ergebnisdienst' && config.competitionState !== 'finale') {
+      return res.status(403).json({ error: 'Ergebnisdienst darf nur im Finale Routen bearbeiten' });
     }
 
-    if (targetUserId !== req.user.id && req.user.role !== 'admin' && !isErgebnisdienstFinaleInput) {
+    if (targetUserId !== req.user.id && !isAdmin) {
       return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
     }
 
@@ -103,7 +95,7 @@ router.post('/result', authenticate, (req, res) => {
       return res.status(403).json({ error: 'Finalisten dürfen Finalrouten nicht bearbeiten' });
     }
 
-    if (req.user.role !== 'admin' && req.user.role !== 'ergebnisdienst') {
+    if (!isAdminOrErgebnisdienst) {
       if (config.competitionState === 'setup' || config.competitionState === 'finished') {
         return res.status(403).json({ error: 'Wettkampf ist nicht aktiv' });
       }
@@ -117,32 +109,34 @@ router.post('/result', authenticate, (req, res) => {
       }
     }
 
-if (route.category === 'finale') {
+    if (route.category === 'finale') {
       // Allow numeric points (as seconds), plain seconds (e.g., 75), or time strings (M:SS or M:SS.s)
       let resultInput = String(result || '').trim();
       
       // Check if it's a plain number (seconds)
       const plainSeconds = Number(resultInput.replace(',', '.'));
       if (Number.isFinite(plainSeconds) && plainSeconds > 0 && !resultInput.includes(':')) {
-      if (Number.isFinite(plainSeconds) && plainSeconds > 0 && !resultInput.includes(':')) {
         // Interpret plain number as seconds - convert to M:SS.s format
         const mins = Math.floor(plainSeconds / 60);
         const secs = plainSeconds % 60;
         req.body.result = secs === 0 ? `${mins}:00` : `${mins}:${secs.toFixed(1)}`;
       } else {
-        // Auto-correct . or , to : for time input (e.g., 4.32 or 4,32 -> 4:32)
-        const resultStr = resultInput.replace(/[.,]/g, ':').replace(/:+/g, ':');
+        // Auto-correct comma to colon for time input (e.g., 4,32 -> 4:32)
+        // Keep dots for milliseconds (e.g., 1:15.15 stays as-is)
+        const resultStr = resultInput.replace(',', ':').replace(/:+/g, ':');
         const isTimeFormat = /^\d+:\d+(\.\d+)?$/.test(resultStr);
-        
+
         if (isTimeFormat) {
-          req.body.result = resultStr;
+          // Convert time string M:SS.ss to seconds as float for proper sorting/comparison
+          const [mins, secs] = resultStr.split(':');
+          req.body.result = parseInt(mins) * 60 + parseFloat(secs);
         } else {
           const parsedResult = typeof result === 'number'
             ? result
             : Number(String(result).replace(',', '.'));
     
           if (!Number.isFinite(parsedResult) || parsedResult <= 0) {
-            return res.status(400).json({ error: 'Für Finalrouten Zeit eingeben (z.B. 4:32 oder 75 für 1:15)' });
+            return res.status(400).json({ error: 'Für Finalrouten Zeit eingeben (z.B. 4:32, 1:15.15 oder 75)' });
           }
     
           req.body.result = parsedResult;
@@ -206,6 +200,7 @@ router.post('/bonus', authenticate, (req, res) => {
       if (route.category === 'finale') {
         return res.status(403).json({ error: 'Finalrouten können nicht als Bonusdaten erfasst werden' });
       }
+    } else if (req.user.role === 'admin' && config.competitionState === 'finale') {
     }
 
     if (typeof count !== 'number' || count < 0) {

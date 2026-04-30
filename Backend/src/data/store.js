@@ -529,6 +529,20 @@ export function deleteRoute(id) {
   return true;
 }
 
+export function deleteAllRoutes() {
+  const db = getDb();
+  db.run('DELETE FROM routes');
+  db.run('DELETE FROM completed_routes');
+  saveToFile();
+}
+
+export function deleteAllGroups() {
+  const db = getDb();
+  db.run('UPDATE users SET group_id = NULL');
+  db.run('DELETE FROM groups');
+  saveToFile();
+}
+
 export function getCompletedRoutes() {
   const db = getDb();
   const result = db.exec('SELECT * FROM completed_routes');
