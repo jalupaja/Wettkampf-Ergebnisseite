@@ -22,6 +22,13 @@
   let timerRouteId = $state(null);
   
   function formatTime(ms) {
+    if (!ms || ms < 0) return '0:00';
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+  
+  function formatTimeWithMs(ms) {
     if (!ms || ms < 0) return '0:00.000';
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
@@ -84,6 +91,7 @@
   
   onDestroy(() => {
     if (refreshInterval) clearInterval(refreshInterval);
+    if (timerInterval) clearInterval(timerInterval);
   });
   
   function getFinalistCount(groupSize) {
@@ -134,12 +142,14 @@
   async function loadData() {
     loading = true;
     try {
-      const configData = await api.config.get();
+      const [configData, resultsData] = await Promise.all([
+        api.config.get(),
+        competitionState === 'finale' ? api.results.get() : Promise.resolve(null)
+      ]);
       config = configData.config;
       competitionState = config.competitionState || 'setup';
       await loadRoutes();
-      if (competitionState === 'finale') {
-        const resultsData = await api.results.get();
+      if (competitionState === 'finale' && resultsData) {
         updateFinalists(resultsData);
       } else {
         finalists = new Set();
@@ -462,6 +472,7 @@
           <button class="timer-close" onclick={closeTimer}>×</button>
         </div>
         <div class="timer-display">{formatTime(timerElapsed)}</div>
+        <div class="timer-display-ms">{formatTimeWithMs(timerElapsed)}</div>
         <div class="timer-controls">
           {#if timerRunning}
             <button class="timer-btn-pause" onclick={pauseTimer}>Pause</button>
@@ -469,8 +480,10 @@
             <button class="timer-btn-start" onclick={startTimer}>{timerElapsed > 0 ? 'Weiter' : 'Start'}</button>
           {/if}
           <button class="timer-btn-reset" onclick={resetTimer}>Reset</button>
+        </div>
+        <div class="timer-use-row">
           {#if timerRouteId}
-            <button class="timer-btn-use" onclick={() => useTimerTime(timerRouteId)}>Zeit übernehmen</button>
+            <button class="timer-btn-use" onclick={() => useTimerTime(timerRouteId)}>Übernehmen</button>
           {/if}
         </div>
       </div>
@@ -603,23 +616,52 @@
     font-weight: 700;
     text-align: center;
     font-family: monospace;
-    margin-bottom: 24px;
+    margin-bottom: 4px;
     color: var(--color-finale);
+  }
+  
+  .timer-display-ms {
+    font-size: 20px;
+    font-weight: 400;
+    text-align: center;
+    font-family: monospace;
+    color: var(--color-text-muted);
+    margin-bottom: 20px;
   }
   
   .timer-controls {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     justify-content: center;
     flex-wrap: wrap;
+    margin-bottom: 12px;
   }
   
   .timer-controls button {
-    padding: 12px 20px;
-    border-radius: 8px;
+    padding: 8px 14px;
+    border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
+    font-size: 12px;
+  }
+  
+  .timer-use-row {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .timer-btn-use {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
     font-size: 14px;
+    background: var(--color-finale);
+    border: 2px solid var(--color-finale);
+    color: white;
+    cursor: pointer;
+  }
+  .timer-btn-use:hover {
+    background: color-mix(in srgb, var(--color-finale) 80%, black);
   }
   
   .timer-btn-start {

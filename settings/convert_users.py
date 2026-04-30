@@ -78,9 +78,9 @@ def convert_csv(input_file, output_file):
                 'groupName': group or ''
             })
     
-    # Write output CSV
+    # Write output CSV - utf-8-sig for Excel compatibility with Umlaute
     headers = ['username', 'password', 'role', 'groupName']
-    with open(output_file, 'w', encoding='utf-8', newline='') as f:
+    with open(output_file, 'w', encoding='utf-8-sig', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
         writer.writerows(results)
