@@ -57,8 +57,7 @@ def convert_csv(input_file, output_file):
             geburtsdatum = row.get('Geburtsdatum', '')
             email = row.get('Email', '')
             
-            username = email.strip() if email else f"{vorname.strip()}.{nachname.strip()}"
-            username = username.replace(' ', '.')
+            username = f"{vorname.strip()} {nachname.strip()}"
             
             if username in seen_names:
                 print(f"Skipping duplicate: {username}")
