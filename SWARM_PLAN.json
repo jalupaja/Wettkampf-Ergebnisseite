@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "title": "Security review for frontend and backend",
+  "swarm": "security-audit",
+  "current_phase": 1,
+  "phases": [
+    {
+      "id": 1,
+      "name": "Frontend security review",
+      "status": "pending",
+      "tasks": [
+        {
+          "id": "1.1",
+          "phase": 1,
+          "status": "pending",
+          "size": "medium",
+          "description": "Inspect frontend components, routing, and user input handling for XSS, unsafe HTML, and client-side injection risks.",
+          "depends": [],
+          "acceptance": "A documented list of frontend security findings and risk areas is produced.",
+          "files_touched": []
+        },
+        {
+          "id": "1.2",
+          "phase": 1,
+          "status": "pending",
+          "size": "small",
+          "description": "Run frontend-focused security checks and verify no exposed secrets or obvious client-side vulnerabilities remain.",
+          "depends": [],
+          "acceptance": "Frontend security scan results are recorded and reviewed.",
+          "files_touched": []
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Backend security review",
+      "status": "pending",
+      "tasks": [
+        {
+          "id": "2.1",
+          "phase": 2,
+          "status": "pending",
+          "size": "medium",
+          "description": "Inspect backend routes, auth, validation, and data persistence paths for injection, auth bypass, and insecure defaults.",
+          "depends": [],
+          "acceptance": "A documented list of backend security findings and risk areas is produced.",
+          "files_touched": []
+        },
+        {
+          "id": "2.2",
+          "phase": 2,
+          "status": "pending",
+          "size": "small",
+          "description": "Run backend-focused security checks and verify no exposed secrets or obvious server-side vulnerabilities remain.",
+          "depends": [],
+          "acceptance": "Backend security scan results are recorded and reviewed.",
+          "files_touched": []
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Security verification and reporting",
+      "status": "pending",
+      "tasks": [
+        {
+          "id": "3.1",
+          "phase": 3,
+          "status": "pending",
+          "size": "medium",
+          "description": "Run targeted security scans and validation checks on both frontend and backend, then summarize results.",
+          "depends": [],
+          "acceptance": "A consolidated security review summary is produced with actionable follow-ups.",
+          "files_touched": []
+        }
+      ]
+    }
+  ],
+  "migration_status": "native",
+  "specMtime": "2026-04-20T14:08:55.182Z",
+  "specHash": "52efbc6e235f61d9006e562fb920bf3ae528c5d4a46b691e1b084b7c6f5d988f"
+}

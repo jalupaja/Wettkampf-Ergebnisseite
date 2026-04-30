@@ -13,6 +13,62 @@
   let finalists = $state(new Set());
   let refreshInterval;
   
+  // Timer state
+  let timerRunning = $state(false);
+  let timerStartTime = $state(0);
+  let timerElapsed = $state(0);
+  let timerInterval = $state(null);
+  let showTimer = $state(false);
+  let timerRouteId = $state(null);
+  
+  function formatTime(ms) {
+    if (!ms || ms < 0) return '0:00.000';
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    const millis = Math.floor(ms % 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}.${millis.toString().padStart(3, '0')}`;
+  }
+  
+  function startTimer() {
+    if (timerRunning) return;
+    timerStartTime = performance.now() - timerElapsed;
+    timerRunning = true;
+    timerInterval = setInterval(() => {
+      timerElapsed = performance.now() - timerStartTime;
+    }, 10);
+  }
+  
+  function pauseTimer() {
+    if (!timerRunning) return;
+    timerRunning = false;
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
+  
+  function resetTimer() {
+    pauseTimer();
+    timerElapsed = 0;
+    timerStartTime = 0;
+  }
+  
+  function useTimerTime(routeId) {
+    const timeValue = formatTime(timerElapsed);
+    setFinaleTime(routeId, timeValue);
+  }
+  
+  function openTimer(routeId) {
+    timerRouteId = routeId;
+    showTimer = true;
+  }
+  
+  function closeTimer() {
+    showTimer = false;
+    timerRouteId = null;
+    pauseTimer();
+  }
+  
   function getActiveUser() {
     return targetUser || $userStore;
   }
@@ -113,9 +169,9 @@
     return !canEditRoute(route);
   }
   
-  async function checkStateAndSetResult(routeId, result) {
+  async function checkStateAndSetResult(routeId, result, resultType = 'points') {
     await refreshState();
-    await setResult(routeId, result);
+    await setResult(routeId, result, resultType);
   }
   
   async function checkStateAndIncrementBonus(routeId, currentCount) {
@@ -263,6 +319,10 @@
     }
     await checkStateAndSetResult(routeId, parsed);
   }
+  
+  async function setFinaleTime(routeId, timeValue) {
+    await checkStateAndSetResult(routeId, timeValue, 'time');
+  }
   // TODO use $userStore?.role
 </script>
 
@@ -340,12 +400,25 @@
                     type="number"
                     min="0"
                     step="0.1"
-                    value={route.result ?? ''}
+                    value={route.result !== null && route.result !== undefined && !String(route.result).includes(':') ? route.result : ''}
                     disabled={disabled}
                     placeholder="Punkte"
+                    class="finale-points-input"
                     onblur={(e) => setFinalePoints(route.id, e.currentTarget.value)}
                     onkeydown={(e) => e.key === 'Enter' && setFinalePoints(route.id, e.currentTarget.value)}
                   />
+                  <input
+                    type="text"
+                    value={String(route.result || '').includes(':') ? route.result : ''}
+                    disabled={disabled}
+                    placeholder="Zeit"
+                    class="finale-time-input"
+                    onblur={(e) => setFinaleTime(route.id, e.currentTarget.value)}
+                    onkeydown={(e) => e.key === 'Enter' && setFinaleTime(route.id, e.currentTarget.value)}
+                  />
+                  <button type="button" class="timer-btn" onclick={() => openTimer(route.id)} disabled={disabled} title="Timer">
+                    ⏱️
+                  </button>
                 </div>
               </div>
             {/each}
@@ -356,6 +429,29 @@
       {#if !routes.length}
         <div class="empty-state"><p>Keine Routen verfügbar.</p></div>
       {/if}
+    </div>
+  {/if}
+  
+  {#if showTimer}
+    <div class="timer-overlay" onclick={closeTimer} role="dialog" aria-modal="true">
+      <div class="timer-popup" onclick={(e) => e.stopPropagation()}>
+        <div class="timer-header">
+          <h3>Timer</h3>
+          <button class="timer-close" onclick={closeTimer}>×</button>
+        </div>
+        <div class="timer-display">{formatTime(timerElapsed)}</div>
+        <div class="timer-controls">
+          {#if timerRunning}
+            <button class="timer-btn-pause" onclick={pauseTimer}>Pause</button>
+          {:else}
+            <button class="timer-btn-start" onclick={startTimer}>{timerElapsed > 0 ? 'Weiter' : 'Start'}</button>
+          {/if}
+          <button class="timer-btn-reset" onclick={resetTimer}>Reset</button>
+          {#if timerRouteId}
+            <button class="timer-btn-use" onclick={() => useTimerTime(timerRouteId)}>Zeit übernehmen</button>
+          {/if}
+        </div>
+      </div>
     </div>
   {/if}
 </div>
@@ -421,13 +517,116 @@
   .finale-input-row {
     display: flex;
     justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
   }
 
   .finale-input-row input {
-    max-width: 120px;
+    max-width: 100px;
     text-align: center;
     font-weight: 600;
   }
+  
+  .finale-points-input { width: 80px; }
+  .finale-time-input { width: 100px; }
+  
+  .timer-btn {
+    background: var(--color-bg-light);
+    border: 2px solid var(--color-finale);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .timer-btn:hover:not(:disabled) { background: var(--color-finale); }
+  .timer-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  
+  .timer-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  .timer-popup {
+    background: var(--color-bg);
+    border-radius: 16px;
+    padding: 24px;
+    min-width: 320px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .timer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .timer-header h3 { margin: 0; font-size: 20px; }
+  
+  .timer-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+  }
+  
+  .timer-display {
+    font-size: 48px;
+    font-weight: 700;
+    text-align: center;
+    font-family: monospace;
+    margin-bottom: 24px;
+    color: var(--color-finale);
+  }
+  
+  .timer-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .timer-controls button {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .timer-btn-start {
+    background: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    color: white;
+  }
+  .timer-btn-start:hover { background: color-mix(in srgb, var(--color-primary) 80%, black); }
+  
+  .timer-btn-pause {
+    background: var(--color-zone);
+    border: 2px solid var(--color-zone);
+    color: white;
+  }
+  .timer-btn-pause:hover { background: color-mix(in srgb, var(--color-zone) 80%, black); }
+  
+  .timer-btn-reset {
+    background: transparent;
+    border: 2px solid var(--color-error);
+    color: var(--color-error);
+  }
+  .timer-btn-reset:hover { background: var(--color-error); color: white; }
+  
+  .timer-btn-use {
+    background: var(--color-finale);
+    border: 2px solid var(--color-finale);
+    color: white;
+  }
+  .timer-btn-use:hover { background: color-mix(in srgb, var(--color-finale) 80%, black); }
   
   .empty-state { text-align: center; padding: 60px; color: var(--color-text-muted); }
   

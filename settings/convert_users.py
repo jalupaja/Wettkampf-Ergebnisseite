@@ -22,8 +22,8 @@ def calculate_age(birth_date_str):
 
 def get_group(anrede, age):
     gender = anrede.strip().lower() if anrede else ''
-    suffix = 'm' if gender == 'herr' elif 'w' if gender = 'frau' else ''
-    if !suffix:
+    suffix = 'm' if gender == 'herr' else ('w' if gender == 'frau' else '')
+    if not suffix:
         print(f"ERROR: wrong Anrede {anrede}")
     
     if age is None:
@@ -57,7 +57,7 @@ def convert_csv(input_file, output_file):
             geburtsdatum = row.get('Geburtsdatum', '')
             email = row.get('Email', '')
             
-            username = email.strip() if email else f"{vorname.lower()}.{nachname.lower()}"
+            username = email.strip() if email else f"{vorname.strip()}.{nachname.strip()}"
             username = username.replace(' ', '.')
             
             if username in seen_names:

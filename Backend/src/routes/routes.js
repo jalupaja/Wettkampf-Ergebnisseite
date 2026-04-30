@@ -117,16 +117,25 @@ router.post('/result', authenticate, (req, res) => {
       }
     }
 
-    if (route.category === 'finale') {
-      const parsedResult = typeof result === 'number'
-        ? result
-        : Number(String(result).replace(',', '.'));
-
-      if (!Number.isFinite(parsedResult) || parsedResult <= 0) {
-        return res.status(400).json({ error: 'Für Finalrouten muss ein positiver Zahlenwert (> 0) erfasst werden' });
+if (route.category === 'finale') {
+      // Allow both numeric points and time strings (format: M:SS.sss or just seconds)
+      const resultStr = String(result || '').trim();
+      const isTimeFormat = /^\d+:\d+(\.\d+)?$/.test(resultStr);
+      
+      if (isTimeFormat) {
+        // Time format - store as is for display and tiebreaker
+        req.body.result = resultStr;
+      } else {
+        const parsedResult = typeof result === 'number'
+          ? result
+          : Number(String(result).replace(',', '.'));
+  
+        if (!Number.isFinite(parsedResult) || parsedResult <= 0) {
+          return res.status(400).json({ error: 'Für Finalrouten muss ein positiver Zahlenwert (> 0) oder Zeit (z.B. 4:32.5) erfasst werden' });
+        }
+  
+        req.body.result = parsedResult;
       }
-
-      req.body.result = parsedResult;
     } else {
       const validResults = ['top', 'attempted', null];
       if (route.zones && route.zones.length > 0) {
