@@ -118,12 +118,13 @@ router.post('/result', authenticate, (req, res) => {
     }
 
 if (route.category === 'finale') {
-      // Allow both numeric points and time strings (format: M:SS.sss or just seconds)
-      const resultStr = String(result || '').trim();
+      // Allow both numeric points and time strings (format M:SS or M:SS.s)
+      let resultStr = String(result || '').trim();
+      // Auto-correct . or , to : for time input (e.g., 4.32 or 4,32 -> 4:32)
+      resultStr = resultStr.replace(/[.,]/g, ':').replace(/:+/g, ':');
       const isTimeFormat = /^\d+:\d+(\.\d+)?$/.test(resultStr);
       
       if (isTimeFormat) {
-        // Time format - store as is for display and tiebreaker
         req.body.result = resultStr;
       } else {
         const parsedResult = typeof result === 'number'
@@ -131,7 +132,7 @@ if (route.category === 'finale') {
           : Number(String(result).replace(',', '.'));
   
         if (!Number.isFinite(parsedResult) || parsedResult <= 0) {
-          return res.status(400).json({ error: 'Für Finalrouten muss ein positiver Zahlenwert (> 0) oder Zeit (z.B. 4:32.5) erfasst werden' });
+          return res.status(400).json({ error: 'Für Finalrouten muss ein positiver Zahlenwert (> 0) oder Zeit (z.B. 4:32) erfasst werden' });
         }
   
         req.body.result = parsedResult;
