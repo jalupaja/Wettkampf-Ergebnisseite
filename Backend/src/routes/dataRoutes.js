@@ -268,30 +268,24 @@ router.post('/groups', authenticate, requireAdmin, (req, res) => {
     data.forEach((row, index) => {
       try {
         if (mode === 'replace' || mode === 'append') {
-          const groupName = row.name || row.settings || '';
-          const groupDesc = row.description || '';
-          if (!groupName) {
-            results.push({ name: 'Unknown', error: 'Missing name' });
-            return;
-          }
-          const existing = getGroups().find(g => g.name === groupName);
+          const existing = getGroups().find(g => g.name === row.name);
           if (existing) {
             updateGroup(existing.id, {
-              description: groupDesc,
+              description: row.description || '',
               order: index + 1
             });
-            results.push({ name: groupName, action: 'updated' });
+            results.push({ name: row.name, action: 'updated' });
           } else {
             createGroup(
-              groupName,
-              groupDesc,
+              row.name,
+              row.description || '',
               index + 1
             );
-            results.push({ name: groupName, action: 'created' });
+            results.push({ name: row.name, action: 'created' });
           }
         }
       } catch (err) {
-        results.push({ name: row.name || row.settings || 'Unknown', error: err.message });
+        results.push({ name: row.name || 'Unknown', error: err.message });
       }
     });
     
