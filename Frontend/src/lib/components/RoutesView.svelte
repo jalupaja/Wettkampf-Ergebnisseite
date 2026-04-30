@@ -66,7 +66,6 @@
   function closeTimer() {
     showTimer = false;
     timerRouteId = null;
-    pauseTimer();
   }
   
   function getActiveUser() {
@@ -163,7 +162,10 @@
     if (['admin', 'ergebnisdienst'].includes($userStore?.role)) return true;
     if (competitionState === 'setup') return false;
     if (competitionState === 'qualification') return true;
-    if (competitionState === 'finale') return false;
+    if (competitionState === 'finale') {
+      if (route.category === 'finale') return false;
+      return false;
+    }
     if (competitionState === 'finished') return false;
     return false;
   }
@@ -457,7 +459,7 @@
   {/if}
   
   {#if showTimer}
-    <div class="timer-overlay" onclick={closeTimer} role="dialog" aria-modal="true">
+    <div class="timer-overlay" role="dialog" aria-modal="true">
       <div class="timer-popup" onclick={(e) => e.stopPropagation()}>
         <div class="timer-header">
           <h3>Timer</h3>
@@ -548,13 +550,13 @@
   }
 
   .finale-input-row input {
-    max-width: 100px;
+    max-width: 140px;
     text-align: center;
     font-weight: 600;
   }
   
-  .finale-points-input { width: 80px; }
-  .finale-time-input { width: 100px; }
+  .finale-points-input { width: 100px; }
+  .finale-time-input { width: 130px; }
   
   .timer-btn {
     background: var(--color-bg-light);
