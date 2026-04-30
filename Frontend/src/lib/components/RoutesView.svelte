@@ -22,11 +22,11 @@
   let timerRouteId = $state(null);
   
   function formatTime(ms) {
-    if (!ms || ms < 0) return '0:00.000';
+    if (!ms || ms < 0) return '0:00.0';
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
-    const millis = Math.floor(ms % 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}.${millis.toString().padStart(3, '0')}`;
+    const tenths = Math.floor((ms % 1000) / 100);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}.${tenths}`;
   }
   
   function startTimer() {
