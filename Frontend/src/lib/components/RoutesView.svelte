@@ -276,9 +276,8 @@
   const totalBonusCount = $derived(bonusRoutes.reduce((sum, r) => sum + (typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0)), 0));
   const maxBonusCount = $derived(bonusRoutes.length);
   
-  // Calculate current points - only best X routes (like backend)
-  const qualPoints = $derived(() => {
-    const routeResults = qualRoutes.map(r => {
+  function calculateQualPoints(routesToCalc, bestCount) {
+    const routeResults = routesToCalc.map(r => {
       let points = 0;
       let isTop = false;
       let zonePoints = 0;
@@ -295,7 +294,6 @@
       return { ...r, points, isTop, zonePoints };
     });
     
-    // Sort same as backend: tops first, then zone points, then topPoints
     const sorted = [...routeResults].sort((a, b) => {
       if (a.isTop && !b.isTop) return -1;
       if (!a.isTop && b.isTop) return 1;
@@ -303,9 +301,11 @@
       return b.topPoints - a.topPoints;
     });
     
-    const best = sorted.slice(0, qualBestCount);
+    const best = sorted.slice(0, bestCount);
     return best.reduce((sum, r) => sum + r.points, 0);
-  });
+  }
+  
+  const qualPoints = $derived(calculateQualPoints(qualRoutes, qualBestCount));
   
   const bonusPoints = $derived(bonusRoutes.reduce((sum, r) => {
     const count = typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0);
