@@ -22,13 +22,6 @@
   let timerRouteId = $state(null);
   
   function formatTime(ms) {
-    if (!ms || ms < 0) return '0:00';
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
-  
-  function formatTimeWithMs(ms) {
     if (!ms || ms < 0) return '0:00.000';
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
@@ -472,7 +465,6 @@
           <button class="timer-close" onclick={closeTimer}>×</button>
         </div>
         <div class="timer-display">{formatTime(timerElapsed)}</div>
-        <div class="timer-display-ms">{formatTimeWithMs(timerElapsed)}</div>
         <div class="timer-controls">
           {#if timerRunning}
             <button class="timer-btn-pause" onclick={pauseTimer}>Pause</button>
@@ -618,15 +610,6 @@
     font-family: monospace;
     margin-bottom: 4px;
     color: var(--color-finale);
-  }
-  
-  .timer-display-ms {
-    font-size: 20px;
-    font-weight: 400;
-    text-align: center;
-    font-family: monospace;
-    color: var(--color-text-muted);
-    margin-bottom: 20px;
   }
   
   .timer-controls {
