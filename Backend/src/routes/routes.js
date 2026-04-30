@@ -127,9 +127,13 @@ router.post('/result', authenticate, (req, res) => {
         const isTimeFormat = /^\d+:\d+(\.\d+)?$/.test(resultStr);
 
         if (isTimeFormat) {
+<<<<<<< Updated upstream
           // Convert time string M:SS.ss to seconds as float for proper sorting/comparison
           const [mins, secs] = resultStr.split(':');
           req.body.result = parseInt(mins) * 60 + parseFloat(secs);
+=======
+          req.body.result = resultStr;
+>>>>>>> Stashed changes
         } else {
           const parsedResult = typeof result === 'number'
             ? result
