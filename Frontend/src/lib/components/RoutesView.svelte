@@ -269,21 +269,43 @@
   const bonusRoutes = $derived(routes.filter(r => r.category === 'bonus'));
   const finaleRoutes = $derived(routes.filter(r => r.category === 'finale'));
   
+  const qualBestCount = $derived(config?.qualificationBestCount || 5);
+  
   const qualTops = $derived(qualRoutes.filter(r => r.result === 'top').length);
   const qualZones = $derived(qualRoutes.filter(r => r.result && r.result !== 'top' && r.result !== 'attempted').length);
   const totalBonusCount = $derived(bonusRoutes.reduce((sum, r) => sum + (typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0)), 0));
   const maxBonusCount = $derived(bonusRoutes.length);
   
-  // Calculate current points
-  const qualPoints = $derived(qualRoutes.reduce((sum, r) => {
-    if (r.result === 'top') return sum + r.topPoints;
-    if (r.result === 'attempted') return sum;
-    if (r.result && r.result !== 'top') {
-      const zone = r.zones?.find(z => z.name === r.result);
-      return sum + (zone?.points || 0);
-    }
-    return sum;
-  }, 0));
+  // Calculate current points - only best X routes (like backend)
+  const qualPoints = $derived(() => {
+    const routeResults = qualRoutes.map(r => {
+      let points = 0;
+      let isTop = false;
+      let zonePoints = 0;
+      if (r.result === 'top') {
+        isTop = true;
+        points = r.topPoints;
+      } else if (r.result && r.result !== 'top' && r.result !== 'attempted') {
+        const zone = r.zones?.find(z => z.name === r.result);
+        if (zone) {
+          zonePoints = zone.points;
+          points = zone.points;
+        }
+      }
+      return { ...r, points, isTop, zonePoints };
+    });
+    
+    // Sort same as backend: tops first, then zone points, then topPoints
+    const sorted = [...routeResults].sort((a, b) => {
+      if (a.isTop && !b.isTop) return -1;
+      if (!a.isTop && b.isTop) return 1;
+      if (a.zonePoints !== b.zonePoints) return b.zonePoints - a.zonePoints;
+      return b.topPoints - a.topPoints;
+    });
+    
+    const best = sorted.slice(0, qualBestCount);
+    return best.reduce((sum, r) => sum + r.points, 0);
+  });
   
   const bonusPoints = $derived(bonusRoutes.reduce((sum, r) => {
     const count = typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0);
