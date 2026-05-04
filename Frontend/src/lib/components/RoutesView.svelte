@@ -189,28 +189,28 @@
     await decrementBonus(routeId, currentCount);
   }
   
-  async function setResult(routeId, result) {
-    const route = routes.find(r => r.id === routeId);
-    if (!route) return;
-    
-    if (!canEditRoute(route)) {
-      toastStore.error('Keine Berechtigung diese Route zu bearbeiten');
-      return;
-    }
-    
-    const userId = getActiveUserId();
-    if (!userId) {
-      toastStore.error('Kein Benutzer ausgewählt');
-      return;
-    }
-    
-    try {
-      await api.routes.setResult(routeId, result, userId);
-      await loadRoutes();
-    } catch (err) {
-      toastStore.error(err.message);
-    }
-  }
+   async function setResult(routeId, result, resultType = 'points') {
+     const route = routes.find(r => r.id === routeId);
+     if (!route) return;
+     
+     if (!canEditRoute(route)) {
+       toastStore.error('Keine Berechtigung diese Route zu bearbeiten');
+       return;
+     }
+     
+     const userId = getActiveUserId();
+     if (!userId) {
+       toastStore.error('Kein Benutzer ausgewählt');
+       return;
+     }
+     
+     try {
+       await api.routes.setResult(routeId, result, userId, resultType);
+       await loadRoutes();
+     } catch (err) {
+       toastStore.error(err.message);
+     }
+   }
   
   async function incrementBonus(routeId, currentCount) {
     const route = routes.find(r => r.id === routeId);

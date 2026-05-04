@@ -47,7 +47,7 @@ export const api = {
   
   routes: {
     list: (userId) => request(userId ? `/Routes?userId=${encodeURIComponent(userId)}` : '/Routes'),
-    setResult: (routeId, result, userId) => request('/Routes/result', { method: 'POST', body: JSON.stringify({ routeId, result, userId }) }),
+    setResult: (routeId, result, userId, resultType = 'points') => request('/Routes/result', { method: 'POST', body: JSON.stringify({ routeId, result, userId, resultType }) }),
     setBonusResult: (routeId, count, userId) => request('/Routes/bonus', { method: 'POST', body: JSON.stringify({ routeId, count, userId }) }),
     admin: {
       list: () => request('/admin/Routes'),

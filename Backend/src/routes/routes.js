@@ -57,7 +57,7 @@ router.get('/', authenticate, (req, res) => {
 
 router.post('/result', authenticate, (req, res) => {
   try {
-    const { routeId, result, userId } = req.body;
+    const { routeId, result, userId, resultType = 'points' } = req.body;
 
     if (!routeId) {
       return res.status(400).json({ error: 'Route-ID erforderlich' });
@@ -114,7 +114,8 @@ if (route.category === 'finale') {
 
       if (resultInput === '') {
         req.body.result = null;
-      } else {
+      } else if (resultType === 'time') {
+        // Handle time format (M:SS or plain seconds)
         const plainSeconds = Number(resultInput.replace(',', '.'));
         if (Number.isFinite(plainSeconds) && plainSeconds > 0 && !resultInput.includes(':')) {
           const mins = Math.floor(plainSeconds / 60);
@@ -127,17 +128,20 @@ if (route.category === 'finale') {
           if (isTimeFormat) {
             req.body.result = resultStr;
           } else {
-            const parsedResult = typeof result === 'number'
-              ? result
-              : Number(String(result).replace(',', '.'));
-
-            if (!Number.isFinite(parsedResult) || parsedResult < 0) {
-              return res.status(400).json({ error: 'Für Finalrouten Zeit eingeben (z.B. 4:32, 1:15.15 oder 75)' });
-            }
-
-            req.body.result = parsedResult;
+            return res.status(400).json({ error: 'Für Finalrouten Zeit eingeben (z.B. 4:32, 1:15.15 oder 75)' });
           }
         }
+      } else {
+        // Handle points format (numeric)
+        const parsedResult = typeof result === 'number'
+          ? result
+          : Number(String(result).replace(',', '.'));
+
+        if (!Number.isFinite(parsedResult) || parsedResult < 0) {
+          return res.status(400).json({ error: 'Für Finalrouten Punkte eingeben (z.B. 100, 87.5)' });
+        }
+
+        req.body.result = parsedResult;
       }
     } else {
       const validResults = ['top', 'attempted', null];
