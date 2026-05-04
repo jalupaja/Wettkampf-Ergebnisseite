@@ -42,13 +42,19 @@ def get_group(anrede, age):
 def convert_csv(input_file, output_file):
     results = []
     seen_names = set()
-    
-    with open(input_file, 'r', encoding='utf-8-sig') as f:
-        sample = f.read(1024)
-        delimiter = ';' if ';' in sample else ','
-    
-    with open(input_file, 'r', encoding='utf-8-sig') as f:
-        reader = csv.DictReader(f, delimiter=delimiter)
+
+    # Try UTF-8 first, fall back to ISO-8859-1 (Latin-1)
+    for encoding in ['utf-8-sig', 'utf-8', 'iso-8859-1', 'latin1']:
+        try:
+            with open(input_file, 'r', encoding=encoding) as f:
+                f.read(1000)  # Test read
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+        else:
+            break
+
+    with open(input_file, 'r', encoding=encoding) as f:
+        reader = csv.DictReader(f, delimiter=';')
         
         for row in reader:
             anrede = row.get('Anrede', '')
