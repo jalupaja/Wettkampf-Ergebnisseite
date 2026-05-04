@@ -5,3 +5,22 @@ dist/
 *.db
 .DS_Store
 .swarm/
+/settings/users.csv
+
+# Agent/AI tool artifacts
+.playwright-mcp/
+.sisyphus/
+SWARM_PLAN.*
+
+# Python
+settings/__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
