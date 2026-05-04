@@ -318,15 +318,33 @@
   }, 0));
   
   const finalePoints = $derived(finaleRoutes.reduce((sum, r) => {
-    if (r.result === 'top') return sum + (Number(r.topPoints) || 0);
-    if (r.result && r.result !== 'top') {
-      const zone = r.zones?.find(z => z.name === r.result);
-      return sum + (zone?.points || 0);
+    if (!r.result) return sum;
+    let points = 0;
+    
+    try {
+      if (typeof r.result === 'string' && r.result.startsWith('{')) {
+        const parsed = JSON.parse(r.result);
+        points = Number(parsed.points) || 0;
+      } else if (r.result === 'top') {
+        points = Number(r.topPoints) || 0;
+      } else if (r.result && r.result !== 'top') {
+        const zone = r.zones?.find(z => z.name === r.result);
+        points = zone?.points || 0;
+      }
+    } catch (e) {
+      // Fall back to old logic if JSON parsing fails
+      if (r.result === 'top') {
+        points = Number(r.topPoints) || 0;
+      } else if (r.result && r.result !== 'top') {
+        const zone = r.zones?.find(z => z.name === r.result);
+        points = zone?.points || 0;
+      }
     }
-    return sum;
+    
+    return sum + points;
   }, 0));
   
-  const totalPoints = $derived(qualPoints + bonusPoints);
+  const totalPoints = $derived(qualPoints + bonusPoints + finalePoints);
 
   const pointsLabel = 'Deine Punkte';
 
@@ -368,10 +386,17 @@
 
   async function setFinalePoints(routeId, rawValue) {
     const parsed = parseFinaleInput(rawValue);
+    
+    // Don't send if user left field empty (could be unintentional)
+    if (parsed === null && rawValue === '') {
+      return;
+    }
+    
     if (parsed === null && rawValue !== '' && rawValue !== null && rawValue !== undefined) {
       toastStore.error('Bitte einen gültigen Zahlenwert >= 0 eingeben');
       return;
     }
+    
     await checkStateAndSetResult(routeId, parsed);
   }
   
