@@ -120,10 +120,22 @@ if (route.category === 'finale') {
       try {
         if (existing && typeof existing.result === 'string' && existing.result.startsWith('{')) {
           existingFinaleData = JSON.parse(existing.result);
+        } else if (existing && typeof existing.result === 'string') {
+          // Handle legacy format: plain numeric value (shouldn't happen, but preserve it)
+          const legacyNum = Number(String(existing.result).replace(',', '.'));
+          if (Number.isFinite(legacyNum)) {
+            existingFinaleData.points = legacyNum;
+          }
         }
       } catch (e) {
-        // If parsing fails, treat as empty
-        existingFinaleData = {};
+        // If parsing fails, try to recover the numeric value
+        console.warn(`[FINALE] Failed to parse existing result for ${route.name}:`, existing?.result, e.message);
+        if (existing && typeof existing.result === 'string') {
+          const legacyNum = Number(String(existing.result).replace(',', '.'));
+          if (Number.isFinite(legacyNum)) {
+            existingFinaleData.points = legacyNum;
+          }
+        }
       }
 
       // Only update if there's an actual input value (not empty string)

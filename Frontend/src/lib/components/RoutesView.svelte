@@ -21,6 +21,9 @@
   let showTimer = $state(false);
   let timerRouteId = $state(null);
   
+  // Debounce timers for finale saves to prevent duplicate requests
+  let finaleDebounceTimers = new Map();
+  
   function formatTime(ms) {
     if (!ms || ms < 0) return '0:00.000';
     const minutes = Math.floor(ms / 60000);
@@ -81,9 +84,15 @@
     refreshInterval = setInterval(refreshState, 30000);
   });
   
-  onDestroy(() => {
+  onDestroy(async () => {
     if (refreshInterval) clearInterval(refreshInterval);
     if (timerInterval) clearInterval(timerInterval);
+    
+    // Clear any pending finale debounce timers
+    for (const timer of finaleDebounceTimers.values()) {
+      clearTimeout(timer);
+    }
+    finaleDebounceTimers.clear();
   });
   
   function getFinalistCount(groupSize) {
@@ -401,7 +410,32 @@
   }
   
   async function setFinaleTime(routeId, timeValue) {
+    // Skip sending empty time (intentional clear by user)
+    if (timeValue === '' || timeValue === null || timeValue === undefined) {
+      return;
+    }
     await checkStateAndSetResult(routeId, timeValue, 'time');
+  }
+
+  function debounceFinaleChange(routeId, value, type) {
+    const key = `${routeId}-${type}`;
+    
+    // Clear any existing timer for this field
+    if (finaleDebounceTimers.has(key)) {
+      clearTimeout(finaleDebounceTimers.get(key));
+    }
+    
+    // Set new debounce timer - save after 500ms of no changes
+    const timer = setTimeout(() => {
+      finaleDebounceTimers.delete(key);
+      if (type === 'points') {
+        setFinalePoints(routeId, value);
+      } else if (type === 'time') {
+        setFinaleTime(routeId, value);
+      }
+    }, 500);
+    
+    finaleDebounceTimers.set(key, timer);
   }
 </script>
 
@@ -475,26 +509,40 @@
               <div class="route-card finale-card" class:disabled={disabled}>
                 <div class="route-name">{route.name}</div>
                 <div class="finale-input-row">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={getFinalePoints(route.result)}
-                    disabled={disabled}
-                    placeholder="Punkte"
-                    class="finale-points-input"
-                    onblur={(e) => setFinalePoints(route.id, e.currentTarget.value)}
-                    onkeydown={(e) => e.key === 'Enter' && setFinalePoints(route.id, e.currentTarget.value)}
-                  />
-                  <input
-                    type="text"
-                    value={getFinaleTime(route.result)}
-                    disabled={disabled}
-                    placeholder="Zeit"
-                    class="finale-time-input"
-                    onblur={(e) => setFinaleTime(route.id, e.currentTarget.value)}
-                    onkeydown={(e) => e.key === 'Enter' && setFinaleTime(route.id, e.currentTarget.value)}
-                  />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={getFinalePoints(route.result)}
+                      disabled={disabled}
+                      placeholder="Punkte"
+                      class="finale-points-input"
+                      oninput={(e) => debounceFinaleChange(route.id, e.currentTarget.value, 'points')}
+                      onkeydown={(e) => {
+                        if (e.key === 'Enter') {
+                          const timer = finaleDebounceTimers.get(`${route.id}-points`);
+                          if (timer) clearTimeout(timer);
+                          finaleDebounceTimers.delete(`${route.id}-points`);
+                          setFinalePoints(route.id, e.currentTarget.value);
+                        }
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={getFinaleTime(route.result)}
+                      disabled={disabled}
+                      placeholder="Zeit"
+                      class="finale-time-input"
+                      oninput={(e) => debounceFinaleChange(route.id, e.currentTarget.value, 'time')}
+                      onkeydown={(e) => {
+                        if (e.key === 'Enter') {
+                          const timer = finaleDebounceTimers.get(`${route.id}-time`);
+                          if (timer) clearTimeout(timer);
+                          finaleDebounceTimers.delete(`${route.id}-time`);
+                          setFinaleTime(route.id, e.currentTarget.value);
+                        }
+                      }}
+                    />
                   <button type="button" class="timer-btn" onclick={() => openTimer(route.id)} disabled={disabled} title="Timer">
                     ⏱️
                   </button>
