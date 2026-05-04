@@ -126,48 +126,53 @@ if (route.category === 'finale') {
         existingFinaleData = {};
       }
 
-      if (resultInput === '' && resultType === 'points') {
-        // Clear points only
-        existingFinaleData.points = null;
-      } else if (resultInput === '' && resultType === 'time') {
-        // Clear time only
-        existingFinaleData.time = null;
-      } else if (resultType === 'time') {
-        // Handle time format (M:SS or plain seconds)
-        const plainSeconds = Number(resultInput.replace(',', '.'));
-        if (Number.isFinite(plainSeconds) && plainSeconds > 0 && !resultInput.includes(':')) {
-          const mins = Math.floor(plainSeconds / 60);
-          const secs = plainSeconds % 60;
-          existingFinaleData.time = secs === 0 ? `${mins}:00` : `${mins}:${secs.toFixed(1)}`;
-        } else {
-          const resultStr = resultInput.replace(',', ':').replace(/:+/g, ':');
-          const isTimeFormat = /^\d+:\d+(\.\d+)?$/.test(resultStr);
-
-          if (isTimeFormat) {
-            existingFinaleData.time = resultStr;
+      // Only update if there's an actual input value (not empty string)
+      if (resultInput !== '') {
+        if (resultType === 'time') {
+          // Handle time format (M:SS or plain seconds)
+          const plainSeconds = Number(resultInput.replace(',', '.'));
+          if (Number.isFinite(plainSeconds) && plainSeconds > 0 && !resultInput.includes(':')) {
+            const mins = Math.floor(plainSeconds / 60);
+            const secs = plainSeconds % 60;
+            existingFinaleData.time = secs === 0 ? `${mins}:00` : `${mins}:${secs.toFixed(1)}`;
           } else {
-            return res.status(400).json({ error: 'Für Finalrouten Zeit eingeben (z.B. 4:32, 1:15.15 oder 75)' });
+            const resultStr = resultInput.replace(',', ':').replace(/:+/g, ':');
+            const isTimeFormat = /^\d+:\d+(\.\d+)?$/.test(resultStr);
+
+            if (isTimeFormat) {
+              existingFinaleData.time = resultStr;
+            } else {
+              return res.status(400).json({ error: 'Für Finalrouten Zeit eingeben (z.B. 4:32, 1:15.15 oder 75)' });
+            }
           }
+        } else {
+          // Handle points format (numeric)
+          const parsedResult = typeof result === 'number'
+            ? result
+            : Number(String(result).replace(',', '.'));
+
+          if (!Number.isFinite(parsedResult) || parsedResult < 0) {
+            return res.status(400).json({ error: 'Für Finalrouten Punkte eingeben (z.B. 100, 87.5)' });
+          }
+
+          existingFinaleData.points = parsedResult;
         }
       } else {
-        // Handle points format (numeric)
-        const parsedResult = typeof result === 'number'
-          ? result
-          : Number(String(result).replace(',', '.'));
-
-        if (!Number.isFinite(parsedResult) || parsedResult < 0) {
-          return res.status(400).json({ error: 'Für Finalrouten Punkte eingeben (z.B. 100, 87.5)' });
+        // Empty input - only clear the specific field if it's explicitly being cleared
+        if (resultType === 'points') {
+          existingFinaleData.points = null;
+        } else if (resultType === 'time') {
+          existingFinaleData.time = null;
         }
-
-        existingFinaleData.points = parsedResult;
       }
       
-      // If both are empty, set result to null; otherwise store as JSON
+      // If both are empty/null, set result to null; otherwise store as JSON
       if ((!existingFinaleData.points && existingFinaleData.points !== 0) && !existingFinaleData.time) {
         req.body.result = null;
       } else {
         req.body.result = JSON.stringify(existingFinaleData);
       }
+      console.log(`[FINALE] User ${targetUserId}, Route ${route.name}: Setting result to`, req.body.result);
     } else {
       const validResults = ['top', 'attempted', null];
       if (route.zones && route.zones.length > 0) {

@@ -343,7 +343,7 @@
     try {
       if (typeof result === 'string' && result.startsWith('{')) {
         const parsed = JSON.parse(result);
-        return parsed.points ?? '';
+        return parsed.points !== undefined && parsed.points !== null ? parsed.points : '';
       }
     } catch (e) {
       // Fall back to checking if it's a plain number
@@ -357,7 +357,7 @@
     try {
       if (typeof result === 'string' && result.startsWith('{')) {
         const parsed = JSON.parse(result);
-        return parsed.time ?? '';
+        return parsed.time !== undefined && parsed.time !== null ? parsed.time : '';
       }
     } catch (e) {
       // Fall back to checking if it's a time format
