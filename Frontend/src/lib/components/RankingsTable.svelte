@@ -37,37 +37,45 @@
 
 
   
-{#snippet resultsTable(athletes, showMedals, useQualificationPoints = false, showStats = true)}
-  <table class="results-table">
-    <thead>
-      <tr>
-        <th class="rank-col">Platz</th>
-        <th class="name-col">Name</th>
-        <th class="points-col">Punkte</th>
-        {#if showStats}
-          <th class="stat-col">T</th>
-          <th class="stat-col">Z</th>
-          <th class="stat-col">B</th>
-        {/if}
-      </tr>
-    </thead>
-    <tbody>
-      {#each athletes as athlete, index}
-        <tr class:me={isCurrentUser(athlete.userId)}>
-          <td class="rank-col">
-            {#if showMedals && index === 0}🥇{:else if showMedals && index === 1}🥈{:else if showMedals && index === 2}🥉{:else}{index + 1}{/if}
-          </td>
-           <td class="name-col">{athlete.username}</td>
-           <td class="points-col">{formatPoints(useQualificationPoints ? (athlete.qualPoints ?? 0) : (athlete.finalePoints ?? athlete.totalPoints ?? 0))}</td>
-          {#if showStats}
-            <td class="stat-col"><span class="stat-value top">{athlete.qualTops ?? 0}</span></td>
-            <td class="stat-col"><span class="stat-value zone">{athlete.qualZones ?? 0}</span></td>
-            <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops ?? 0}</span></td>
-          {/if}
-        </tr>
-      {/each}
-    </tbody>
-  </table>
+{#snippet resultsTable(athletes, showMedals, pointsType = 'total', showStats = true)}
+   <table class="results-table">
+     <thead>
+       <tr>
+         <th class="rank-col">Platz</th>
+         <th class="name-col">Name</th>
+         <th class="points-col">Punkte</th>
+         {#if showStats}
+           <th class="stat-col">T</th>
+           <th class="stat-col">Z</th>
+           <th class="stat-col">B</th>
+         {/if}
+       </tr>
+     </thead>
+     <tbody>
+       {#each athletes as athlete, index}
+         <tr class:me={isCurrentUser(athlete.userId)}>
+           <td class="rank-col">
+             {#if showMedals && index === 0}🥇{:else if showMedals && index === 1}🥈{:else if showMedals && index === 2}🥉{:else}{index + 1}{/if}
+           </td>
+            <td class="name-col">{athlete.username}</td>
+            <td class="points-col">
+              {#if pointsType === 'finale'}
+                {formatPoints(athlete.finalePoints ?? 0)}
+              {:else if pointsType === 'qualification'}
+                {formatPoints(athlete.qualPoints ?? 0)}
+              {:else}
+                {formatPoints(athlete.totalPoints ?? 0)}
+              {/if}
+            </td>
+           {#if showStats}
+             <td class="stat-col"><span class="stat-value top">{athlete.qualTops ?? 0}</span></td>
+             <td class="stat-col"><span class="stat-value zone">{athlete.qualZones ?? 0}</span></td>
+             <td class="stat-col"><span class="stat-value bonus">{athlete.bonusTops ?? 0}</span></td>
+           {/if}
+         </tr>
+       {/each}
+     </tbody>
+   </table>
 {/snippet}
 
   {#if loading}
@@ -81,25 +89,25 @@
            {#if finalists.length > 0}
              <div class="group-results card">
                <h3 class="group-title">{groupResult.groupName}</h3>
-               {@render resultsTable(finalists, true, true, false)}
+               {@render resultsTable(finalists, true, 'finale', false)}
              </div>
            {/if}
          {/each}
       </div>
 
-      <div class="round-section qualifikation-phase">
-        <h2 class="round-title qualifikation phase-heading">Qualifikation</h2>
-        {#each results as groupResult}
-          <div class="group-results card">
-            <h3 class="group-title">{groupResult.groupName}</h3>
-            {#if groupResult.athletes.length}
-              {@render resultsTable(groupResult.athletes, false, true, true)}
-            {:else}
-              <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
-            {/if}
-          </div>
-        {/each}
-      </div>
+         <div class="round-section qualifikation-phase">
+           <h2 class="round-title qualifikation phase-heading">Qualifikation</h2>
+           {#each results as groupResult}
+             <div class="group-results card">
+               <h3 class="group-title">{groupResult.groupName}</h3>
+               {#if groupResult.athletes.length}
+                 {@render resultsTable(groupResult.athletes, false, 'qualification', true)}
+               {:else}
+                 <p class="no-athletes">Keine Athleten in dieser Startklasse</p>
+               {/if}
+             </div>
+           {/each}
+         </div>
     {:else}
       {#each results as groupResult}
         <div class="group-results card">
