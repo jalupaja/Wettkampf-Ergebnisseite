@@ -197,16 +197,18 @@ export function calculateResults() {
         sortedAthletes.map((a, i) => `${i + 1}. ${a.username} (${a.finalePoints}pts, time=${a.finaleTotalTime}s)`).join(', '));
     }
     
-    if (config.competitionState === 'finale' && group.athletes.length > 0) {
-      console.log(`[RANKING] Group "${group.groupName}": sorted ${group.athletes.length} athletes:`, 
-        group.athletes.map((a, i) => `${i + 1}. ${a.username} (${a.finalePoints}pts, time=${a.finaleTotalTime}s)`).join(', '));
-    }
-    
-    return {
+    const result = {
       groupId: group.id,
       groupName: group.name,
       athletes: sortedAthletes
     };
+    
+    if (config.competitionState === 'finale' && sortedAthletes.length > 0) {
+      console.log(`[RANKING] Response athletes order:`, 
+        result.athletes.map((a, i) => `${i + 1}. ${a.username}`).join(' → '));
+    }
+    
+    return result;
   });
 
   return { results, config };

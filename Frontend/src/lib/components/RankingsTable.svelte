@@ -18,7 +18,12 @@
   }
 
   function getFinalistsByRole(athletes) {
-    return athletes.filter(a => a.role === 'finalist');
+    const finalists = athletes.filter(a => a.role === 'finalist');
+    if (finalists.length > 0) {
+      console.log(`[FRONTEND-FINALISTS] Received ${athletes.length} athletes, filtered to ${finalists.length} finalists:`, 
+        finalists.map((a, i) => `${i + 1}. ${a.username} (${a.finalePoints}pts, time=${a.finaleTotalTime}s)`).join(' → '));
+    }
+    return finalists;
   }
 
   let currentUserRole = $state(null);

@@ -184,7 +184,6 @@ if (route.category === 'finale') {
       } else {
         req.body.result = JSON.stringify(existingFinaleData);
       }
-      console.log(`[FINALE] User ${targetUserId}, Route ${route.name}: Setting result to`, req.body.result);
     } else {
       const validResults = ['top', 'attempted', null];
       if (route.zones && route.zones.length > 0) {
