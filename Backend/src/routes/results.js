@@ -7,6 +7,18 @@ import {
   getConfig
 } from '../data/store.js';
 
+function parseTimeToSeconds(timeStr) {
+  if (!timeStr) return Infinity;
+  const parts = String(timeStr).split(':');
+  if (parts.length === 2) {
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseFloat(parts[1]);
+    return minutes * 60 + seconds;
+  }
+  const seconds = parseFloat(timeStr);
+  return Number.isFinite(seconds) ? seconds : Infinity;
+}
+
 export function calculateResults() {
   const config = getConfig();
   const groups = getGroups();
@@ -47,6 +59,7 @@ export function calculateResults() {
       const finaleResults = finaleRoutes.map(route => {
         const completedEntry = userCompleted.find(cr => cr.routeName === route.name);
         let points = 0;
+        let time = null;
         let isTop = false;
         let zoneName = null;
         let zonePoints = 0;
@@ -70,9 +83,12 @@ export function calculateResults() {
             points = Number.isFinite(numResult) ? numResult : 0;
           }
           
-          // If we parsed JSON, extract points from it
+          // If we parsed JSON, extract points and time from it
           if (finaleData.points !== undefined) {
             points = Number(finaleData.points);
+          }
+          if (finaleData.time !== undefined) {
+            time = finaleData.time;
           }
           
           if (Number.isFinite(points)) {
@@ -87,7 +103,8 @@ export function calculateResults() {
           isTop,
           zoneName,
           zonePoints,
-          points
+          points,
+          time
         };
       });
       
@@ -127,39 +144,42 @@ export function calculateResults() {
       const bonusTops = bonusResults.reduce((sum, r) => sum + r.count, 0);
       const bonusPoints = bonusResults.reduce((sum, r) => sum + (r.count * (Number(r.topPoints) || 0)), 0);
       
-      const finaleTops = finaleResults.filter(r => r.isTop).length;
-      const finaleZones = finaleResults.filter(r => r.zonePoints > 0 && !r.isTop).length;
-      const finalePoints = finaleResults.reduce((sum, r) => sum + r.points, 0);
-      
-      const totalTops = qualTops + bonusTops;
-      const totalPoints = config.competitionState === 'finale'
-        ? finalePoints
-        : qualPoints + bonusPoints + finalePoints;
-      
-      return {
-        userId: user.id,
-        username: user.username,
-        role: user.role,
-        qualTops,
-        qualZones,
-        qualPoints,
-        bonusTops,
-        bonusPoints,
-        finaleTops,
-        finaleZones,
-        finalePoints,
-        totalPoints,
-        routes: qualResults,
-        bonusRoutes: bonusResults,
-        finaleRoutes: finaleResults
-      };
+       const finaleTops = finaleResults.filter(r => r.isTop).length;
+       const finaleZones = finaleResults.filter(r => r.zonePoints > 0 && !r.isTop).length;
+       const finalePoints = finaleResults.reduce((sum, r) => sum + r.points, 0);
+       const finaleTotalTime = finaleResults.reduce((sum, r) => sum + parseTimeToSeconds(r.time), 0);
+       
+       const totalTops = qualTops + bonusTops;
+       const totalPoints = config.competitionState === 'finale'
+         ? finalePoints
+         : qualPoints + bonusPoints + finalePoints;
+       
+       return {
+         userId: user.id,
+         username: user.username,
+         role: user.role,
+         qualTops,
+         qualZones,
+         qualPoints,
+         bonusTops,
+         bonusPoints,
+         finaleTops,
+         finaleZones,
+         finalePoints,
+         finaleTotalTime,
+         totalPoints,
+         routes: qualResults,
+         bonusRoutes: bonusResults,
+         finaleRoutes: finaleResults
+       };
     });
     
     const sortedAthletes = [...athleteResults].sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
       if (config.competitionState === 'finale') {
         if (b.finaleTops !== a.finaleTops) return b.finaleTops - a.finaleTops;
-        return b.finaleZones - a.finaleZones;
+        if (b.finaleZones !== a.finaleZones) return b.finaleZones - a.finaleZones;
+        return a.finaleTotalTime - b.finaleTotalTime;
       }
       if (b.qualTops !== a.qualTops) return b.qualTops - a.qualTops;
       return b.bonusTops - a.bonusTops;
