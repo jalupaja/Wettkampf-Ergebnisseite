@@ -179,11 +179,28 @@ export function calculateResults() {
       if (config.competitionState === 'finale') {
         if (b.finaleTops !== a.finaleTops) return b.finaleTops - a.finaleTops;
         if (b.finaleZones !== a.finaleZones) return b.finaleZones - a.finaleZones;
-        return a.finaleTotalTime - b.finaleTotalTime;
+        const aHasTime = a.finaleTotalTime !== Infinity;
+        const bHasTime = b.finaleTotalTime !== Infinity;
+        if (aHasTime && bHasTime) {
+          return a.finaleTotalTime - b.finaleTotalTime;
+        }
+        if (aHasTime) return -1;
+        if (bHasTime) return 1;
+        return 0;
       }
       if (b.qualTops !== a.qualTops) return b.qualTops - a.qualTops;
       return b.bonusTops - a.bonusTops;
     });
+    
+    if (config.competitionState === 'finale' && sortedAthletes.length > 0) {
+      console.log(`[RANKING] Group "${group.name}": sorted ${sortedAthletes.length} athletes:`, 
+        sortedAthletes.map((a, i) => `${i + 1}. ${a.username} (${a.finalePoints}pts, time=${a.finaleTotalTime}s)`).join(', '));
+    }
+    
+    if (config.competitionState === 'finale' && group.athletes.length > 0) {
+      console.log(`[RANKING] Group "${group.groupName}": sorted ${group.athletes.length} athletes:`, 
+        group.athletes.map((a, i) => `${i + 1}. ${a.username} (${a.finalePoints}pts, time=${a.finaleTotalTime}s)`).join(', '));
+    }
     
     return {
       groupId: group.id,
