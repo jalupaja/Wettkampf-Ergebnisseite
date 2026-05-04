@@ -109,35 +109,34 @@ router.post('/result', authenticate, (req, res) => {
       }
     }
 
-    if (route.category === 'finale') {
-      // Allow numeric points (as seconds), plain seconds (e.g., 75), or time strings (M:SS or M:SS.s)
-      let resultInput = String(result || '').trim();
-      
-      // Check if it's a plain number (seconds)
-      const plainSeconds = Number(resultInput.replace(',', '.'));
-      if (Number.isFinite(plainSeconds) && plainSeconds > 0 && !resultInput.includes(':')) {
-        // Interpret plain number as seconds - convert to M:SS.s format
-        const mins = Math.floor(plainSeconds / 60);
-        const secs = plainSeconds % 60;
-        req.body.result = secs === 0 ? `${mins}:00` : `${mins}:${secs.toFixed(1)}`;
-      } else {
-        // Auto-correct comma to colon for time input (e.g., 4,32 -> 4:32)
-        // Keep dots for milliseconds (e.g., 1:15.15 stays as-is)
-        const resultStr = resultInput.replace(',', ':').replace(/:+/g, ':');
-        const isTimeFormat = /^\d+:\d+(\.\d+)?$/.test(resultStr);
+if (route.category === 'finale') {
+      const resultInput = result === null || result === undefined ? '' : String(result).trim();
 
-        if (isTimeFormat) {
-          req.body.result = resultStr;
+      if (resultInput === '') {
+        req.body.result = null;
+      } else {
+        const plainSeconds = Number(resultInput.replace(',', '.'));
+        if (Number.isFinite(plainSeconds) && plainSeconds > 0 && !resultInput.includes(':')) {
+          const mins = Math.floor(plainSeconds / 60);
+          const secs = plainSeconds % 60;
+          req.body.result = secs === 0 ? `${mins}:00` : `${mins}:${secs.toFixed(1)}`;
         } else {
-          const parsedResult = typeof result === 'number'
-            ? result
-            : Number(String(result).replace(',', '.'));
-    
-          if (!Number.isFinite(parsedResult) || parsedResult <= 0) {
-            return res.status(400).json({ error: 'Für Finalrouten Zeit eingeben (z.B. 4:32, 1:15.15 oder 75)' });
+          const resultStr = resultInput.replace(',', ':').replace(/:+/g, ':');
+          const isTimeFormat = /^\d+:\d+(\.\d+)?$/.test(resultStr);
+
+          if (isTimeFormat) {
+            req.body.result = resultStr;
+          } else {
+            const parsedResult = typeof result === 'number'
+              ? result
+              : Number(String(result).replace(',', '.'));
+
+            if (!Number.isFinite(parsedResult) || parsedResult < 0) {
+              return res.status(400).json({ error: 'Für Finalrouten Zeit eingeben (z.B. 4:32, 1:15.15 oder 75)' });
+            }
+
+            req.body.result = parsedResult;
           }
-    
-          req.body.result = parsedResult;
         }
       }
     } else {
