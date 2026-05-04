@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - CORS_ORIGINS=http://localhost:5173,http://frontend:5173
+    volumes:
+      - ./Backend/src:/app/src
+      - ./Backend/data:/app/data
+    networks:
+      - wettkampf-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/config"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - wettkampf-network
+    volumes:
+      - ./Frontend/src:/app/src
+    environment:
+      - VITE_API_URL=http://localhost:3001
+
+networks:
+  wettkampf-network:
+    driver: bridge
+
