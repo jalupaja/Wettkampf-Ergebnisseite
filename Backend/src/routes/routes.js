@@ -111,22 +111,40 @@ router.post('/result', authenticate, (req, res) => {
 
 if (route.category === 'finale') {
       const resultInput = result === null || result === undefined ? '' : String(result).trim();
+      
+      // Get existing finale result to merge
+      const userCompleted = getCompletedRoutes();
+      const existing = userCompleted.find(cr => cr.userId === targetUserId && cr.routeName === route.name);
+      let existingFinaleData = {};
+      
+      try {
+        if (existing && typeof existing.result === 'string' && existing.result.startsWith('{')) {
+          existingFinaleData = JSON.parse(existing.result);
+        }
+      } catch (e) {
+        // If parsing fails, treat as empty
+        existingFinaleData = {};
+      }
 
-      if (resultInput === '') {
-        req.body.result = null;
+      if (resultInput === '' && resultType === 'points') {
+        // Clear points only
+        existingFinaleData.points = null;
+      } else if (resultInput === '' && resultType === 'time') {
+        // Clear time only
+        existingFinaleData.time = null;
       } else if (resultType === 'time') {
         // Handle time format (M:SS or plain seconds)
         const plainSeconds = Number(resultInput.replace(',', '.'));
         if (Number.isFinite(plainSeconds) && plainSeconds > 0 && !resultInput.includes(':')) {
           const mins = Math.floor(plainSeconds / 60);
           const secs = plainSeconds % 60;
-          req.body.result = secs === 0 ? `${mins}:00` : `${mins}:${secs.toFixed(1)}`;
+          existingFinaleData.time = secs === 0 ? `${mins}:00` : `${mins}:${secs.toFixed(1)}`;
         } else {
           const resultStr = resultInput.replace(',', ':').replace(/:+/g, ':');
           const isTimeFormat = /^\d+:\d+(\.\d+)?$/.test(resultStr);
 
           if (isTimeFormat) {
-            req.body.result = resultStr;
+            existingFinaleData.time = resultStr;
           } else {
             return res.status(400).json({ error: 'Für Finalrouten Zeit eingeben (z.B. 4:32, 1:15.15 oder 75)' });
           }
@@ -141,7 +159,14 @@ if (route.category === 'finale') {
           return res.status(400).json({ error: 'Für Finalrouten Punkte eingeben (z.B. 100, 87.5)' });
         }
 
-        req.body.result = parsedResult;
+        existingFinaleData.points = parsedResult;
+      }
+      
+      // If both are empty, set result to null; otherwise store as JSON
+      if ((!existingFinaleData.points && existingFinaleData.points !== 0) && !existingFinaleData.time) {
+        req.body.result = null;
+      } else {
+        req.body.result = JSON.stringify(existingFinaleData);
       }
     } else {
       const validResults = ['top', 'attempted', null];

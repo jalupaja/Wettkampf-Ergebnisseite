@@ -54,17 +54,29 @@ export function calculateResults() {
         const resultValue = completedEntry?.result;
         
         if (resultValue !== undefined && resultValue !== null) {
-          const numResult = typeof resultValue === 'number' ? resultValue : Number(String(resultValue).replace(',', '.'));
+          let finaleData = {};
           
-          if (typeof resultValue === 'number') {
-            points = numResult;
-            isTop = Number(route.topPoints) > 0 && numResult >= Number(route.topPoints);
-          } else if (resultValue === 'top') {
-            isTop = true;
-            points = Number(route.topPoints) || 0;
-          } else if (typeof resultValue === 'string' && resultValue !== 'top') {
-            points = numResult;
-            isTop = Number(route.topPoints) > 0 && numResult >= Number(route.topPoints);
+          // Parse JSON finale result if applicable
+          if (typeof resultValue === 'string' && resultValue.startsWith('{')) {
+            try {
+              finaleData = JSON.parse(resultValue);
+            } catch (e) {
+              // Fall back to numeric parsing
+              const numResult = Number(String(resultValue).replace(',', '.'));
+              points = Number.isFinite(numResult) ? numResult : 0;
+            }
+          } else {
+            const numResult = typeof resultValue === 'number' ? resultValue : Number(String(resultValue).replace(',', '.'));
+            points = Number.isFinite(numResult) ? numResult : 0;
+          }
+          
+          // If we parsed JSON, extract points from it
+          if (finaleData.points !== undefined) {
+            points = Number(finaleData.points);
+          }
+          
+          if (Number.isFinite(points)) {
+            isTop = Number(route.topPoints) > 0 && points >= Number(route.topPoints);
           }
         }
         

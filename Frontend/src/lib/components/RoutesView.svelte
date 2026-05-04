@@ -338,6 +338,34 @@
     return n;
   }
 
+  function getFinalePoints(result) {
+    if (!result) return '';
+    try {
+      if (typeof result === 'string' && result.startsWith('{')) {
+        const parsed = JSON.parse(result);
+        return parsed.points ?? '';
+      }
+    } catch (e) {
+      // Fall back to checking if it's a plain number
+      if (!String(result).includes(':')) return result;
+    }
+    return '';
+  }
+
+  function getFinaleTime(result) {
+    if (!result) return '';
+    try {
+      if (typeof result === 'string' && result.startsWith('{')) {
+        const parsed = JSON.parse(result);
+        return parsed.time ?? '';
+      }
+    } catch (e) {
+      // Fall back to checking if it's a time format
+      if (String(result).includes(':')) return result;
+    }
+    return '';
+  }
+
   async function setFinalePoints(routeId, rawValue) {
     const parsed = parseFinaleInput(rawValue);
     if (parsed === null && rawValue !== '' && rawValue !== null && rawValue !== undefined) {
@@ -426,7 +454,7 @@
                     type="number"
                     min="0"
                     step="0.1"
-                    value={route.result !== null && route.result !== undefined && !String(route.result).includes(':') ? route.result : ''}
+                    value={getFinalePoints(route.result)}
                     disabled={disabled}
                     placeholder="Punkte"
                     class="finale-points-input"
@@ -435,7 +463,7 @@
                   />
                   <input
                     type="text"
-                    value={String(route.result || '').includes(':') ? route.result : ''}
+                    value={getFinaleTime(route.result)}
                     disabled={disabled}
                     placeholder="Zeit"
                     class="finale-time-input"
