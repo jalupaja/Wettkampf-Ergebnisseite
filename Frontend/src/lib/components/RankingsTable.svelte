@@ -57,8 +57,8 @@
           <td class="rank-col">
             {#if showMedals && index === 0}🥇{:else if showMedals && index === 1}🥈{:else if showMedals && index === 2}🥉{:else}{index + 1}{/if}
           </td>
-          <td class="name-col">{athlete.username}</td>
-          <td class="points-col">{formatPoints(useQualificationPoints ? (athlete.qualPoints ?? 0) : (athlete.totalPoints ?? 0))}</td>
+           <td class="name-col">{athlete.username}</td>
+           <td class="points-col">{formatPoints(useQualificationPoints ? (athlete.qualPoints ?? 0) : (athlete.finalePoints ?? athlete.totalPoints ?? 0))}</td>
           {#if showStats}
             <td class="stat-col"><span class="stat-value top">{athlete.qualTops ?? 0}</span></td>
             <td class="stat-col"><span class="stat-value zone">{athlete.qualZones ?? 0}</span></td>
@@ -75,16 +75,16 @@
   {:else if results.length}
     {#if config?.competitionState === 'finale' || config?.competitionState === 'finished'}
       <div class="round-section finale-phase">
-        <h2 class="round-title finale phase-heading">Finale</h2>
-        {#each results as groupResult}
-          {@const finalists = getFinalistsByRole(groupResult.athletes)}
-          {#if finalists.length > 0}
-            <div class="group-results card">
-              <h3 class="group-title">{groupResult.groupName}</h3>
-              {@render resultsTable(finalists, true, false, false)}
-            </div>
-          {/if}
-        {/each}
+         <h2 class="round-title finale phase-heading">Finale</h2>
+         {#each results as groupResult}
+           {@const finalists = getFinalistsByRole(groupResult.athletes)}
+           {#if finalists.length > 0}
+             <div class="group-results card">
+               <h3 class="group-title">{groupResult.groupName}</h3>
+               {@render resultsTable(finalists, true, true, false)}
+             </div>
+           {/if}
+         {/each}
       </div>
 
       <div class="round-section qualifikation-phase">

@@ -340,7 +340,7 @@
 
   async function setFinalePoints(routeId, rawValue) {
     const parsed = parseFinaleInput(rawValue);
-    if (parsed === null) {
+    if (parsed === null && rawValue !== '' && rawValue !== null && rawValue !== undefined) {
       toastStore.error('Bitte einen gültigen Zahlenwert >= 0 eingeben');
       return;
     }
@@ -506,7 +506,12 @@
   .route-sections { display: flex; flex-direction: column; gap: 32px; }
   .route-section h2 { margin-bottom: 16px; font-size: 18px; color: var(--color-text); }
   
-  .routes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+   .routes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+   
+   .route-section:has(.finale-card) .routes-grid {
+     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+     gap: 16px;
+   }
 
   @media (min-width: 768px) {
     .bonus-routes { 
@@ -538,36 +543,60 @@
   .counter-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .counter-value { font-size: 28px; font-weight: 700; color: var(--color-secondary); min-width: 40px; }
   
-  .route-card.finale-card { cursor: pointer; }
-  .route-card.finale-card:hover { border-color: var(--color-finale); transform: translateY(-2px); }
-  .route-card.finale-card.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+   .route-card.finale-card { cursor: pointer; }
+   .route-card.finale-card:hover { border-color: var(--color-finale); transform: translateY(-2px); }
+   .route-card.finale-card.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+   .route-card.finale-card {
+     padding: 24px;
+     min-height: 220px;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+   }
+   
+   .route-card.finale-card .route-name {
+     font-size: 20px;
+     margin-bottom: 20px;
+     font-weight: 700;
+   }
 
-  .finale-input-row {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
+   .finale-input-row {
+     display: flex;
+     justify-content: center;
+     gap: 12px;
+     flex-wrap: wrap;
+     width: 100%;
+   }
 
-  .finale-input-row input {
-    max-width: 140px;
-    text-align: center;
-    font-weight: 600;
-  }
+   .finale-input-row input {
+     max-width: 140px;
+     text-align: center;
+     font-weight: 600;
+     padding: 14px 12px;
+     font-size: 18px;
+     border: 2px solid var(--color-border);
+     border-radius: 8px;
+     background: var(--color-white);
+   }
+   
+   .finale-points-input {
+     width: 130px;
+   }
+   .finale-time-input {
+     width: 160px;
+   }
   
-  .finale-points-input { width: 100px; }
-  .finale-time-input { width: 130px; }
-  
-  .timer-btn {
-    background: var(--color-bg-light);
-    border: 2px solid var(--color-finale);
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  .timer-btn:hover:not(:disabled) { background: var(--color-finale); }
-  .timer-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+   .timer-btn {
+     background: var(--color-bg-light);
+     border: 2px solid var(--color-finale);
+     border-radius: 8px;
+     padding: 12px 16px;
+     font-size: 20px;
+     cursor: pointer;
+   }
+   .timer-btn:hover:not(:disabled) { background: var(--color-finale); }
+   .timer-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   
   .timer-overlay {
     position: fixed;
@@ -678,12 +707,48 @@
   
   .empty-state { text-align: center; padding: 60px; color: var(--color-text-muted); }
   
-  @media (max-width: 480px) {
-    .stats { grid-template-columns: 1fr; gap: 12px; }
-    .routes-grid { grid-template-columns: 1fr; gap: 8px; }
-    .route-card { padding: 12px; }
-    .route-name { font-size: 13px; margin-bottom: 8px; }
-    .result-btn { padding: 8px 6px; font-size: 11px; }
-    .route-buttons { grid-template-columns: 1fr; gap: 4px; }
-  }
+   @media (max-width: 480px) {
+     .stats { grid-template-columns: 1fr; gap: 12px; }
+     .routes-grid { grid-template-columns: 1fr; gap: 8px; }
+     .route-card { padding: 12px; }
+     .route-name { font-size: 13px; margin-bottom: 8px; }
+     .result-btn { padding: 8px 6px; font-size: 11px; }
+     .route-buttons { grid-template-columns: 1fr; gap: 4px; }
+     
+     .route-section:has(.finale-card) .routes-grid {
+       grid-template-columns: 1fr;
+     }
+     
+     .route-card.finale-card {
+       padding: 20px;
+       min-height: 200px;
+     }
+     
+     .route-card.finale-card .route-name {
+       font-size: 18px;
+       margin-bottom: 16px;
+     }
+     
+     .finale-input-row {
+       gap: 8px;
+     }
+     
+     .finale-input-row input {
+       font-size: 16px;
+       padding: 12px 10px;
+     }
+     
+     .finale-points-input {
+       width: 110px;
+     }
+     
+     .finale-time-input {
+       width: 140px;
+     }
+     
+     .timer-btn {
+       padding: 12px 14px;
+       font-size: 18px;
+     }
+   }
 </style>
