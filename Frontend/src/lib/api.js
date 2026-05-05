@@ -7,6 +7,21 @@ const VITE_API = import.meta.env.VITE_API_URL;
 if (VITE_API) {
   // ensure the value includes a protocol; if not, assume http
   API_BASE = (VITE_API.match(/^https?:\/\//) ? VITE_API : `http://${VITE_API}`) + '/api';
+  // Normalise common misconfigurations: if someone accidentally provided https for the internal
+  // Docker hostname `backend`, switch it to http because that host is not TLS-terminating here.
+  try {
+    const parsed = new URL(API_BASE);
+    if (parsed.hostname === 'backend' && parsed.protocol === 'https:') {
+      parsed.protocol = 'http:';
+      API_BASE = parsed.origin + '/api';
+    }
+  } catch (e) {
+    // ignore parsing errors and keep API_BASE as-is
+  }
+  // Defensive fallback: if API_BASE still contains https://backend, force http://backend
+  if (typeof API_BASE === 'string' && API_BASE.indexOf('https://backend') !== -1) {
+    API_BASE = API_BASE.replace(/^https:\/\/backend/, 'http://backend');
+  }
 } else if (typeof window !== 'undefined') {
   const host = window.location.hostname;
   // For local development we explicitly use http to avoid accidental https forcing.
@@ -35,7 +50,25 @@ if (typeof window !== 'undefined') {
 }
 
 async function request(endpoint, options = {}) {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const url = `${API_BASE}${endpoint}`;
+  // Log the exact request for debugging (helps detect accidental https usage)
+  // eslint-disable-next-line no-console
+  console.debug('[wettkampf] request', options.method || 'GET', url);
+
+  // Defensive: if the page is served over HTTP but url is https (or vice versa), log a clear error
+  if (typeof window !== 'undefined') {
+    const pageProto = window.location.protocol; // 'http:' or 'https:'
+    if (pageProto === 'http:' && url.startsWith('https://')) {
+      // eslint-disable-next-line no-console
+      console.error('[wettkampf] Attempting to call HTTPS API from HTTP page (will be blocked or fail):', url);
+    }
+    if (pageProto === 'https:' && url.startsWith('http://')) {
+      // eslint-disable-next-line no-console
+      console.warn('[wettkampf] Page is HTTPS but API is HTTP (mixed-content will be blocked):', url);
+    }
+  }
+
+  const response = await fetch(url, {
     ...options,
     credentials: 'include',
     headers: {
@@ -96,7 +129,8 @@ export const api = {
   },
   
   results: {
-    get: () => fetch(`${API_BASE}/results`).then(r => r.json())
+    // Use the request wrapper to ensure consistent headers and credentials
+    get: () => request('/results')
   },
   
   config: {
