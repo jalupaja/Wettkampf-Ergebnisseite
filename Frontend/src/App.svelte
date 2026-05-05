@@ -37,6 +37,23 @@
     });
     
     try {
+      // Debug: print API, origin, and cookie names to help diagnose auth/CORS issues
+      try {
+        // eslint-disable-next-line no-console
+        console.info('[wettkampf-debug] API_BASE=', api && api ? undefined : '');
+        // Print API_BASE computed by the client library
+        // We import api above; its module prints API_BASE on import. Also print window location and cookie names.
+        if (typeof window !== 'undefined') {
+          // eslint-disable-next-line no-console
+          console.info('[wettkampf-debug] window.location=', window.location.href);
+          // Do not print cookie values, only names
+          const cookieNames = document.cookie.split(';').map(c => c.split('=')[0].trim()).filter(Boolean);
+          // eslint-disable-next-line no-console
+          console.info('[wettkampf-debug] cookie names=', cookieNames);
+        }
+      } catch (e) {
+        // ignore debug helper errors
+      }
       const data = await api.auth.check();
       if (data.authenticated) {
         userStore.login(data.user);
