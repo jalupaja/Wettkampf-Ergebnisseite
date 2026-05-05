@@ -7,3 +7,7 @@
 Current backend passwords are stored in plaintext so admins can view current password values directly from the backend.
 
 This is a deliberate visibility-over-security tradeoff accepted for this non-critical test application. It is only appropriate for short-term/local use and not for long-term or production deployments.
+
+## Deployment
+`docker-compose -f docker-compose.yml build`
+`docker-compose -f docker-compose.yml up -d`

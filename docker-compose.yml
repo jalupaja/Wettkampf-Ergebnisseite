@@ -2,17 +2,14 @@ version: '3.8'
 
 services:
   backend:
-    build:
-      context: ./Backend
-      dockerfile: Dockerfile
+    image: wettkampf-backend:latest
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3001
       - CORS_ORIGINS=http://localhost:5173,http://frontend:5173
     volumes:
-      - ./Backend/src:/app/src
       - ./Backend/data:/app/data
     networks:
       - wettkampf-network
@@ -22,25 +19,21 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    command: npm run dev
+    restart: unless-stopped
 
   frontend:
-    build:
-      context: ./Frontend
-      dockerfile: Dockerfile
+    image: wettkampf-frontend:latest
     ports:
-      - "5173:5173"
+      - "5173:4173"
     depends_on:
       backend:
         condition: service_healthy
     networks:
       - wettkampf-network
-    volumes:
-      - ./Frontend/src:/app/src
     environment:
       - VITE_API_URL=http://localhost:3001
+    restart: unless-stopped
 
 networks:
   wettkampf-network:
     driver: bridge
-
