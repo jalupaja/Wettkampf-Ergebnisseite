@@ -1,4 +1,38 @@
-const API_BASE = import.meta.env.VITE_API_URL + '/api';
+// Resolve API base URL with sensible fallbacks:
+// 1) Use VITE_API_URL when provided at build time (should include protocol, e.g. http://backend:3001)
+// 2) When running in browser on localhost, assume backend is at the same host on port 3001
+// 3) Otherwise fall back to relative /api so a reverse proxy can route requests (recommended for prod TLS)
+let API_BASE = null;
+const VITE_API = import.meta.env.VITE_API_URL;
+if (VITE_API) {
+  // ensure the value includes a protocol; if not, assume http
+  API_BASE = (VITE_API.match(/^https?:\/\//) ? VITE_API : `http://${VITE_API}`) + '/api';
+} else if (typeof window !== 'undefined') {
+  const host = window.location.hostname;
+  // For local development we explicitly use http to avoid accidental https forcing.
+  if (host === 'localhost' || host === '127.0.0.1') {
+    API_BASE = `http://${host}:3001/api`;
+  } else {
+    // rely on same-origin + reverse proxy in front of frontend
+    API_BASE = '/api';
+  }
+}
+
+// If the page is served over https but API_BASE is http, warn: browsers block mixed-content.
+if (typeof window !== 'undefined' && window.location.protocol === 'https:' && API_BASE && API_BASE.startsWith('http://')) {
+  // don't try to force http; inform the operator to enable TLS or reverse proxy
+  // This is intentional: mixed-content (https page -> http API) will be blocked by browsers.
+  // The user should enable TLS via a reverse proxy in front of the app.
+  // For now we log a clear message to help debugging.
+  // eslint-disable-next-line no-console
+  console.warn('[wettkampf] Page is served over HTTPS but API_BASE is HTTP. Browser will block mixed-content requests. Use TLS or a reverse proxy.');
+}
+
+// Helpful debug note in console so operator can see which API base was chosen
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line no-console
+  console.info(`[wettkampf] Using API_BASE=${API_BASE}`);
+}
 
 async function request(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
