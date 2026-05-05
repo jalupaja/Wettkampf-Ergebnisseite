@@ -2,17 +2,17 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
 
-# Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY src ./src
+COPY . .
 
-# Expose port (backend runs on 3001 by default, check server.js)
+# Create non-root user for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+USER appuser
+
 EXPOSE 3001
 
-# Start the backend
-CMD ["npm", "start"]
+CMD ["node", "src/server.js"]

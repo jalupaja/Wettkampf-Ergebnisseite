@@ -8,6 +8,10 @@ RUN npm ci
 
 COPY . .
 
-EXPOSE 5173
+RUN npm run build
 
-CMD ["npm", "run", "dev"]
+# Vite preview defaults to port 4173
+EXPOSE 4173
+
+# Use --host to bind to 0.0.0.0 for external access
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
