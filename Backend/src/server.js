@@ -30,32 +30,10 @@ const CORS_ORIGINS = process.env.CORS_ORIGINS
       'http://localhost:5175'
     ];
 
-// Debug middleware to log Origin and preflight headers (helps diagnose CORS failures)
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin) {
-    console.log(`[CORS DEBUG] Origin: ${origin} Method: ${req.method} Path: ${req.path}`);
-  }
-  if (req.method === 'OPTIONS') {
-    console.log('[CORS DEBUG] Access-Control-Request-Headers:', req.headers['access-control-request-headers']);
-  }
-  next();
-});
-
-// If DEBUG_ALLOW_CORS is set, accept and echo back any origin (FOR DEBUG ONLY)
-const DEBUG_ALLOW_CORS = process.env.DEBUG_ALLOW_CORS === 'true';
-if (DEBUG_ALLOW_CORS) {
-  console.warn('CORS DEBUG: permissive CORS enabled (DEBUG_ALLOW_CORS=true) - do not use in production');
-  app.use(cors({
-    origin: (origin, cb) => cb(null, origin || false),
-    credentials: true
-  }));
-} else {
-  app.use(cors({
-    origin: CORS_ORIGINS,
-    credentials: true
-  }));
-}
+app.use(cors({
+  origin: CORS_ORIGINS,
+  credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 
