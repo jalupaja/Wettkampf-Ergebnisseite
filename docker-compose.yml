@@ -19,6 +19,8 @@ services:
     build:
       context: ./Frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://backend:3001
     ports:
       - "5173:4173"
     depends_on:
