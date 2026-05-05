@@ -1,0 +1,45 @@
+name: Docker Build (Local)
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  schedule:
+    # Run daily at 2 AM UTC to check for base image updates
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service }} image
+        run: |
+          docker buildx build \
+            -t wettkampf-${{ matrix.service }}:${{ github.sha }} \
+            -t wettkampf-${{ matrix.service }}:latest \
+            ./${{ matrix.service == 'backend' && 'Backend' || 'Frontend' }}
+
+      - name: Verify ${{ matrix.service }} image
+        run: |
+          docker buildx build \
+            --load \
+            -t wettkampf-${{ matrix.service }}:test \
+            ./${{ matrix.service == 'backend' && 'Backend' || 'Frontend' }}
+          
+          echo "✓ ${{ matrix.service }} image built successfully"
+          docker image inspect wettkampf-${{ matrix.service }}:test > /dev/null && echo "✓ Image is valid"
