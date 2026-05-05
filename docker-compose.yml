@@ -13,12 +13,6 @@ services:
       - backend-data:/app/src/data
     networks:
       - wettkampf-network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://0.0.0.0:3001/api/config"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     restart: unless-stopped
 
   frontend:
@@ -28,12 +22,11 @@ services:
     ports:
       - "5173:4173"
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     networks:
       - wettkampf-network
     environment:
-      - VITE_API_URL=http://localhost:3001
+      - VITE_API_URL=http://backend:3001
     restart: unless-stopped
 
 networks:
