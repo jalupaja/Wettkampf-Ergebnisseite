@@ -10,7 +10,7 @@ services:
       - PORT=3001
       - CORS_ORIGINS=http://localhost:5173,http://frontend:5173
     volumes:
-      - ./Backend/data:/app/data
+      - backend-data:/app/data
     networks:
       - wettkampf-network
     healthcheck:
@@ -39,3 +39,6 @@ services:
 networks:
   wettkampf-network:
     driver: bridge
+
+volumes:
+  backend-data:
