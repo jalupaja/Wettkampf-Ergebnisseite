@@ -1,8 +1,8 @@
-version: '3.8'
-
 services:
   backend:
-    image: wettkampf-backend:latest
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
     ports:
       - "3001:3001"
     environment:
@@ -22,7 +22,9 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: wettkampf-frontend:latest
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
     ports:
       - "5173:4173"
     depends_on:
