@@ -22,6 +22,19 @@ if (VITE_API) {
   if (typeof API_BASE === 'string' && API_BASE.indexOf('https://backend') !== -1) {
     API_BASE = API_BASE.replace(/^https:\/\/backend/, 'http://backend');
   }
+
+  // If code runs in a browser, the hostname 'backend' is not resolvable there.
+  // When that happens, rewrite the hostname to the page's host (or 'localhost') so
+  // the browser uses a reachable address. This avoids ERR_NAME_NOT_RESOLVED.
+  if (typeof window !== 'undefined' && typeof API_BASE === 'string' && /:\/\/backend(\/|:|$)/.test(API_BASE)) {
+    const pageHost = window.location.hostname || 'localhost';
+    const pageProto = (window.location.protocol || 'http:').replace(':', '');
+    // prefer the page protocol to avoid mixed-content
+    const proto = pageProto || 'http';
+    API_BASE = `${proto}://${pageHost}:3001/api`;
+    // eslint-disable-next-line no-console
+    console.info(`[wettkampf] Rewrote internal backend host to browser-accessible host: ${API_BASE}`);
+  }
 } else if (typeof window !== 'undefined') {
   const host = window.location.hostname;
   // For local development we explicitly use http to avoid accidental https forcing.
