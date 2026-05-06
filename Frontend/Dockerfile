@@ -16,6 +16,7 @@ RUN npm run build
 FROM nginx:1.27-alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY entrypoint.sh /entrypoint.sh
 
 # Minimal SPA config: static assets + index fallback for client-side routes
 RUN rm -f /etc/nginx/conf.d/default.conf && \
@@ -32,9 +33,12 @@ RUN rm -f /etc/nginx/conf.d/default.conf && \
     '  }' \
     '}' > /etc/nginx/conf.d/default.conf
 
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 4173
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD wget -q -O /dev/null http://127.0.0.1:4173/ || exit 1
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
