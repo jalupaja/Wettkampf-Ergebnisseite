@@ -10,7 +10,7 @@ version: '3.8'
 
 services:
   backend:
-    image: ghcr.io/jalupaja/Wettkampf-Ergebnisseite-backend:latest
+    image: ghcr.io/jalupaja/wettkampf-ergebnisseite-backend:latest
     pull_policy: always
     ports:
       - "3001:3001"
@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ghcr.io/jalupaja/Wettkampf-Ergebnisseite-frontend:latest
+    image: ghcr.io/jalupaja/wettkampf-ergebnisseite-frontend:latest
     pull_policy: always
     ports:
       - "5173:4173"
