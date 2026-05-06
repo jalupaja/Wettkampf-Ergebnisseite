@@ -1,9 +1,18 @@
 // Resolve API base URL with sensible fallbacks:
-// 1) Use VITE_API_URL when provided at build time (should include protocol, e.g. http://backend:3001)
-// 2) When running in browser on localhost, assume backend is at the same host on port 3001
-// 3) Otherwise fall back to relative /api so a reverse proxy can route requests (recommended for prod TLS)
+// 1) Use runtime config from window.RUNTIME_CONFIG (set by config.js at runtime)
+// 2) Use VITE_API_URL when provided at build time (should include protocol, e.g. http://backend:3001)
+// 3) When running in browser on localhost, assume backend is at the same host on port 3001
+// 4) Otherwise fall back to relative /api so a reverse proxy can route requests (recommended for prod TLS)
 let API_BASE = null;
-const VITE_API = import.meta.env.VITE_API_URL;
+
+// Check for runtime configuration first (set by config.js)
+let VITE_API = null;
+if (typeof window !== 'undefined' && window.RUNTIME_CONFIG && window.RUNTIME_CONFIG.VITE_API_URL) {
+  VITE_API = window.RUNTIME_CONFIG.VITE_API_URL;
+} else {
+  // Fall back to build-time environment variable
+  VITE_API = import.meta.env.VITE_API_URL;
+}
 if (VITE_API) {
   // ensure the value includes a protocol; if not, assume http
   API_BASE = (VITE_API.match(/^https?:\/\//) ? VITE_API : `http://${VITE_API}`) + '/api';
