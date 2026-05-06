@@ -9,8 +9,6 @@ on:
       - 'Frontend/**'
       - 'docker-compose*.yml'
       - '.github/workflows/docker-build.yml'
-  tags:
-    - 'v*'
   workflow_dispatch:
 
 env:
