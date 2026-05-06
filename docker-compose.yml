@@ -27,9 +27,6 @@ services:
       - backend
     networks:
       - wettkampf-network
-    environment:
-      - VITE_API_URL=http://backend:3001
-      - FRONTEND_PORT=4173
     restart: unless-stopped
 
 networks:
