@@ -19,17 +19,14 @@ services:
     build:
       context: ./Frontend
       dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=http://backend:3001
     ports:
       - "5173:4173"
+    environment:
+      - VITE_API_URL=http://backend:3001
     depends_on:
       - backend
     networks:
       - wettkampf-network
-    environment:
-      - VITE_API_URL=http://backend:3001
-      - FRONTEND_PORT=4173
     restart: unless-stopped
 
 networks:

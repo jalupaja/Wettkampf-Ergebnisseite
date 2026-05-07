@@ -1,0 +1,45 @@
+version: '3.8'
+
+# Production docker-compose file that pulls images from GitHub Container Registry
+#
+# Requires Docker login:
+#   docker login ghcr.io -u <username> -p <github-token>
+#
+# Usage:
+#   docker-compose -f docker-compose-deploy.yml up -d
+
+services:
+  backend:
+    image: ghcr.io/jalupaja/wettkampf-ergebnisseite-backend:latest
+    pull_policy: always
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://frontend:5173}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - backend-data:/app/src/data
+    networks:
+      - wettkampf-network
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/jalupaja/wettkampf-ergebnisseite-frontend:latest
+    pull_policy: always
+    ports:
+      - "5173:4173"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://backend:3001}
+    networks:
+      - wettkampf-network
+    restart: unless-stopped
+
+networks:
+  wettkampf-network:
+    driver: bridge
+
+volumes:
+  backend-data:
+    driver: local

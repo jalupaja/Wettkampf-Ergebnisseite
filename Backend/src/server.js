@@ -23,7 +23,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 const CORS_ORIGINS = process.env.CORS_ORIGINS 
-  ? process.env.CORS_ORIGINS.split(',') 
+  ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
   : [
       'http://localhost:5173', 
       'http://localhost:5174', 
@@ -61,8 +61,27 @@ initialize().then(() => {
     res.status(500).json({ error: 'Serverfehler', details: err.message });
   });
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server läuft auf http://0.0.0.0:${PORT}`);
     console.log(`Erlaubte CORS Origins: ${CORS_ORIGINS.join(', ')}`);
   });
+
+  // Graceful shutdown handler
+  const gracefulShutdown = (signal) => {
+    console.log(`\n${signal} empfangen, fahre Server herunter...`);
+    
+    server.close(() => {
+      console.log('Server erfolgreich beendet');
+      process.exit(0);
+    });
+
+    // Force exit after 10 seconds if graceful shutdown takes too long
+    setTimeout(() => {
+      console.error('Erzwungenes Beenden nach Timeout');
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 });
