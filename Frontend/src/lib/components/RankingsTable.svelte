@@ -46,7 +46,7 @@
    <table class="results-table">
      <thead>
        <tr>
-         <th class="rank-col">Platz</th>
+         <th class="rank-col"></th>
          <th class="name-col">Name</th>
          <th class="points-col">Punkte</th>
          {#if showStats}
