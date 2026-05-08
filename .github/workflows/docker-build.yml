@@ -9,6 +9,15 @@ on:
       - 'Frontend/**'
       - 'docker-compose*.yml'
       - '.github/workflows/docker-build.yml'
+  pull_request:
+    branches:
+      - master
+      - main
+    paths:
+      - 'Backend/**'
+      - 'Frontend/**'
+      - 'docker-compose*.yml'
+      - '.github/workflows/docker-build.yml'
   workflow_dispatch:
 
 env:
@@ -53,7 +62,8 @@ jobs:
       - name: Build and push ${{ matrix.service }}
         uses: docker/build-push-action@v5
         with:
-          context: ./${{ matrix.service == 'backend' && 'Backend' || 'Frontend' }}
+          context: .
+          file: ./${{ matrix.service == 'backend' && 'Backend' || 'Frontend' }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

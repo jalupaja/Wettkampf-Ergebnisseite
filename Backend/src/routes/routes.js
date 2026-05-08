@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import CompetitionStates from '../../../shared/competitionStates.js';
-import Roles from '../../../shared/roles.js';
-import RouteCategories from '../../../shared/routeCategories.js';
+import CompetitionStates from 'shared/competitionStates.js';
+import Roles from 'shared/roles.js';
+import RouteCategories from 'shared/routeCategories.js';
 import { authenticate } from '../middleware/auth.js';
 import {
   getRoutes,

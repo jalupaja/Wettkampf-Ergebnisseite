@@ -1,7 +1,7 @@
 <script>
   import { userStore } from '../stores/user.js';
   import { formatPoints } from '../utils/formatters.js';
-  import { CompetitionStates } from '../../../../shared/competitionStates.js';
+  import { CompetitionStates } from 'shared/competitionStates.js';
   
   let { results = [], loading = false, error = '', config = null } = $props();
   

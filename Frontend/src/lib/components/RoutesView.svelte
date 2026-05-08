@@ -4,9 +4,9 @@
   import { userStore } from '../stores/user.js';
   import { toastStore } from '../stores/toast.js';
   import { formatPoints } from '../utils/formatters.js';
-  import { CompetitionStates } from '../../../../shared/competitionStates.js';
-  import RouteCategories from '../../../../shared/routeCategories.js';
-  import Roles from '../../../../shared/roles.js';
+  import { CompetitionStates } from 'shared/competitionStates.js';
+  import RouteCategories from 'shared/routeCategories.js';
+  import Roles from 'shared/roles.js';
   
   let { targetUser = null } = $props();
   let routes = $state([]);

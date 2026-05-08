@@ -5,18 +5,20 @@ WORKDIR /app
 ARG VITE_API_URL=http://backend:3001
 ENV VITE_API_URL=$VITE_API_URL
 
-COPY package*.json ./
+COPY Frontend/package*.json ./
 
 RUN npm ci
 
-COPY . .
+COPY ./Frontend .
+
+COPY ./shared ./shared
 
 RUN npm run build
 
 FROM nginx:1.27-alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY entrypoint.sh /entrypoint.sh
+COPY ./Frontend/entrypoint.sh /entrypoint.sh
 
 # Minimal SPA config: static assets + index fallback for client-side routes
 RUN rm -f /etc/nginx/conf.d/default.conf && \

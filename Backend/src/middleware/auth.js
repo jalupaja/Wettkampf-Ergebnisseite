@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { getUserById } from '../data/store.js';
-import Roles from '../../../shared/roles.js';
+import Roles from 'shared/roles.js';
 
 import crypto from 'crypto';
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
