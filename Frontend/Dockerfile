@@ -18,7 +18,7 @@ RUN npm run build
 FROM nginx:1.27-alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY ./Frontend/entrypoint.sh /entrypoint.sh
+COPY Frontend/entrypoint.sh /entrypoint.sh
 
 # Minimal SPA config: static assets + index fallback for client-side routes
 RUN rm -f /etc/nginx/conf.d/default.conf && \

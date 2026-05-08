@@ -8,7 +8,7 @@ COPY Backend/package*.json ./
 
 RUN npm ci --omit=dev
 
-COPY --chown=nodejs:nodejs ./Backend .
+COPY --chown=nodejs:nodejs Backend/src ./src
 
 COPY --chown=nodejs:nodejs ./shared ./node_modules/shared
 
