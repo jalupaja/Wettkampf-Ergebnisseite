@@ -78,6 +78,18 @@
     }
     loading = false;
   });
+
+  // Overlay handlers (silenced) - prefer pointerdown on backdrop and stopPropagation inside modal
+  function overlayHandler(e) {
+    // Close only when the backdrop itself was hit
+    if (e.target === e.currentTarget) {
+      closeLogin();
+    }
+  }
+
+  function stopHandler(e) {
+    e.stopPropagation();
+  }
 </script>
 
 <div class:dark={isDark} class:light={!isDark}>
@@ -102,30 +114,35 @@
     <!-- modal overlay: clicking/touching outside closes the modal. Use Svelte event modifiers
          to ensure only clicks/touches directly on the overlay (not its children) close the modal.
          Also listen for Escape key. -->
-    <div
-      class="modal-overlay"
-      role="presentation"
-      tabindex="-1"
-      on:click|self={closeLogin}
-      on:touchstart|self={closeLogin}
-      on:keydown={(e) => {
-        const key = e.key || e.code;
-        if (key === 'Escape') closeLogin();
-      }}
-    >
+  <div
+    class="modal-overlay"
+    role="presentation"
+    tabindex="-1"
+    onclick={overlayHandler}
+    onpointerdown={overlayHandler}
+    onkeydown={(e) => {
+      const key = e.key || e.code;
+      if (key === 'Escape') closeLogin();
+    }}
+  >
       <!-- inner modal: the dialog itself - interactive role so tabindex and events are acceptable -->
-      <div
-        class="modal"
-        role="dialog"
-        aria-modal="true"
-        tabindex="0"
-        on:click|stopPropagation
-        on:touchstart|stopPropagation
-        on:keydown={(e) => e.stopPropagation()}
-      >
-        <button class="modal-close" aria-label="Schließen" on:click={closeLogin}>×</button>
-        <Login onLogin={closeLogin} />
-      </div>
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      tabindex="0"
+      onkeydown={stopHandler}
+    >
+      <Login
+        onLogin={closeLogin}
+        embedded={true}
+        onclick={stopHandler}
+        onpointerdown={stopHandler}
+        onpointerup={stopHandler}
+        ontouchstart={stopHandler}
+        ontouchend={stopHandler}
+      />
+    </div>
     </div>
   {/if}
 </div>
@@ -165,39 +182,51 @@
     to { transform: rotate(360deg); }
   }
   
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Raise overlay above toasts/timers which use z-index: 9999 */
+  z-index: 10001;
+  pointer-events: auto; /* ensure overlay can receive tap events */
+}
   
   .modal {
-    max-width: 400px;
-    width: 90%;
+    /* Keep the modal wrapper simple and shrink-wrapped to its content so
+       it does NOT stretch to the full overlay size. This ensures clicks
+       outside the popup hit the overlay element instead of the modal.
+    */
+    display: inline-block;
+    align-self: center;
     position: relative;
-    padding: 16px;
-    background: var(--color-bg);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    padding: 0;
+    background: transparent;
+    width: auto;
+    max-width: none;
   }
 
-  .modal-close {
-    position: absolute;
-    right: 10px;
-    top: 8px;
-    border: none;
-    background: transparent;
-    font-size: 22px;
-    cursor: pointer;
-    color: var(--color-text-muted);
+  /* Constrain modal height and let inner card scroll when necessary */
+  .modal {
+    max-height: 90vh;
+    overflow: auto;
   }
+
+  /* Target the login card inside the modal so it remains compact */
+  :global(.modal .login-card) {
+    max-height: 80vh;
+    overflow: auto;
+    margin: 0 auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  /* Removed unused .modal-close styles (close button now lives inside
+     the embedded login card as .embedded-close). */
   
   @media (max-width: 640px) {
     main { padding: 12px; }

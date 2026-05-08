@@ -4,7 +4,7 @@
   import { toastStore } from '../stores/toast.js';
   import { onMount } from 'svelte';
   
-  let { onLogin } = $props();
+  let { onLogin, embedded = false } = $props();
   
   let password = $state('');
   let error = $state('');
@@ -32,8 +32,12 @@
   }
 </script>
 
-<div class="login-container">
   <div class="login-card">
+      {#if embedded}
+      <button class="embedded-close" aria-label="Schließen" onclick={() => { if (onLogin) onLogin(); }}>
+        ×
+      </button>
+    {/if}
     <div class="logo">
       <img src="/favicon.svg" alt="Wettkampf Logo" class="logo-img" />
       <h1>Offene Regensburger Stadtmeisterschaft</h1>
@@ -62,17 +66,8 @@
       </button>
     </form>
   </div>
-</div>
 
 <style>
-  .login-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 16px;
-  }
-  
   .login-card {
     background: var(--color-bg-light);
     border-radius: 16px;
@@ -80,16 +75,35 @@
     width: 100%;
     max-width: 360px;
     border: 1px solid var(--color-border);
+    position: relative;
   }
-  
+
+  .embedded-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    line-height: 1;
+    padding: 6px;
+  }
+
+  /* Ensure the embedded close button sits visibly on top of the card */
+  .embedded-close {
+    z-index: 2;
+  }
+
   .logo {
     text-align: center;
     margin-bottom: 28px;
   }
 
   .logo-img {
-    height: 40%;
-    width: 40%;
+    height: 48px;
+    width: 48px;
     display: block;
     margin-left: auto;
     margin-right: auto;
