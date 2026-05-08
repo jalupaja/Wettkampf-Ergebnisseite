@@ -1,0 +1,11 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "competitionStates.js",
+  "exports": {
+    "./competitionStates.js": "./competitionStates.js",
+    "./roles.js": "./roles.js",
+    "./routeCategories.js": "./routeCategories.js"
+  }
+}
