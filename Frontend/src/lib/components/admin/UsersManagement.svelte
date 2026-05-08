@@ -215,7 +215,7 @@ async function clearAllUsers() {
                 {#if user.role === 'admin'}
                   <span class="badge admin">Admin</span>
                 {:else if user.role === 'ergebnisdienst'}
-                  <span class="badge ergebnisdienst">Ergebnisdienst</span>
+                  <span class="badge ergebnisdienst">Schiedsrichter</span>
                 {:else if user.role === 'finalist'}
                   <span class="badge finalist">Finalist</span>
                 {/if}
@@ -290,7 +290,7 @@ async function clearAllUsers() {
             <select id="role" bind:value={formData.role}>
               <option value="athlete">Athlet</option>
               <option value="admin">Admin</option>
-              <option value="ergebnisdienst">Ergebnisdienst</option>
+              <option value="ergebnisdienst">Schiedsrichter</option>
               <option value="finalist">Finalist</option>
             </select>
           </div>

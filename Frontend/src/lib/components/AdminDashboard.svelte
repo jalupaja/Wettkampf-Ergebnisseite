@@ -15,7 +15,7 @@
   let users = $state([]);
   let selectedUserId = $state('');
   let loadingUsers = $state(true);
-  const isErgebnisdienst = $derived($userStore?.role === 'ergebnisdienst');
+  const isErgebnisdienst = $derived($userStore?.role === 'ergebnisdienst' || $userStore?.role === 'schiedsrichter');
   
   const tabs = $derived(
     isErgebnisdienst

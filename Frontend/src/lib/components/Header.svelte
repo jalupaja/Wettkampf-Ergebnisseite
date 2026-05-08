@@ -30,7 +30,7 @@
         {#if $userStore?.role === 'admin'}
           <span class="badge">Admin</span>
         {:else if $userStore?.role === 'ergebnisdienst'}
-          <span class="badge ergebnisdienst">Ergebnisdienst</span>
+          <span class="badge ergebnisdienst">Schiedsrichter</span>
         {:else if $userStore?.role === 'athlete' || $userStore?.role === 'finalist'}
           <span class="badge athlete">Athlet</span>
         {/if}

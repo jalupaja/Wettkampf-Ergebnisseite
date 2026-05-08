@@ -23,7 +23,7 @@ router.get('/', authenticate, (req, res) => {
     return res.status(404).json({ error: 'Benutzer nicht gefunden' });
   }
 
-  const isErgebnisdienst = ['admin', 'ergebnisdienst'].includes(req.user.role);
+    const isErgebnisdienst = ['admin', 'ergebnisdienst', 'schiedsrichter'].includes(req.user.role);
 
   if (targetUserId !== req.user.id && !isErgebnisdienst) {
     return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
@@ -33,7 +33,7 @@ router.get('/', authenticate, (req, res) => {
     targetUserId === req.user.id &&
     ['athlete', 'finalist'].includes(req.user.role);
 
-  const isAdminOrErgebnisdienst = ['admin', 'ergebnisdienst'].includes(req.user.role);
+  const isAdminOrErgebnisdienst = ['admin', 'ergebnisdienst', 'schiedsrichter'].includes(req.user.role);
 
   const visibleRoutes = isAdminOrErgebnisdienst
     ? routes

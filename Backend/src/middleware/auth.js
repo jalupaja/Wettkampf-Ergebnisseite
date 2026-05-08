@@ -29,7 +29,7 @@ export function authenticate(req, res, next) {
   
   const decoded = verifyToken(token);
   if (!decoded) {
-    return res.status(401).json({ error: 'Ungültiges Token' });
+    return res.status(401).json({ error: 'Account ungültig. Bitte Seite neu laden.' });
   }
   
   const user = getUserById(decoded.id);
@@ -49,8 +49,8 @@ export function requireAdmin(req, res, next) {
 }
 
 export function requireAdminOrErgebnisdienst(req, res, next) {
-  if (!['admin', 'ergebnisdienst'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Admin- oder Ergebnisdienst-Rechte erforderlich' });
+  if (!['admin', 'ergebnisdienst', 'schiedsrichter'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Admin- oder Schiedsrichter-Rechte erforderlich' });
   }
   next();
 }

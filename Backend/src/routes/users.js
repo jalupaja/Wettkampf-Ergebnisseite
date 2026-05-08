@@ -14,7 +14,7 @@ const router = Router();
 router.get('/', authenticate, requireAdminOrErgebnisdienst, (req, res) => {
   const users = getUsers();
   const groups = getGroups();
-  const visibleUsers = req.user.role === 'ergebnisdienst'
+  const visibleUsers = ['ergebnisdienst', 'schiedsrichter'].includes(req.user.role)
     ? users.filter(u => ['athlete', 'finalist'].includes(u.role))
     : users;
   
@@ -41,11 +41,11 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
       return res.status(400).json({ error: 'Benutzername, Passwort und Rolle erforderlich' });
     }
     
-    if (!['admin', 'athlete', 'finalist', 'ergebnisdienst'].includes(role)) {
+    if (!['admin', 'athlete', 'finalist', 'ergebnisdienst', 'schiedsrichter'].includes(role)) {
       return res.status(400).json({ error: 'Ungültige Rolle' });
     }
-    if ((role === 'admin' || role === 'ergebnisdienst') && !req.user.isSuperAdmin) {
-      return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Ergebnisdienst erstellen' });
+    if ((role === 'admin' || role === 'ergebnisdienst' || role === 'schiedsrichter') && !req.user.isSuperAdmin) {
+      return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Schiedsrichter erstellen' });
     }
     
     if ((role === 'athlete' || role === 'finalist') && !groupId) {
@@ -94,18 +94,18 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
     }
     
     // Check permissions for password changes on admin users
-    if (updates.password && ['admin', 'ergebnisdienst'].includes(targetUser.role)) {
+    if (updates.password && ['admin', 'ergebnisdienst', 'schiedsrichter'].includes(targetUser.role)) {
       // Only super-admin can change admin passwords
       if (!req.user.isSuperAdmin) {
         return res.status(403).json({ error: 'Nur Super-Admin kann Admin-Passwörter ändern' });
       }
     }
     
-    if (updates.role && !['admin', 'athlete', 'finalist', 'ergebnisdienst'].includes(updates.role)) {
+    if (updates.role && !['admin', 'athlete', 'finalist', 'ergebnisdienst', 'schiedsrichter'].includes(updates.role)) {
       return res.status(400).json({ error: 'Ungültige Rolle' });
     }
-    if ((updates.role === 'admin' || updates.role === 'ergebnisdienst') && !req.user.isSuperAdmin && targetUser.role !== updates.role) {
-      return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Ergebnisdienst befördern' });
+    if ((updates.role === 'admin' || updates.role === 'ergebnisdienst' || updates.role === 'schiedsrichter') && !req.user.isSuperAdmin && targetUser.role !== updates.role) {
+      return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Schiedsrichter befördern' });
     }
     
     // Regular admins cannot change super-admin password
