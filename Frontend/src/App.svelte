@@ -96,9 +96,11 @@
   let overlayEl;
 
   // When the modal opens, focus the backdrop so keyboard events (Escape) are reliably received
-  $: if (showLogin) {
-    requestAnimationFrame(() => overlayEl?.focus());
-  }
+  $effect(() => {
+    if (showLogin) {
+      requestAnimationFrame(() => overlayEl?.focus());
+    }
+  });
 </script>
 
 <div class:dark={isDark} class:light={!isDark}>
