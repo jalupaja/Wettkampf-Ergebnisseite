@@ -12,7 +12,8 @@
   let passwordInput;
   
   onMount(() => {
-    requestAnimationFrame(() => passwordInput?.focus());
+    // Do not auto-focus here; parent controls focus when modal opens.
+    // requestAnimationFrame(() => passwordInput?.focus());
   });
   
   async function handleLogin(e) {
@@ -33,11 +34,6 @@
 </script>
 
   <div class="login-card">
-      {#if embedded}
-      <button class="embedded-close" aria-label="Schließen" onclick={(e) => { e.stopPropagation(); if (onLogin) onLogin(); }}>
-        ×
-      </button>
-    {/if}
     <div class="logo">
       <img src="/favicon.svg" alt="Wettkampf Logo" class="logo-img" />
       <h1>Offene Regensburger Stadtmeisterschaft</h1>
@@ -71,29 +67,13 @@
   .login-card {
     background: var(--color-bg-light);
     border-radius: 16px;
-    padding: 32px 24px;
+    /* add extra top padding so the embedded close fits inside the card */
+    padding: 40px 24px 24px 24px;
     width: 100%;
     max-width: 360px;
     border: 1px solid var(--color-border);
     position: relative;
-  }
-
-  .embedded-close {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    border: none;
-    background: transparent;
-    font-size: 20px;
-    cursor: pointer;
-    color: var(--color-text-muted);
-    line-height: 1;
-    padding: 6px;
-  }
-
-  /* Ensure the embedded close button sits visibly on top of the card */
-  .embedded-close {
-    z-index: 2;
+    box-sizing: border-box;
   }
 
   .logo {

@@ -97,11 +97,31 @@
 
   let overlayEl = $state(null);
 
-  // When the modal opens, focus the backdrop so keyboard events (Escape) are reliably received
+  // When the modal opens, focus the backdrop so keyboard events (Escape) are reliably received,
+  // then attempt to focus the password input inside the login component. Multiple retries
+  // are used to handle timing differences on mobile browsers.
   $effect(() => {
-    if (showLogin) {
-      requestAnimationFrame(() => overlayEl?.focus());
-    }
+    if (!showLogin) return;
+    requestAnimationFrame(() => {
+      overlayEl?.focus();
+
+      const tryFocus = (attempt = 0) => {
+        try {
+          const pw = overlayEl?.querySelector('input[type="password"], input[type="text"], input:not([type])');
+          if (pw && typeof pw.focus === 'function') {
+            try { pw.focus({ preventScroll: true }); } catch (e) { pw.focus(); }
+            return;
+          }
+        } catch (e) {
+          // ignore
+        }
+        if (attempt < 3) {
+          setTimeout(() => tryFocus(attempt + 1), attempt === 0 ? 50 : 150);
+        }
+      };
+
+      tryFocus(0);
+    });
   });
 </script>
 
