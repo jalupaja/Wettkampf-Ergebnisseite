@@ -533,7 +533,8 @@
             {/each}
           </div>
         </section>
-  
+      {/if}
+
       {#if bonusRoutes.length}
         <section class="route-section">
           <h2>Bonus</h2>
