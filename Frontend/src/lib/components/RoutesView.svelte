@@ -4,6 +4,7 @@
   import { userStore } from '../stores/user.js';
   import { toastStore } from '../stores/toast.js';
   import { formatPoints } from '../utils/formatters.js';
+  import { CompetitionStates } from '../../../../shared/competitionStates.js';
   
   let { targetUser = null } = $props();
   let routes = $state([]);
@@ -168,14 +169,24 @@
   }
   
   function canEditRoute(route) {
-  if (['admin', 'schiedsrichter'].includes($userStore?.role)) return true;
-    if (competitionState === 'setup') return false;
-    if (competitionState === 'qualification') return true;
-    if (competitionState === 'finale') {
-      if (route.category === 'finale') return false;
+    const role = $userStore?.role;
+    // Admin may always edit
+    if (role === 'admin') return true;
+
+    // Schiedsrichter: only allowed to edit finale routes while the competition is in FINALE
+    if (role === 'schiedsrichter') {
+      return config?.competitionState === CompetitionStates.FINALE && route.category === 'finale';
+    }
+
+    // Athletes/Finalists: may edit during qualification and only non-finale routes (their own)
+    if (role === 'athlete' || role === 'finalist') {
+      if (config?.competitionState === CompetitionStates.QUALIFICATION) {
+        return true;
+      }
       return false;
     }
-    if (competitionState === 'finished') return false;
+
+    // Default deny
     return false;
   }
 
