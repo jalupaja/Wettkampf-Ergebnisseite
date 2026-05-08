@@ -224,13 +224,7 @@
     max-width: 360px;
   }
   
-  .error-message {
-    background: rgba(231, 76, 60, 0.1);
-    border: 1px solid var(--color-error);
-    color: var(--color-error);
-    padding: 12px;
-    border-radius: 8px;
-  }
+  /* No component-scoped .error-message here — global style in global.css */
   
   .loading {
     text-align: center;

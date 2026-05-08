@@ -488,11 +488,13 @@
 
   {#if !loading}
     <div class="stats">
+      {#if $userStore?.role !== Roles.SCHIEDSRICHTER}
         <div class="stat-card total">
-              <div class="stat-label">{pointsLabel}</div>
-              <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
+          <div class="stat-label">{pointsLabel}</div>
+          <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
         </div>
-      </div>
+      {/if}
+    </div>
     
     <div class="route-sections">
       {#if qualRoutes.length}
@@ -735,8 +737,9 @@
       font-size: 18px;
       border: 2px solid var(--color-border);
       border-radius: 8px;
-      background: var(--color-white);
-      /* Use site text color so input is readable on white background */
+      /* Match the site's standard input background so color contrast is correct
+         in both light and dark themes */
+      background: var(--color-bg-light);
       color: var(--color-text);
     }
    

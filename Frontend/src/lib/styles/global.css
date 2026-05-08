@@ -18,6 +18,18 @@
   --color-white: #ffffff;
 }
 
+/* Global error message style used across multiple components. Declared here
+   to avoid Svelte component-scoped unused-css warnings and ensure
+   consistent appearance across the app. */
+.error-message {
+  background: rgba(231, 76, 60, 0.08);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  color: var(--color-error);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
 body.light,
 .light {
   --color-bg: #f5f5f5;

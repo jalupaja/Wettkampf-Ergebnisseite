@@ -207,14 +207,7 @@
     font-size: 24px;
   }
   
-  .error-message {
-    background: rgba(231, 76, 60, 0.1);
-    border: 1px solid var(--color-error);
-    color: var(--color-error);
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-  }
+  /* Use global .error-message from global.css */
   
   
   .loading {
