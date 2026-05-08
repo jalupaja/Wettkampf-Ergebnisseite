@@ -5,6 +5,8 @@
   import { toastStore } from '../stores/toast.js';
   import { formatPoints } from '../utils/formatters.js';
   import { CompetitionStates } from '../../../../shared/competitionStates.js';
+  import RouteCategories from '../../../../shared/routeCategories.js';
+  import Roles from '../../../../shared/roles.js';
   
   let { targetUser = null } = $props();
   let routes = $state([]);
@@ -170,22 +172,20 @@
   
   function canEditRoute(route) {
     const role = $userStore?.role;
-    // Use shared Roles enum where available
-    // (importing Roles in Svelte files would be ideal; left as string checks for minimal change)
-    // Debug: log role, competition state and route category to help diagnose permission issues
+    // Use shared Roles enum
     console.debug('[canEditRoute] role=', role, 'config.state=', config?.competitionState, 'route.category=', route?.category, 'route.id=', route?.id);
     // Admin may always edit
-    if (role === 'admin') return true;
+    if (role === Roles.ADMIN) return true;
 
     // Schiedsrichter: only allowed to edit finale routes while the competition is in FINALE
-    if (role === 'schiedsrichter') {
+    if (role === Roles.SCHIEDSRICHTER) {
       return config?.competitionState === CompetitionStates.FINALE && route.category === RouteCategories.FINALE;
     }
 
     // Athletes/Finalists: may edit during qualification and only non-finale routes (their own)
-    if (role === 'athlete' || role === 'finalist') {
+    if (role === Roles.ATHLETE || role === Roles.FINALIST) {
       if (config?.competitionState === CompetitionStates.QUALIFICATION) {
-        return true;
+        return route.category !== RouteCategories.FINALE;
       }
       return false;
     }
@@ -261,17 +261,17 @@
 
   function getDisableReason(route) {
     const role = $userStore?.role;
-    if (role === 'admin') return null;
-      if (role === 'schiedsrichter') {
-        if (config?.competitionState !== CompetitionStates.FINALE) return 'Schiedsrichter dürfen nur im Finale Routen bearbeiten';
-        if (route.category !== RouteCategories.FINALE) return 'Schiedsrichter dürfen nur Finalrouten bearbeiten';
-        return null;
-      }
-      if (role === 'athlete' || role === 'finalist') {
-        if (config?.competitionState !== CompetitionStates.QUALIFICATION) return 'Athleten dürfen Routen nur während der Qualifikation bearbeiten';
-        if (route.category === RouteCategories.FINALE) return 'Athleten dürfen Finalrouten nicht bearbeiten';
-        return null;
-      }
+    if (role === Roles.ADMIN) return null;
+    if (role === Roles.SCHIEDSRICHTER) {
+      if (config?.competitionState !== CompetitionStates.FINALE) return 'Schiedsrichter dürfen nur im Finale Routen bearbeiten';
+      if (route.category !== RouteCategories.FINALE) return 'Schiedsrichter dürfen nur Finalrouten bearbeiten';
+      return null;
+    }
+    if (role === Roles.ATHLETE || role === Roles.FINALIST) {
+      if (config?.competitionState !== CompetitionStates.QUALIFICATION) return 'Athleten dürfen Routen nur während der Qualifikation bearbeiten';
+      if (route.category === RouteCategories.FINALE) return 'Athleten dürfen Finalrouten nicht bearbeiten';
+      return null;
+    }
     return 'Keine Berechtigung';
   }
   
@@ -535,9 +535,7 @@
             {/each}
           </div>
         </section>
-    {/if}
-  {/if}
-      
+  
       {#if bonusRoutes.length}
         <section class="route-section">
           <h2>Bonus</h2>
