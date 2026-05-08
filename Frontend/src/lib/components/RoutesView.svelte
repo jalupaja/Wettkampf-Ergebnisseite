@@ -580,7 +580,7 @@
         const key = e.key || e.code;
         if (key === 'Escape' || key === 'Enter' || key === ' ' || key === 'Spacebar' || key === 'Space') closeTimer();
       }}>
-      <div class="timer-popup" role="dialog" aria-modal="true" tabindex="0" onclick={(e) => e.stopPropagation()}>
+      <div class="timer-popup" role="dialog" aria-modal="true" tabindex="0" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
         <div class="timer-header">
           <h3>Timer</h3>
           <button class="timer-close" onclick={closeTimer}>×</button>

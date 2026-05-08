@@ -80,18 +80,7 @@
     flex-shrink: 0;
   }
   
-  .logo-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--color-primary);
-    color: var(--color-white);
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  /* .logo-icon removed (unused in this component). Use direct <img> for logo. */
   
   .logo span {
     font-size: 18px;
