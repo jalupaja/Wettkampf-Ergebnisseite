@@ -27,7 +27,8 @@
   
   onMount(async () => {
     window.addEventListener('open-login', openLogin);
-    window.addEventListener('keydown', handleKeydown);
+    // Ensure Escape closes modal by handling keydown at window level
+    window.addEventListener('keydown', handleKeydown, { passive: true });
     
     themeStore.subscribe(value => {
       isDark = value;
@@ -85,10 +86,6 @@
     if (e.target === e.currentTarget) {
       closeLogin();
     }
-  }
-
-  function stopHandler(e) {
-    e.stopPropagation();
   }
 </script>
 
