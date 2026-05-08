@@ -312,9 +312,7 @@
       toastStore.error(err.message);
     }
   }
-  
- import RouteCategories from '../../../../shared/routeCategories.js';
-
+   
    const qualRoutes = $derived(routes.filter(r => r.category === RouteCategories.QUALIFICATION));
    const bonusRoutes = $derived(routes.filter(r => r.category === RouteCategories.BONUS));
    const finaleRoutes = $derived(routes.filter(r => r.category === RouteCategories.FINALE));
