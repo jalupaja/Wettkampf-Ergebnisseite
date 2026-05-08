@@ -29,7 +29,12 @@ export function calculateResults() {
   const qualificationRoutes = routes.filter(r => r.category === 'qualification');
   const bonusRoutes = routes.filter(r => r.category === 'bonus');
   const finaleRoutes = routes.filter(r => r.category === 'finale');
-  const bestCount = config.qualificationBestCount;
+  // Ensure qualification best count is a sane integer (fallback to 4)
+  const bestCount = Number.isFinite(Number(config.qualificationBestCount))
+    ? Math.max(1, Math.floor(Number(config.qualificationBestCount)))
+    : 4;
+  // Do not allow bestCount greater than available qualification routes
+  const effectiveBestCount = Math.min(bestCount, Math.max(0, qualificationRoutes.length));
   
   const results = groups.map(group => {
     const groupUsers = users.filter(u => u.groupId === group.id);
@@ -41,7 +46,7 @@ export function calculateResults() {
         const completedEntry = userCompleted.find(cr => cr.routeName === route.name);
         return {
           name: route.name,
-          topPoints: route.topPoints,
+          topPoints: Number(route.topPoints) || 0,
           zones: route.zones,
           result: completedEntry ? completedEntry.result : null
         };
@@ -116,13 +121,13 @@ export function calculateResults() {
         
         if (r.result === 'top') {
           isTop = true;
-          points = r.topPoints;
+          points = Number(r.topPoints) || 0;
         } else if (r.result && r.result !== 'top') {
           const zone = r.zones.find(z => z.name === r.result);
           if (zone) {
             zoneName = r.result;
             zonePoints = zone.points;
-            points = zone.points;
+            points = Number(zone.points) || 0;
           }
         }
         
@@ -136,7 +141,7 @@ export function calculateResults() {
         return b.topPoints - a.topPoints;
       });
       
-      const bestQual = sortedQual.slice(0, bestCount);
+    const bestQual = sortedQual.slice(0, effectiveBestCount);
       const qualTops = bestQual.filter(r => r.isTop).length;
       const qualZones = bestQual.filter(r => !r.isTop && r.zonePoints > 0).length;
       const qualPoints = bestQual.reduce((sum, r) => sum + r.points, 0);
