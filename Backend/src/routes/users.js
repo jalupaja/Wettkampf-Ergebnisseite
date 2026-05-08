@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate, requireAdminOrSchiedsrichter, requireAdmin } from '../middleware/auth.js';
+import Roles from '../../../shared/roles.js';
 import {
   getUsers,
   getUserById,
@@ -41,10 +42,10 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
       return res.status(400).json({ error: 'Benutzername, Passwort und Rolle erforderlich' });
     }
     
-    if (!['admin', 'athlete', 'finalist', 'schiedsrichter'].includes(role)) {
+    if (![Roles.ADMIN, Roles.ATHLETE, Roles.FINALIST, Roles.SCHIEDSRICHTER].includes(role)) {
       return res.status(400).json({ error: 'Ungültige Rolle' });
     }
-    if ((role === 'admin' || role === 'schiedsrichter') && !req.user.isSuperAdmin) {
+    if ((role === Roles.ADMIN || role === Roles.SCHIEDSRICHTER) && !req.user.isSuperAdmin) {
       return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Schiedsrichter erstellen' });
     }
     
@@ -94,17 +95,17 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
     }
     
     // Check permissions for password changes on admin users
-    if (updates.password && ['admin', 'schiedsrichter'].includes(targetUser.role)) {
+    if (updates.password && [Roles.ADMIN, Roles.SCHIEDSRICHTER].includes(targetUser.role)) {
       // Only super-admin can change admin passwords
       if (!req.user.isSuperAdmin) {
         return res.status(403).json({ error: 'Nur Super-Admin kann Admin-Passwörter ändern' });
       }
     }
     
-    if (updates.role && !['admin', 'athlete', 'finalist', 'schiedsrichter'].includes(updates.role)) {
+    if (updates.role && ![Roles.ADMIN, Roles.ATHLETE, Roles.FINALIST, Roles.SCHIEDSRICHTER].includes(updates.role)) {
       return res.status(400).json({ error: 'Ungültige Rolle' });
     }
-    if ((updates.role === 'admin' || updates.role === 'schiedsrichter') && !req.user.isSuperAdmin && targetUser.role !== updates.role) {
+    if ((updates.role === Roles.ADMIN || updates.role === Roles.SCHIEDSRICHTER) && !req.user.isSuperAdmin && targetUser.role !== updates.role) {
       return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Schiedsrichter befördern' });
     }
     

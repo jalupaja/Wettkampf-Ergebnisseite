@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { getUserById } from '../data/store.js';
+import Roles from '../../../shared/roles.js';
 
 import crypto from 'crypto';
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
@@ -42,21 +43,21 @@ export function authenticate(req, res, next) {
 }
 
 export function requireAdmin(req, res, next) {
-  if (req.user.role !== 'admin') {
+  if (req.user.role !== Roles.ADMIN) {
     return res.status(403).json({ error: 'Admin-Rechte erforderlich' });
   }
   next();
 }
 
 export function requireAdminOrSchiedsrichter(req, res, next) {
-  if (!['admin', 'schiedsrichter'].includes(req.user.role)) {
+  if (![Roles.ADMIN, Roles.SCHIEDSRICHTER].includes(req.user.role)) {
     return res.status(403).json({ error: 'Admin- oder Schiedsrichter-Rechte erforderlich' });
   }
   next();
 }
 
 export function requireAthlete(req, res, next) {
-  if (!['athlete', 'finalist'].includes(req.user.role)) {
+  if (![Roles.ATHLETE, Roles.FINALIST].includes(req.user.role)) {
     return res.status(403).json({ error: 'Athleten-Rechte erforderlich' });
   }
   next();

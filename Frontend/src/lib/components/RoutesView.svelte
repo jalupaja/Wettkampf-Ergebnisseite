@@ -170,6 +170,10 @@
   
   function canEditRoute(route) {
     const role = $userStore?.role;
+    // Use shared Roles enum where available
+    // (importing Roles in Svelte files would be ideal; left as string checks for minimal change)
+    // Debug: log role, competition state and route category to help diagnose permission issues
+    console.debug('[canEditRoute] role=', role, 'config.state=', config?.competitionState, 'route.category=', route?.category, 'route.id=', route?.id);
     // Admin may always edit
     if (role === 'admin') return true;
 
@@ -209,7 +213,7 @@
     await decrementBonus(routeId, currentCount);
   }
   
-   async function setResult(routeId, result, resultType = 'points') {
+  async function setResult(routeId, result, resultType = 'points') {
      const route = routes.find(r => r.id === routeId);
      if (!route) return;
      
@@ -224,13 +228,15 @@
        return;
      }
      
-     try {
-       await api.routes.setResult(routeId, result, userId, resultType);
-       await loadRoutes();
-     } catch (err) {
-       toastStore.error(err.message);
-     }
-   }
+      try {
+        console.debug('[setResult] Sending', { routeId, result, userId, resultType });
+        await api.routes.setResult(routeId, result, userId, resultType);
+        await loadRoutes();
+      } catch (err) {
+        console.error('[setResult] error', err);
+        toastStore.error(err.message || String(err));
+      }
+    }
   
   async function incrementBonus(routeId, currentCount) {
     const route = routes.find(r => r.id === routeId);
@@ -251,6 +257,22 @@
     } catch (err) {
       toastStore.error(err.message);
     }
+  }
+
+  function getDisableReason(route) {
+    const role = $userStore?.role;
+    if (role === 'admin') return null;
+    if (role === 'schiedsrichter') {
+      if (config?.competitionState !== CompetitionStates.FINALE) return 'Schiedsrichter dürfen nur im Finale Routen bearbeiten';
+      if (route.category !== 'finale') return 'Schiedsrichter dürfen nur Finalrouten bearbeiten';
+      return null;
+    }
+    if (role === 'athlete' || role === 'finalist') {
+      if (config?.competitionState !== CompetitionStates.QUALIFICATION) return 'Athleten dürfen Routen nur während der Qualifikation bearbeiten';
+      if (route.category === 'finale') return 'Athleten dürfen Finalrouten nicht bearbeiten';
+      return null;
+    }
+    return 'Keine Berechtigung';
   }
   
   async function decrementBonus(routeId, currentCount) {
@@ -486,9 +508,23 @@
                 <div class="route-buttons">
                   <button class="result-btn zone-btn" class:disabled={disabled} disabled={disabled} onclick={() => checkStateAndSetResult(route.id, route.result === 'attempted' ? null : 'attempted')}>Versucht</button>
                   {#each route.zones || [] as zone}
-                    <button class="result-btn zone-btn" class:active={route.result === zone.name} class:disabled={disabled} disabled={disabled} onclick={() => checkStateAndSetResult(route.id, route.result === zone.name ? null : zone.name)}>{zone.name}</button>
+                    <button
+                      class="result-btn zone-btn"
+                      class:active={route.result === zone.name}
+                      class:disabled={disabled}
+                      disabled={disabled}
+                      onclick={() => disabled ? toastStore.error(getDisableReason(route) || 'Keine Berechtigung') : checkStateAndSetResult(route.id, route.result === zone.name ? null : zone.name)}
+                      title={disabled ? getDisableReason(route) : `Wert setzen: ${zone.name}`}
+                    >{zone.name}</button>
                   {/each}
-                  <button class="result-btn top-btn" class:active={route.result === 'top'} class:disabled={disabled} disabled={disabled} onclick={() => checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}>Top</button>
+                  <button
+                    class="result-btn top-btn"
+                    class:active={route.result === 'top'}
+                    class:disabled={disabled}
+                    disabled={disabled}
+                    onclick={() => disabled ? toastStore.error(getDisableReason(route) || 'Keine Berechtigung') : checkStateAndSetResult(route.id, route.result === 'top' ? null : 'top')}
+                    title={disabled ? getDisableReason(route) : 'Top/keine Top'}
+                  >Top</button>
                 </div>
               </div>
             {/each}
@@ -509,6 +545,9 @@
                   <button class="counter-btn minus" onclick={() => checkStateAndDecrementBonus(route.id, count)} disabled={disabled || count <= 0}>-</button>
                   <span class="counter-value">{count}</span>
                   <button class="counter-btn plus" onclick={() => checkStateAndIncrementBonus(route.id, count)} disabled={disabled}>+</button>
+                  {#if disabled}
+                    <span class="disabled-hint" title={getDisableReason(route)}></span>
+                  {/if}
                 </div>
               </div>
             {/each}
@@ -542,8 +581,9 @@
                           setFinalePoints(route.id, e.currentTarget.value);
                         }
                       }}
+                      title={disabled ? getDisableReason(route) : 'Finale Punkte'}
                     />
-                    <input
+                     <input
                       type="text"
                       value={getFinaleTime(route.result)}
                       disabled={disabled}
@@ -558,6 +598,7 @@
                           setFinaleTime(route.id, e.currentTarget.value);
                         }
                       }}
+                      title={disabled ? getDisableReason(route) : 'Finale Zeit'}
                     />
                   <button type="button" class="timer-btn" onclick={() => openTimer(route.id)} disabled={disabled} title="Timer">
                     ⏱️
