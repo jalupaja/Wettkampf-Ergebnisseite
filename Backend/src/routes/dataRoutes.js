@@ -151,7 +151,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
 });
 
 router.get('/users', authenticate, requireAdmin, (req, res) => {
-  const users = getUsers().filter(u => !['admin', 'ergebnisdienst', 'schiedsrichter'].includes(u.role));
+  const users = getUsers().filter(u => !['admin', 'schiedsrichter'].includes(u.role));
   const groups = getGroups();
   const completed = getCompletedRoutes();
   
@@ -188,9 +188,9 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
     if (mode === 'replace') {
       const store = getStore();
       const athleteIds = users.filter(u => ['athlete', 'finalist'].includes(u.role)).map(u => u.id);
-  store.users = store.users.filter(u => ['admin', 'ergebnisdienst', 'schiedsrichter'].includes(u.role));
+      store.users = store.users.filter(u => ['admin', 'schiedsrichter'].includes(u.role));
       store.completedRoutes = store.completedRoutes.filter(cr => 
-  users.find(u => u.id === cr.userId && ['admin', 'ergebnisdienst', 'schiedsrichter'].includes(u.role))
+        users.find(u => u.id === cr.userId && ['admin', 'schiedsrichter'].includes(u.role))
       );
     }
     
@@ -204,26 +204,26 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
       }
       
       try {
-        if (mode === 'replace' || mode === 'append') {
+      if (mode === 'replace' || mode === 'append') {
           const existing = users.find(u => u.username === row.username);
           const password = row.password ? row.password : generatePassword();
           if (existing) {
-  if (['admin', 'ergebnisdienst', 'schiedsrichter'].includes(existing.role)) continue;
-            const updates = { groupId: group?.id || null };
-            if (row.password) {
-              updates.password = password;
+              if (['admin', 'schiedsrichter'].includes(existing.role)) continue;
+              const updates = { groupId: group?.id || null };
+              if (row.password) {
+                updates.password = password;
+              }
+              updateUser(existing.id, updates);
+              results.push({ username: row.username, password: row.password ? undefined : password, action: 'updated' });
+            } else {
+              createUser(
+                row.username,
+                password,
+                ['athlete', 'finalist', 'schiedsrichter', 'admin'].includes(row.role) ? row.role : 'athlete',
+                group?.id || null
+              );
+              results.push({ username: row.username, password: row.password ? undefined : password, action: 'created' });
             }
-            updateUser(existing.id, updates);
-            results.push({ username: row.username, password: row.password ? undefined : password, action: 'updated' });
-          } else {
-            createUser(
-              row.username,
-              password,
-  ['athlete', 'finalist', 'ergebnisdienst', 'schiedsrichter', 'admin'].includes(row.role) ? row.role : 'athlete',
-              group?.id || null
-            );
-            results.push({ username: row.username, password: row.password ? undefined : password, action: 'created' });
-          }
         }
       } catch (err) {
         results.push({ username: row.username || 'Unknown', error: err.message });

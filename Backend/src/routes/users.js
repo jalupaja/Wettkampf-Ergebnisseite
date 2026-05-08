@@ -41,10 +41,10 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
       return res.status(400).json({ error: 'Benutzername, Passwort und Rolle erforderlich' });
     }
     
-    if (!['admin', 'athlete', 'finalist', 'ergebnisdienst', 'schiedsrichter'].includes(role)) {
+    if (!['admin', 'athlete', 'finalist', 'schiedsrichter'].includes(role)) {
       return res.status(400).json({ error: 'Ungültige Rolle' });
     }
-    if ((role === 'admin' || role === 'ergebnisdienst' || role === 'schiedsrichter') && !req.user.isSuperAdmin) {
+    if ((role === 'admin' || role === 'schiedsrichter') && !req.user.isSuperAdmin) {
       return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Schiedsrichter erstellen' });
     }
     
@@ -94,17 +94,17 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
     }
     
     // Check permissions for password changes on admin users
-    if (updates.password && ['admin', 'ergebnisdienst', 'schiedsrichter'].includes(targetUser.role)) {
+    if (updates.password && ['admin', 'schiedsrichter'].includes(targetUser.role)) {
       // Only super-admin can change admin passwords
       if (!req.user.isSuperAdmin) {
         return res.status(403).json({ error: 'Nur Super-Admin kann Admin-Passwörter ändern' });
       }
     }
     
-    if (updates.role && !['admin', 'athlete', 'finalist', 'ergebnisdienst', 'schiedsrichter'].includes(updates.role)) {
+    if (updates.role && !['admin', 'athlete', 'finalist', 'schiedsrichter'].includes(updates.role)) {
       return res.status(400).json({ error: 'Ungültige Rolle' });
     }
-    if ((updates.role === 'admin' || updates.role === 'ergebnisdienst' || updates.role === 'schiedsrichter') && !req.user.isSuperAdmin && targetUser.role !== updates.role) {
+    if ((updates.role === 'admin' || updates.role === 'schiedsrichter') && !req.user.isSuperAdmin && targetUser.role !== updates.role) {
       return res.status(403).json({ error: 'Nur Super-Admin kann Administratoren/Schiedsrichter befördern' });
     }
     

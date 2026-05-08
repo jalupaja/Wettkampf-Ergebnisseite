@@ -168,7 +168,7 @@
   }
   
   function canEditRoute(route) {
-    if (['admin', 'ergebnisdienst'].includes($userStore?.role)) return true;
+  if (['admin', 'schiedsrichter'].includes($userStore?.role)) return true;
     if (competitionState === 'setup') return false;
     if (competitionState === 'qualification') return true;
     if (competitionState === 'finale') {
@@ -442,7 +442,7 @@
 <div class="routes-view">
   {#if competitionState === 'setup' && !loading}
     <div class="setup-banner">Wettkampf noch nicht gestartet.</div>
-  {:else if competitionState === 'finale' && !['admin', 'ergebnisdienst'].includes($userStore?.role) && !loading}
+  {:else if competitionState === 'finale' && !['admin', 'schiedsrichter'].includes($userStore?.role) && !loading}
     <div class="setup-banner finale">Finale läuft!</div>
   {:else if competitionState === 'finished' && !loading}
     <div class="setup-banner finished">Wettkampf beendet.</div>

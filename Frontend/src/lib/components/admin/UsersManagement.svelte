@@ -17,7 +17,7 @@
   let formData = $state({
     username: '',
     password: '',
-    role: 'athlete',
+            role: 'athlete',
     groupId: ''
   });
   

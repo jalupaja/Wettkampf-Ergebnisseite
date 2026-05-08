@@ -33,7 +33,7 @@ router.get('/', authenticate, (req, res) => {
     targetUserId === req.user.id &&
     ['athlete', 'finalist'].includes(req.user.role);
 
-  const isAdminOrErgebnisdienst = ['admin', 'ergebnisdienst', 'schiedsrichter'].includes(req.user.role);
+    const isAdminOrErgebnisdienst = ['admin', 'schiedsrichter'].includes(req.user.role);
 
   const visibleRoutes = isAdminOrErgebnisdienst
     ? routes
@@ -75,7 +75,7 @@ router.post('/result', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Benutzer nicht gefunden' });
     }
 
-    const isAdminOrErgebnisdienst = ['admin', 'ergebnisdienst'].includes(req.user.role);
+    const isAdminOrErgebnisdienst = ['admin', 'schiedsrichter'].includes(req.user.role);
     const isAdmin = req.user.role === 'admin';
 
     if (isAdminOrErgebnisdienst && config.competitionState === 'finale') {
@@ -213,8 +213,8 @@ router.post('/bonus', authenticate, (req, res) => {
       return res.status(400).json({ error: 'Route-ID erforderlich' });
     }
 
-    if (req.user.role === 'ergebnisdienst') {
-      return res.status(403).json({ error: 'Ergebnisdienst darf keine Bonusdaten erfassen' });
+    if (req.user.role === 'schiedsrichter') {
+      return res.status(403).json({ error: 'Schiedsrichter darf keine Bonusdaten erfassen' });
     }
 
     const config = getConfig();
