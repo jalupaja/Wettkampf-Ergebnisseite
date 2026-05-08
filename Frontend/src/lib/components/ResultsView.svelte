@@ -4,27 +4,27 @@
   import { userStore } from '../stores/user.js';
   import { themeStore } from '../stores/theme.js';
   import RankingsTable from './RankingsTable.svelte';
-  
+
   let { admin = false, onLogin } = $props();
   let isDark = $state(true);
-  
+
   let results = $state([]);
   let config = $state(null);
   let loading = $state(true);
   let error = $state('');
   let refreshInterval;
-  
+
   themeStore.subscribe(value => { isDark = value; });
-  
+
   onMount(async () => {
     await loadResults();
-    refreshInterval = setInterval(loadResults, 10000);
+    refreshInterval = setInterval(loadResults, 30000);
   });
-  
+
   onDestroy(() => {
     if (refreshInterval) clearInterval(refreshInterval);
   });
-  
+
   import { CompetitionStates } from 'shared/competitionStates.js';
 
   async function loadResults() {
@@ -32,7 +32,7 @@
       const data = await api.results.get();
       results = data.results;
       config = data.config;
-      
+
       if (config?.competitionState === CompetitionStates.FINALE) {
         console.log('[FRONTEND] Results received from API:');
         results.forEach(group => {
@@ -67,18 +67,18 @@
       </div>
     </div>
   {/if}
-  
+
   <RankingsTable {results} {loading} {error} {config} />
 </div>
 
 <style>
-  .results-view { 
-    max-width: 1000px; 
+  .results-view {
+    max-width: 1000px;
     min-height: 100vh;
     margin: 0 auto;
     padding: 0 16px;
   }
-  
+
   .button-group { display: flex; gap: 8px; }
   .theme-btn {
     background: var(--color-bg-light);
@@ -98,15 +98,15 @@
     flex-wrap: wrap;
     gap: 16px;
   }
-  
+
   .title-section {
     display: flex;
     align-items: center;
     gap: 16px;
   }
-  
+
   .title-section h2 { font-size: 24px; }
-  
+
   .rules-link {
     background: var(--color-bg-lighter);
     padding: 8px 16px;
@@ -118,13 +118,13 @@
     cursor: pointer;
     opacity: 1;
   }
-  
+
   .rules-link:hover {
     background: var(--color-bg-light);
     border-color: var(--color-primary);
     opacity: 1;
   }
-  
+
   .login-btn {
     background: var(--color-primary);
     color: var(--color-text);
@@ -133,7 +133,7 @@
     font-weight: 500;
     cursor: pointer;
   }
-  
+
   @media (max-width: 640px) {
     .results-view { padding: 0 12px; }
     .button-group { display: flex; gap: 8px; }
