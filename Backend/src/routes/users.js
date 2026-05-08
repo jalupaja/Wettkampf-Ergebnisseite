@@ -14,7 +14,7 @@ const router = Router();
 router.get('/', authenticate, requireAdminOrErgebnisdienst, (req, res) => {
   const users = getUsers();
   const groups = getGroups();
-  const visibleUsers = ['ergebnisdienst', 'schiedsrichter'].includes(req.user.role)
+  const visibleUsers = ['schiedsrichter'].includes(req.user.role)
     ? users.filter(u => ['athlete', 'finalist'].includes(u.role))
     : users;
   

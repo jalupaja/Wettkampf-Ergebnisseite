@@ -29,8 +29,8 @@
         {$userStore?.username}
         {#if $userStore?.role === 'admin'}
           <span class="badge">Admin</span>
-        {:else if $userStore?.role === 'ergebnisdienst'}
-          <span class="badge ergebnisdienst">Schiedsrichter</span>
+        {:else if $userStore?.role === 'schiedsrichter'}
+          <span class="badge schiedsrichter">Schiedsrichter</span>
         {:else if $userStore?.role === 'athlete' || $userStore?.role === 'finalist'}
           <span class="badge athlete">Athlet</span>
         {/if}
@@ -125,7 +125,7 @@
     background: var(--color-secondary);
   }
   
-  .badge.ergebnisdienst {
+  .badge.schiedsrichter {
     background: var(--color-success);
   }
   
