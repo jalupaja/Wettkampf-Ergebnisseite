@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { getRoutes, getUsers, getCompletedRoutes, getConfig } from '../data/store.js';
-import RouteCategories from 'shared/routeCategories.js';
+import RouteCategories from '../../../shared/routeCategories.js';
 
 const router = Router();
 

@@ -6,7 +6,7 @@ import {
   updateRoute,
   deleteRoute
 } from '../data/store.js';
-import RouteCategories from 'shared/routeCategories.js';
+import RouteCategories from '../../../shared/routeCategories.js';
 
 const router = Router();
 

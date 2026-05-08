@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
-import Roles from 'shared/roles.js';
-import RouteCategories from 'shared/routeCategories.js';
+import Roles from '../../../shared/roles.js';
+import RouteCategories from '../../../shared/routeCategories.js';
 import {
   getConfig,
   getRoutes,
