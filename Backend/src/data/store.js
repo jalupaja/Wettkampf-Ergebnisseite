@@ -135,7 +135,7 @@ function loadDefaultData() {
       finaleMaxAthletes: 8,
       finaleSmallGroupMaxAthletes: 6,
       finaleSmallGroupThreshold: 10,
-      competitionState: 'setup',
+    competitionState: 'setup',
       rulesURL: ''
     }
   };

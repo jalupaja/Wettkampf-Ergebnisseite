@@ -112,9 +112,9 @@
       config = configData.config;
       const newState = config.competitionState || 'setup';
       
-      if (newState !== competitionState) {
-        competitionState = newState;
-        finalists = new Set();
+    if (newState !== competitionState) {
+      competitionState = newState;
+      finalists = new Set();
         if (competitionState === 'finale') {
           const resultsData = await api.results.get();
           updateFinalists(resultsData);
@@ -449,7 +449,8 @@
     <div class="setup-banner finished">Wettkampf beendet.</div>
   {/if}
   
-  {#if loading}
+  {#if $userStore?.role == 'schiedsrichter'}
+  {:else if loading}
     <div class="loading">Routen werden geladen...</div>
   {:else}
       <div class="stats">

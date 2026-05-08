@@ -6,7 +6,7 @@
   let loading = $state(true);
   let error = $state('');
   
-  import { CompetitionStates } from '../../../../shared/competitionStates.js';
+  import { CompetitionStates } from '../../../../../shared/competitionStates.js';
 
   const states = [
     { value: CompetitionStates.SETUP, label: 'Setup', description: 'Routen und Athleten werden vorbereitet' },

@@ -25,13 +25,14 @@
     if (refreshInterval) clearInterval(refreshInterval);
   });
   
+  import { CompetitionStates } from '../../../../shared/competitionStates.js';
+
   async function loadResults() {
     try {
       const data = await api.results.get();
       results = data.results;
       config = data.config;
       
-      import { CompetitionStates } from '../../../../shared/competitionStates.js';
       if (config?.competitionState === CompetitionStates.FINALE) {
         console.log('[FRONTEND] Results received from API:');
         results.forEach(group => {
