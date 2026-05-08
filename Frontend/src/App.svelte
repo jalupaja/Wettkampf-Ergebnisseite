@@ -210,17 +210,19 @@
 }
   
   .modal {
-    /* Keep the modal wrapper simple and shrink-wrapped to its content so
-       it does NOT stretch to the full overlay size. This ensures clicks
-       outside the popup hit the overlay element instead of the modal.
+    /* Keep the modal wrapper shrink-wrapped but use inline-flex so the
+       inner login card is centered inside it. This preserves hit-testing
+       for the backdrop while ensuring the popup appears centered.
     */
-    display: inline-block;
-    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
     padding: 0;
     background: transparent;
     width: auto;
     max-width: none;
+    margin: 0 auto; /* ensure horizontal centering fallback */
   }
 
   /* Constrain modal height and let inner card scroll when necessary */
