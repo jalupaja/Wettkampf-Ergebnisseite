@@ -28,7 +28,7 @@
   onMount(async () => {
     window.addEventListener('open-login', openLogin);
     // Ensure Escape closes modal by handling keydown at window level
-    window.addEventListener('keydown', handleKeydown, { passive: true });
+    window.addEventListener('keydown', handleKeydown);
     
     themeStore.subscribe(value => {
       isDark = value;
@@ -87,6 +87,18 @@
       closeLogin();
     }
   }
+
+  function stopHandler(e) {
+    // Prevent clicks inside the modal from reaching the backdrop
+    e.stopPropagation();
+  }
+
+  let overlayEl;
+
+  // When the modal opens, focus the backdrop so keyboard events (Escape) are reliably received
+  $: if (showLogin) {
+    requestAnimationFrame(() => overlayEl?.focus());
+  }
 </script>
 
 <div class:dark={isDark} class:light={!isDark}>
@@ -112,9 +124,10 @@
          to ensure only clicks/touches directly on the overlay (not its children) close the modal.
          Also listen for Escape key. -->
   <div
+    bind:this={overlayEl}
     class="modal-overlay"
     role="presentation"
-    tabindex="-1"
+    tabindex="0"
     onclick={overlayHandler}
     onpointerdown={overlayHandler}
     onkeydown={(e) => {
