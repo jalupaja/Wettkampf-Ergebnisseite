@@ -7,6 +7,7 @@
   import Dashboard from './lib/components/Dashboard.svelte';
   import Header from './lib/components/Header.svelte';
   import ResultsView from './lib/components/ResultsView.svelte';
+  import RankingsAuto from './lib/components/RankingsAuto.svelte';
   import Toast from './lib/components/Toast.svelte';
   import './lib/styles/global.css';
   
@@ -61,13 +62,29 @@
     } catch (e) {
       console.log('Not authenticated');
     }
+    // detect direct access to the auto rankings page
+    try {
+      const path = typeof window !== 'undefined' ? window.location.pathname : '';
+      if (path && path.replace(/\/$/, '') === '/rankings_auto') {
+        // Show RankingsAuto page only
+        // Replace body content by rendering RankingsAuto component (handled below)
+        // We set loading=false and rely on the conditional rendering below
+        loading = false;
+        // set a global flag on window so the markup shows RankingsAuto
+        window.__SHOW_RANKINGS_AUTO = true;
+      }
+    } catch (e) {
+      // ignore
+    }
     loading = false;
   });
 </script>
 
 <div class:dark={isDark} class:light={!isDark}>
   <Toast />
-  {#if loading}
+  {#if typeof window !== 'undefined' && window.__SHOW_RANKINGS_AUTO}
+    <RankingsAuto />
+  {:else if loading}
     <div class="loading">
       <div class="spinner"></div>
       <p>Laden...</p>

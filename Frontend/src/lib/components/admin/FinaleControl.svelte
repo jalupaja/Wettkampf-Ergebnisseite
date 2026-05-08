@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { api } from '../../api.js';
   
-  import CompetitionStates from 'shared/competitionStates.js';
+  import { CompetitionStates } from 'shared/competitionStates.js';
 
   let competitionState = $state(CompetitionStates.SETUP);
   let loading = $state(true);

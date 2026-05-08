@@ -8,7 +8,14 @@ export default defineConfig({
     alias: {
       // allow imports like `import X from 'shared/...'` and
       // resolve them to the `Frontend/shared` folder during build
-      shared: path.resolve(__dirname, 'shared')
+      // map 'shared/...' to the repository-level shared directory
+      shared: path.resolve(__dirname, '..', 'shared')
+    }
+  },
+  build: {
+    rollupOptions: {
+      // Treat runtime config injected at /config.js as external so Vite doesn't attempt to bundle it
+      external: ['/config.js']
     }
   },
   server: {

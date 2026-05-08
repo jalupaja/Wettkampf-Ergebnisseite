@@ -25,7 +25,7 @@
     if (refreshInterval) clearInterval(refreshInterval);
   });
   
-  import { CompetitionStates } from 'shared/competitionStates.js';
+  import { CompetitionStates } from '../../../../shared/competitionStates.js';
 
   async function loadResults() {
     try {

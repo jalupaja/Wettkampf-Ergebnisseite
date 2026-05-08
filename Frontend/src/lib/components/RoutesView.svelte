@@ -506,7 +506,13 @@
               <div class="route-card" class:top={route.result === 'top'} class:zone={route.result && route.result !== 'top'} class:attempted={'result' in route && route.result === 'attempted'} class:disabled={disabled}>
                 <div class="route-name">{route.name}</div>
                 <div class="route-buttons">
-                  <button class="result-btn zone-btn" class:disabled={disabled} disabled={disabled} onclick={() => checkStateAndSetResult(route.id, route.result === 'attempted' ? null : 'attempted')}>Versucht</button>
+                  <button 
+                    class="result-btn zone-btn" 
+                    class:active={route.result === 'attempted'} 
+                    class:disabled={disabled} 
+                    disabled={disabled} 
+                    onclick={() => checkStateAndSetResult(route.id, route.result === 'attempted' ? null : 'attempted')}>
+                    Versucht</button>
                   {#each route.zones || [] as zone}
                     <button
                       class="result-btn zone-btn"

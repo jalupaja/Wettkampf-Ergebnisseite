@@ -154,6 +154,10 @@ export const api = {
     // Use the request wrapper to ensure consistent headers and credentials
     get: () => request('/results')
   },
+  // alias for TV auto-rotating ranking page
+  rankingsAuto: {
+    get: () => request('/results')
+  },
   
   config: {
     get: () => request('/config'),
