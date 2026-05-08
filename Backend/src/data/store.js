@@ -139,7 +139,10 @@ function loadDefaultData() {
       finaleMaxAthletes: 8,
       finaleSmallGroupMaxAthletes: 6,
       finaleSmallGroupThreshold: 10,
-    competitionState: CompetitionStates.SETUP,
+      competitionState: CompetitionStates.SETUP,
+      // Only the best N qualification routes should count towards qualification points
+      // Default to 4 best routes as requested
+      qualificationBestCount: 4,
       rulesURL: ''
     }
   };

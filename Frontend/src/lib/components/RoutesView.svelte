@@ -317,7 +317,8 @@
    const bonusRoutes = $derived(routes.filter(r => r.category === RouteCategories.BONUS));
    const finaleRoutes = $derived(routes.filter(r => r.category === RouteCategories.FINALE));
   
-  const qualBestCount = $derived(config?.qualificationBestCount || 5);
+   // Use the configured qualificationBestCount (fallback to 4 best routes)
+   const qualBestCount = $derived(config?.qualificationBestCount || 4);
   
   const qualTops = $derived(qualRoutes.filter(r => r.result === 'top').length);
   const qualZones = $derived(qualRoutes.filter(r => r.result && r.result !== 'top' && r.result !== 'attempted').length);
@@ -477,18 +478,12 @@
 <div class="routes-view">
   {#if competitionState === CompetitionStates.SETUP && !loading}
     <div class="setup-banner">Wettkampf noch nicht gestartet.</div>
-  {:else if competitionState === CompetitionStates.FINALE && !loading}
-    <div class="setup-banner finale">Finale läuft!</div>
   {:else if competitionState === CompetitionStates.FINISHED && !loading}
     <div class="setup-banner finished">Wettkampf beendet.</div>
   {/if}
   
   {#if loading}
     <div class="loading">Routen werden geladen...</div>
-  {/if}
-
-  {#if $userStore?.role == 'schiedsrichter'}
-    <div class="schiedsrichter-note">Schiedsrichter-Modus: Nur Finalrouten sind sichtbar. Bearbeiten ist während des Finales möglich.</div>
   {/if}
 
   {#if !loading}
@@ -652,11 +647,9 @@
   .routes-view { max-width: 1200px; }
   
   .setup-banner { background: color-mix(in srgb, var(--color-zone) 10%, transparent); border: 1px solid var(--color-zone); color: var(--color-zone); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 500; }
-  .setup-banner.finale { background: color-mix(in srgb, var(--color-finale) 10%, transparent); border-color: var(--color-finale); color: var(--color-finale); }
   .setup-banner.finished { background: color-mix(in srgb, var(--color-finished) 10%, transparent); border-color: var(--color-finished); color: var(--color-finished); }
   
   .loading { text-align: center; padding: 40px; color: var(--color-text-muted); }
-  .schiedsrichter-note { padding: 12px; background: color-mix(in srgb, var(--color-finale) 8%, transparent); border-radius: 8px; border: 1px solid var(--color-finale); color: var(--color-finale); margin-bottom: 12px; text-align: center; }
   
   .stats { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 32px; }
   
