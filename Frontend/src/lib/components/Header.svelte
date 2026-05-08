@@ -20,8 +20,8 @@
 <header>
   <div class="header-content">
     <div class="logo">
-      <div class="logo-icon">W</div>
-      <span>Wettkampf</span>
+      <img src="/favicon.svg" height="70px" margin="3px" />
+      <span>Offene Regensburger Stadtmeisterschaft</span>
     </div>
     
     <nav>
