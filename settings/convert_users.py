@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 import csv
 import sys
+import string
+import random
 from datetime import datetime
 from pathlib import Path
+
+def generate_password(length=5):
+    alphabet = string.ascii_uppercase + string.digits
+    return ''.join(random.choice(alphabet) for _ in range(length))
 
 def calculate_age(birth_date_str):
     """Calculate age from birth date string."""
@@ -25,7 +31,7 @@ def get_group(anrede, age):
     suffix = 'm' if gender == 'herr' else ('w' if gender == 'frau' else '')
     if not suffix:
         print(f"ERROR: wrong Anrede {anrede}")
-    
+
     if age is None:
         return None
     elif age <= 10:
@@ -55,41 +61,41 @@ def convert_csv(input_file, output_file):
 
     with open(input_file, 'r', encoding=encoding) as f:
         reader = csv.DictReader(f, delimiter=';')
-        
+
         for row in reader:
             anrede = row.get('Anrede', '')
             vorname = row.get('Vorname', '')
             nachname = row.get('Nachname', '')
             geburtsdatum = row.get('Geburtsdatum', '')
             email = row.get('Email', '')
-            
+
             username = f"{vorname.strip()} {nachname.strip()}"
-            
+
             if username in seen_names:
                 print(f"Skipping duplicate: {username}")
                 continue
             seen_names.add(username)
-            
+
             age = calculate_age(geburtsdatum)
             group = get_group(anrede, age)
-            
+
             if not group:
                 print(f"Warning: Could not determine group for {username}")
-            
+
             results.append({
                 'username': username,
-                'password': '',
+                'password': generate_password(5),
                 'role': 'athlete',
                 'groupName': group or ''
             })
-    
+
     # Write output CSV - utf-8-sig for Excel compatibility with Umlaute
     headers = ['username', 'password', 'role', 'groupName']
     with open(output_file, 'w', encoding='utf-8-sig', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
         writer.writerows(results)
-    
+
     print(f"Converted {len(results)} users to {output_file}")
     print("Groups used:")
     groups = {}
@@ -103,12 +109,12 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Usage: python convert_users.py <input.csv> [output.csv]")
         sys.exit(1)
-    
+
     input_file = sys.argv[1]
     output_file = sys.argv[2] if len(sys.argv) > 2 else 'users.csv'
-    
+
     # Move to temp/settings directory
     output_path = Path(__file__).parent.parent / 'settings' / output_file
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     convert_csv(input_file, str(output_path))
