@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import CompetitionStates from '../../../../shared/competitionStates.js';
 import { authenticate } from '../middleware/auth.js';
 import {
   getRoutes,

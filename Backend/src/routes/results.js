@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import CompetitionStates from '../../../../shared/competitionStates.js';
 import {
   getRoutes,
   getUsers,
@@ -21,7 +22,6 @@ function parseTimeToSeconds(timeStr) {
 
 export function calculateResults() {
   const config = getConfig();
-  const CompetitionStates = await import('../../../../shared/competitionStates.js').then(m => m.default);
   const groups = getGroups();
   const routes = getRoutes();
   const users = getUsers().filter(u => ['athlete', 'finalist'].includes(u.role) && u.groupId);
@@ -198,10 +198,10 @@ export function calculateResults() {
       return b.bonusTops - a.bonusTops;
     });
     
-    if (config.competitionState === 'finale' && sortedAthletes.length > 0) {
-      console.log(`[RANKING] Group "${group.name}": sorted ${sortedAthletes.length} athletes:`, 
-        sortedAthletes.map((a, i) => `${i + 1}. ${a.username} (${a.finalePoints}pts, time=${a.finaleTotalTime}s)`).join(', '));
-    }
+      if (config.competitionState === CompetitionStates.FINALE && sortedAthletes.length > 0) {
+        console.log(`[RANKING] Group "${group.name}": sorted ${sortedAthletes.length} athletes:`, 
+          sortedAthletes.map((a, i) => `${i + 1}. ${a.username} (${a.finalePoints}pts, time=${a.finaleTotalTime}s)`).join(', '));
+      }
     
     const result = {
       groupId: group.id,
@@ -209,7 +209,7 @@ export function calculateResults() {
       athletes: sortedAthletes
     };
     
-    if (config.competitionState === 'finale' && sortedAthletes.length > 0) {
+    if (config.competitionState === CompetitionStates.FINALE && sortedAthletes.length > 0) {
       console.log(`[RANKING] Response athletes order:`, 
         result.athletes.map((a, i) => `${i + 1}. ${a.username}`).join(' → '));
     }
