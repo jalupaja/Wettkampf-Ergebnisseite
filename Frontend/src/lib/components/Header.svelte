@@ -20,7 +20,7 @@
 <header>
   <div class="header-content">
       <div class="logo">
-      <img src="/favicon.svg" height="70px" margin="3px" alt="Wettkampf Logo" />
+      <img src="/favicon.svg" alt="Wettkampf Logo" class="logo-img" />
       <span>Offene Regensburger Stadtmeisterschaft</span>
       </div>
     
@@ -78,6 +78,13 @@
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+  }
+
+  .logo-img {
+    /* Limit logo height to fit header; keep aspect ratio */
+    height: 40px;
+    width: auto;
+    display: block;
   }
   
   /* .logo-icon removed (unused in this component). Use direct <img> for logo. */
