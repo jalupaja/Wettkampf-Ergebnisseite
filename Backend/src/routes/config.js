@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { getConfig, updateConfig, getGroups, getUsers, updateUserRole } from '../data/store.js';
-import CompetitionStates from '../../../../shared/competitionStates.js';
+import CompetitionStates from '../../../shared/competitionStates.js';
 import { calculateResults } from './results.js';
 
 const router = Router();

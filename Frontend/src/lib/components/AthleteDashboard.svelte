@@ -5,7 +5,8 @@
   import RoutesView from './RoutesView.svelte';
   import AthleteResultsView from './AthleteResultsView.svelte';
   
-  let activeTab = $state('routes');
+  // Show rankings by default for athletes so they see the current standings immediately after login
+  let activeTab = $state('results');
   let user = $state(null);
   
   userStore.subscribe(value => {

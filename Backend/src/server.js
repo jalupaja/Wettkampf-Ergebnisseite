@@ -25,9 +25,11 @@ const PORT = process.env.PORT || 3001;
 const CORS_ORIGINS = process.env.CORS_ORIGINS 
   ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
   : [
-      'http://localhost:5173', 
-      'http://localhost:5174', 
-      'http://localhost:5175'
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      // Vite preview server default
+      'http://localhost:4173'
     ];
 
 app.use(cors({

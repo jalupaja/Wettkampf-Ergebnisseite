@@ -41,6 +41,9 @@
     </div>
     
     <form onsubmit={handleLogin}>
+      {#if error}
+        <div class="error-message">{error}</div>
+      {/if}
       <div class="form-group">
         <label for="password">Passwort</label>
         <input
@@ -114,14 +117,9 @@
     gap: 4px;
   }
   
+  /* .error-message is currently unused; keep styles for potential future use */
   .error-message {
-    background: rgba(231, 76, 60, 0.1);
-    border: 1px solid var(--color-error);
-    color: var(--color-error);
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    margin-bottom: 16px;
+    display: none;
   }
   
   .form-group {

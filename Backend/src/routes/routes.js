@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import CompetitionStates from '../../../../shared/competitionStates.js';
+import CompetitionStates from '../../../shared/competitionStates.js';
+import RouteCategories from '../../../shared/routeCategories.js';
 import { authenticate } from '../middleware/auth.js';
 import {
   getRoutes,
@@ -42,9 +43,9 @@ router.get('/', authenticate, (req, res) => {
     const visibleRoutes = isAdmin
       ? routes
       : isSchiedsrichter
-      ? routes.filter(route => route.category === 'finale')
+      ? routes.filter(route => route.category === RouteCategories.FINALE)
       : isAthleteOrFinalistSelf
-        ? routes.filter(route => route.category !== 'finale')
+        ? routes.filter(route => route.category !== RouteCategories.FINALE)
         : routes;
 
   const userCompleted = completed.filter(cr => cr.userId === targetUserId);
@@ -68,7 +69,6 @@ router.post('/result', authenticate, (req, res) => {
     }
 
     const config = getConfig();
-    const CompetitionStates = await import('../../../../shared/competitionStates.js').then(m => m.default);
     const route = getRouteById(routeId);
     if (!route) {
       return res.status(404).json({ error: 'Route nicht gefunden' });
@@ -229,10 +229,10 @@ router.post('/bonus', authenticate, (req, res) => {
     }
 
     if (req.user.role !== 'admin') {
-      if (config.competitionState === 'setup' || config.competitionState === 'finished') {
+      if (config.competitionState === CompetitionStates.SETUP || config.competitionState === CompetitionStates.FINISHED) {
         return res.status(403).json({ error: 'Wettkampf ist nicht aktiv' });
       }
-      if (config.competitionState === 'finale') {
+      if (config.competitionState === CompetitionStates.FINALE) {
         return res.status(403).json({ error: 'Bonusdaten sind im Finale nicht erlaubt' });
       }
       if (route.category === 'finale') {

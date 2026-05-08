@@ -82,10 +82,13 @@
   {/if}
   
   {#if showLogin}
-    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <div class="modal-overlay" role="dialog" tabindex="-1" onclick={closeLogin} onkeydown={(e) => e.key === 'Escape' && closeLogin()}>
-      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
-      <div class="modal" onclick={(e) => e.stopPropagation()}>
+    <!-- modal overlay: clicking outside closes the modal. overlay has role=dialog and keyboard handler -->
+    <div class="modal-overlay" role="presentation" tabindex="-1" onclick={closeLogin} onkeydown={(e) => {
+        const key = e.key || e.code;
+        if (key === 'Escape') closeLogin();
+      }}>
+      <!-- inner modal: the dialog itself - interactive role so tabindex and events are acceptable -->
+      <div class="modal" role="dialog" aria-modal="true" tabindex="0" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
         <Login onLogin={closeLogin} />
       </div>
     </div>

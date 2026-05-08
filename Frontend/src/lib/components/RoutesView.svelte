@@ -279,9 +279,11 @@
     }
   }
   
-  const qualRoutes = $derived(routes.filter(r => r.category === 'qualification'));
-  const bonusRoutes = $derived(routes.filter(r => r.category === 'bonus'));
-  const finaleRoutes = $derived(routes.filter(r => r.category === 'finale'));
+ import RouteCategories from '../../../../shared/routeCategories.js';
+
+   const qualRoutes = $derived(routes.filter(r => r.category === RouteCategories.QUALIFICATION));
+   const bonusRoutes = $derived(routes.filter(r => r.category === RouteCategories.BONUS));
+   const finaleRoutes = $derived(routes.filter(r => r.category === RouteCategories.FINALE));
   
   const qualBestCount = $derived(config?.qualificationBestCount || 5);
   
@@ -450,6 +452,7 @@
   {/if}
   
   {#if $userStore?.role == 'schiedsrichter'}
+    <div class="schiedsrichter-note">Schiedsrichter-Modus: Nur Finalrouten sind sichtbar und bearbeitbar.</div>
   {:else if loading}
     <div class="loading">Routen werden geladen...</div>
   {:else}
@@ -562,8 +565,11 @@
   {/if}
   
   {#if showTimer}
-    <div class="timer-overlay" role="dialog" aria-modal="true">
-      <div class="timer-popup" onclick={(e) => e.stopPropagation()}>
+    <div class="timer-overlay" role="presentation" tabindex="-1" onclick={closeTimer} onkeydown={(e) => {
+        const key = e.key || e.code;
+        if (key === 'Escape' || key === 'Enter' || key === ' ' || key === 'Spacebar' || key === 'Space') closeTimer();
+      }}>
+      <div class="timer-popup" role="dialog" aria-modal="true" tabindex="0" onclick={(e) => e.stopPropagation()}>
         <div class="timer-header">
           <h3>Timer</h3>
           <button class="timer-close" onclick={closeTimer}>×</button>
@@ -595,6 +601,7 @@
   .setup-banner.finished { background: color-mix(in srgb, var(--color-finished) 10%, transparent); border-color: var(--color-finished); color: var(--color-finished); }
   
   .loading { text-align: center; padding: 40px; color: var(--color-text-muted); }
+  .schiedsrichter-note { padding: 12px; background: color-mix(in srgb, var(--color-finale) 8%, transparent); border-radius: 8px; border: 1px solid var(--color-finale); color: var(--color-finale); margin-bottom: 12px; text-align: center; }
   
   .stats { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 32px; }
   

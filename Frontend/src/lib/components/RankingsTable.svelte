@@ -1,6 +1,7 @@
 <script>
   import { userStore } from '../stores/user.js';
   import { formatPoints } from '../utils/formatters.js';
+  import { CompetitionStates } from '../../../../shared/competitionStates.js';
   
   let { results = [], loading = false, error = '', config = null } = $props();
   
@@ -86,7 +87,6 @@
   {#if loading}
     <div class="loading">Rangliste wird geladen...</div>
   {:else if results.length}
-    import { CompetitionStates } from '../../../../../shared/competitionStates.js';
     {#if config?.competitionState === CompetitionStates.FINALE || config?.competitionState === CompetitionStates.FINISHED}
       <div class="round-section finale-phase">
          <h2 class="round-title finale phase-heading">Finale</h2>
