@@ -99,13 +99,31 @@
   {/if}
   
   {#if showLogin}
-    <!-- modal overlay: clicking outside closes the modal. overlay has role=dialog and keyboard handler -->
-    <div class="modal-overlay" role="presentation" tabindex="-1" onclick={closeLogin} onkeydown={(e) => {
+    <!-- modal overlay: clicking/touching outside closes the modal. Use Svelte event modifiers
+         to ensure only clicks/touches directly on the overlay (not its children) close the modal.
+         Also listen for Escape key. -->
+    <div
+      class="modal-overlay"
+      role="presentation"
+      tabindex="-1"
+      on:click|self={closeLogin}
+      on:touchstart|self={closeLogin}
+      on:keydown={(e) => {
         const key = e.key || e.code;
         if (key === 'Escape') closeLogin();
-      }}>
+      }}
+    >
       <!-- inner modal: the dialog itself - interactive role so tabindex and events are acceptable -->
-      <div class="modal" role="dialog" aria-modal="true" tabindex="0" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        tabindex="0"
+        on:click|stopPropagation
+        on:touchstart|stopPropagation
+        on:keydown={(e) => e.stopPropagation()}
+      >
+        <button class="modal-close" aria-label="Schließen" on:click={closeLogin}>×</button>
         <Login onLogin={closeLogin} />
       </div>
     </div>
@@ -163,6 +181,22 @@
   .modal {
     max-width: 400px;
     width: 90%;
+    position: relative;
+    padding: 16px;
+    background: var(--color-bg);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  }
+
+  .modal-close {
+    position: absolute;
+    right: 10px;
+    top: 8px;
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--color-text-muted);
   }
   
   @media (max-width: 640px) {

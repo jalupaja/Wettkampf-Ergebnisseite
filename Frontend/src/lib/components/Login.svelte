@@ -35,9 +35,9 @@
 <div class="login-container">
   <div class="login-card">
     <div class="logo">
-      <div class="logo-icon">W</div>
-      <h1>Wettkampf</h1>
-      <p>Kletterzentrum Regensburg</p>
+      <img src="/favicon.svg" alt="Wettkampf Logo" class="logo-img" />
+      <h1>Offene Regensburger Stadtmeisterschaft</h1>
+      <p>Kletterzentrum Lappersdorf</p>
     </div>
     
     <form onsubmit={handleLogin}>
@@ -86,19 +86,13 @@
     text-align: center;
     margin-bottom: 28px;
   }
-  
-  .logo-icon {
-    width: 64px;
-    height: 64px;
-    background: var(--color-primary);
-    color: var(--color-white);
-    font-size: 32px;
-    font-weight: bold;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 14px;
+
+  .logo-img {
+    height: 40%;
+    width: 40%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
   
   .logo h1 {
@@ -116,7 +110,7 @@
     flex-direction: column;
     gap: 4px;
   }
-  
+
   /* .error-message is currently unused; keep styles for potential future use */
   .error-message {
     display: none;
@@ -136,16 +130,11 @@
     width: 100%;
     margin-top: 8px;
   }
-  
+
   @media (max-width: 400px) {
     .login-card {
       padding: 24px 16px;
     }
     
-    .logo-icon {
-      width: 56px;
-      height: 56px;
-      font-size: 28px;
-    }
   }
 </style>

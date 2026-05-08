@@ -22,22 +22,75 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const CORS_ORIGINS = process.env.CORS_ORIGINS 
-  ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
-  : [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:5175',
-      // Vite preview server default
-      'http://localhost:4173'
-    ];
+// Configure CORS. In production we prefer a strict allowlist provided
+// by the CORS_ORIGINS environment variable. In development (no
+// CORS_ORIGINS provided) we reflect the request origin so that local
+// dev servers (Vite at various ports) can connect without brittle
+// hard-coded port lists.
+// Prepare CORS origins variable for logging and options. We keep the
+// parsed allowlist in CORS_ORIGINS when provided, otherwise null to
+// indicate development reflect-mode.
+let corsOptions;
+let CORS_ORIGINS = null;
+if (process.env.CORS_ORIGINS) {
+  CORS_ORIGINS = process.env.CORS_ORIGINS.split(',').map(origin => origin.trim());
+  corsOptions = { origin: CORS_ORIGINS, credentials: true };
+} else {
+  // Development: reflect the incoming Origin header so browsers accept
+  // requests from whatever local dev server port is being used.
+  corsOptions = { origin: true, credentials: true };
+}
 
-app.use(cors({
-  origin: CORS_ORIGINS,
-  credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+
+// Diagnostic logging in development: capture incoming Origin and key headers
+// to help troubleshoot CORS failures reported by browsers. This logs only in
+// development (when CORS_ORIGINS is not set) to avoid verbose logs in prod.
+if (!process.env.CORS_ORIGINS) {
+  app.use((req, res, next) => {
+    try {
+      const origin = req.headers.origin || '<none>';
+      const debug = {
+        method: req.method,
+        path: req.path,
+        origin,
+        headers: {
+          'access-control-request-method': req.headers['access-control-request-method'] || undefined,
+          'access-control-request-headers': req.headers['access-control-request-headers'] || undefined,
+          'cookie': req.headers.cookie ? '<present>' : '<none>'
+        }
+      };
+      console.log('[CORS DEBUG]', JSON.stringify(debug));
+    } catch (e) {
+      // noop
+    }
+    next();
+  });
+}
+
+// When in development and we are reflecting origin (origin: true in cors
+// options), some clients/browsers still expect explicit headers on
+// preflight responses. Add a lightweight middleware to echo the Origin
+// and required preflight headers to be explicit.
+if (!process.env.CORS_ORIGINS) {
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Vary', 'Origin');
+      if (req.method === 'OPTIONS') {
+        res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+        const reqHeaders = req.headers['access-control-request-headers'];
+        if (reqHeaders) res.setHeader('Access-Control-Allow-Headers', reqHeaders);
+        return res.sendStatus(204);
+      }
+    }
+    next();
+  });
+}
 
 initialize().then(() => {
   console.log('Datenbank initialisiert');
@@ -65,7 +118,11 @@ initialize().then(() => {
 
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server läuft auf http://0.0.0.0:${PORT}`);
-    console.log(`Erlaubte CORS Origins: ${CORS_ORIGINS.join(', ')}`);
+    if (CORS_ORIGINS && CORS_ORIGINS.length) {
+      console.log(`Erlaubte CORS Origins: ${CORS_ORIGINS.join(', ')}`);
+    } else {
+      console.log('Erlaubte CORS Origins: (dev) reflecting incoming Origin');
+    }
   });
 
   // Graceful shutdown handler
