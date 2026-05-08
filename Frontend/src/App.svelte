@@ -89,11 +89,13 @@
   }
 
   function stopHandler(e) {
-    // Prevent clicks inside the modal from reaching the backdrop
+    // Only stop propagation for pointer/click/touch events.
+    // Don't stop keydown so Escape can bubble to window listeners.
+    if (typeof e?.type === 'string' && e.type.toLowerCase().startsWith('key')) return;
     e.stopPropagation();
   }
 
-  let overlayEl;
+  let overlayEl = $state(null);
 
   // When the modal opens, focus the backdrop so keyboard events (Escape) are reliably received
   $effect(() => {
@@ -125,26 +127,27 @@
     <!-- modal overlay: clicking/touching outside closes the modal. Use Svelte event modifiers
          to ensure only clicks/touches directly on the overlay (not its children) close the modal.
          Also listen for Escape key. -->
-  <div
-    bind:this={overlayEl}
-    class="modal-overlay"
-    role="presentation"
-    tabindex="0"
-    onclick={overlayHandler}
-    onpointerdown={overlayHandler}
-    onkeydown={(e) => {
-      const key = e.key || e.code;
-      if (key === 'Escape') closeLogin();
-    }}
-  >
+    <div
+      bind:this={overlayEl}
+      class="modal-overlay"
+      role="presentation"
+      tabindex="-1"
+      onclick={overlayHandler}
+      onpointerdown={overlayHandler}
+      onkeydown={(e) => {
+        const key = e.key || e.code;
+        if (key === 'Escape') closeLogin();
+      }}
+    >
+      <!-- Close button moved into the popup window (Login.svelte embedded close) -->
       <!-- inner modal: the dialog itself - interactive role so tabindex and events are acceptable -->
     <div
       class="modal"
       role="dialog"
       aria-modal="true"
       tabindex="0"
-      onkeydown={stopHandler}
     >
+      
       <Login
         onLogin={closeLogin}
         embedded={true}
@@ -224,6 +227,11 @@
     max-width: none;
     margin: 0 auto; /* ensure horizontal centering fallback */
   }
+
+  /* Ensure embedded close is visible inside the popup */
+  :global(.login-card .embedded-close) { display: block; }
+
+  /* (removed) .modal-close unused; embedded-close inside Login.svelte is used */
 
   /* Constrain modal height and let inner card scroll when necessary */
   .modal {

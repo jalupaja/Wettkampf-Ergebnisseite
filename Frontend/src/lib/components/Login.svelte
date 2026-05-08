@@ -34,7 +34,7 @@
 
   <div class="login-card">
       {#if embedded}
-      <button class="embedded-close" aria-label="Schließen" onclick={() => { if (onLogin) onLogin(); }}>
+      <button class="embedded-close" aria-label="Schließen" onclick={(e) => { e.stopPropagation(); if (onLogin) onLogin(); }}>
         ×
       </button>
     {/if}
