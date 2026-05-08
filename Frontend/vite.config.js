@@ -1,8 +1,16 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import path from 'path';
 
 export default defineConfig({
   plugins: [svelte()],
+  resolve: {
+    alias: {
+      // allow imports like `import X from 'shared/...'` and
+      // resolve them to the `Frontend/shared` folder during build
+      shared: path.resolve(__dirname, 'shared')
+    }
+  },
   server: {
     // allow overriding the dev port with FRONTEND_PORT env var
     port: Number(process.env.FRONTEND_PORT) || 5173,

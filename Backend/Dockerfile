@@ -4,11 +4,13 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY Backend/package*.json ./
 
 RUN npm ci --omit=dev
 
-COPY --chown=nodejs:nodejs . .
+COPY --chown=nodejs:nodejs ./Backend .
+
+COPY --chown=nodejs:nodejs ./shared ./node_modules/shared
 
 USER nodejs
 

@@ -1,9 +1,9 @@
 import { randomUUID } from 'crypto';
 const uuidv4 = () => randomUUID();
 import { getDb, initDatabase, isDatabaseEmpty, migrateData, saveToFile } from './db.js';
-import CompetitionStates from '../../../shared/competitionStates.js';
-import RouteCategories from '../../../shared/routeCategories.js';
-import Roles from '../../../shared/roles.js';
+import CompetitionStates from 'shared/competitionStates.js';
+import RouteCategories from 'shared/routeCategories.js';
+import Roles from 'shared/roles.js';
 
 function loadDefaultData() {
   const adminPassword = 'ADMIN';
