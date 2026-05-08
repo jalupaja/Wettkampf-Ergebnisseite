@@ -17,16 +17,16 @@
 <div class="athlete-dashboard">
   <div class="tabs">
     <button 
-      class:active={activeTab === 'routes'} 
-      onclick={() => activeTab = 'routes'}
-    >
-      Routen
-    </button>
-    <button 
       class:active={activeTab === 'results'} 
       onclick={() => activeTab = 'results'}
     >
       Rangliste
+    </button>
+    <button 
+      class:active={activeTab === 'routes'} 
+      onclick={() => activeTab = 'routes'}
+    >
+      Routen
     </button>
   </div>
   
