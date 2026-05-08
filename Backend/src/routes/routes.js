@@ -23,9 +23,10 @@ router.get('/', authenticate, (req, res) => {
     return res.status(404).json({ error: 'Benutzer nicht gefunden' });
   }
 
-    const isSchiedsrichter = ['admin', 'schiedsrichter'].includes(req.user.role);
+    const isSchiedsrichter = req.user.role === 'schiedsrichter';
+    const isAdmin = req.user.role === 'admin';
 
-  if (targetUserId !== req.user.id && !isSchiedsrichter) {
+  if (targetUserId !== req.user.id && !isSchiedsrichter && !isAdmin) {
     return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
   }
 
@@ -33,15 +34,18 @@ router.get('/', authenticate, (req, res) => {
     targetUserId === req.user.id &&
     ['athlete', 'finalist'].includes(req.user.role);
 
-    const isAdminOrSchiedsrichter = ['admin', 'schiedsrichter'].includes(req.user.role);
-
-  const visibleRoutes = isAdminOrSchiedsrichter
-    ? routes
-    : isSchiedsrichter
-    ? routes.filter(route => route.category === 'finale')
-    : isAthleteOrFinalistSelf
-      ? routes.filter(route => route.category !== 'finale')
-      : routes;
+    const isAdmin = req.user.role === 'admin';
+    // Visible routes:
+    // - Admin: all routes
+    // - Schiedsrichter: only finale routes
+    // - Athlete/Finalist (self): qualification and bonus (not finale)
+    const visibleRoutes = isAdmin
+      ? routes
+      : isSchiedsrichter
+      ? routes.filter(route => route.category === 'finale')
+      : isAthleteOrFinalistSelf
+        ? routes.filter(route => route.category !== 'finale')
+        : routes;
 
   const userCompleted = completed.filter(cr => cr.userId === targetUserId);
   const routesWithStatus = visibleRoutes.map(route => {
@@ -75,42 +79,37 @@ router.post('/result', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Benutzer nicht gefunden' });
     }
 
-    const isAdminOrSchiedsrichter = ['admin', 'schiedsrichter'].includes(req.user.role);
     const isAdmin = req.user.role === 'admin';
+    const isSchiedsrichter = req.user.role === 'schiedsrichter';
+    const isSelf = targetUserId === req.user.id;
+    const isAthleteOrFinalist = ['athlete', 'finalist'].includes(req.user.role);
 
-    if (isAdminOrSchiedsrichter && config.competitionState === 'finale') {
-    } else if (config.competitionState === 'finale' && route.category === 'finale') {
-      return res.status(403).json({ error: 'Nur Admin oder Schiedsrichter dürfen Finalrouten bearbeiten' });
-    }
+    // Permission model:
+    // - Admin: can edit any route at any time
+    // - Schiedsrichter: can edit finale routes only and only while competitionState === 'finale'
+    // - Athlete/Finalist (self): can edit their own non-finale routes only while competitionState === 'qualification'
 
-    if (req.user.role === 'schiedsrichter' && config.competitionState !== 'finale') {
-      return res.status(403).json({ error: 'Schiedsrichter darf nur im Finale Routen bearbeiten' });
-    }
-
-    // Allow admins to edit any user. Allow 'ergebnisdienst' to edit other users only during the finale.
-    if (targetUserId !== req.user.id && !(isAdmin || (req.user.role === 'schiedsrichter' && config.competitionState === 'finale'))) {
+    if (isAdmin) {
+      // Admin allowed
+    } else if (isSchiedsrichter) {
+      if (config.competitionState !== 'finale') {
+        return res.status(403).json({ error: 'Schiedsrichter darf nur im Finale Routen bearbeiten' });
+      }
+      if (route.category !== 'finale') {
+        return res.status(403).json({ error: 'Schiedsrichter darf nur Finalrouten bearbeiten' });
+      }
+    } else if (isSelf && isAthleteOrFinalist) {
+      if (config.competitionState !== 'qualification') {
+        return res.status(403).json({ error: 'Benutzer dürfen Routen nur während der Qualifikation bearbeiten' });
+      }
+      if (route.category === 'finale') {
+        return res.status(403).json({ error: 'Benutzer dürfen Finalrouten nicht bearbeiten' });
+      }
+    } else {
       return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
     }
 
-    if (req.user.role === 'finalist' && config.competitionState === 'finale' && route.category === 'finale') {
-      return res.status(403).json({ error: 'Finalisten dürfen Finalrouten nicht bearbeiten' });
-    }
-
-    if (!isAdminOrErgebnisdienst) {
-      if (config.competitionState === 'setup' || config.competitionState === 'finished') {
-        return res.status(403).json({ error: 'Wettkampf ist nicht aktiv' });
-      }
-      if (config.competitionState === 'finale') {
-        if (req.user.role !== 'finalist' || route.category !== 'finale') {
-          return res.status(403).json({ error: 'Nur Finalisten können Finalrouten bearbeiten' });
-        }
-      }
-      if (config.competitionState === 'qualification' && route.category === 'finale') {
-        return res.status(403).json({ error: 'Finalrouten können noch nicht bearbeitet werden' });
-      }
-    }
-
-if (route.category === 'finale') {
+  if (route.category === 'finale') {
       const resultInput = result === null || result === undefined ? '' : String(result).trim();
       
       // Get existing finale result to merge
