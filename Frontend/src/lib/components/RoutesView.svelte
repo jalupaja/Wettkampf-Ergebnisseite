@@ -696,6 +696,7 @@
   
   .result-btn { padding: 10px 8px; border: 2px solid var(--color-border); border-radius: 6px; background: transparent; color: var(--color-text-muted); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }
   .result-btn:hover { border-color: var(--color-text-muted); }
+  .attemp-btn.active { background: var(--color-attempted); border-color: var(--color-attempted); color: var(--color-white); }
   .zone-btn.active { background: var(--color-zone); border-color: var(--color-zone); color: var(--color-white); }
   .top-btn.active { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-white); }
   .result-btn.disabled, .result-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
