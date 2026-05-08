@@ -87,7 +87,8 @@ router.post('/result', authenticate, (req, res) => {
       return res.status(403).json({ error: 'Ergebnisdienst darf nur im Finale Routen bearbeiten' });
     }
 
-    if (targetUserId !== req.user.id && !isAdmin) {
+    // Allow admins to edit any user. Allow 'ergebnisdienst' to edit other users only during the finale.
+    if (targetUserId !== req.user.id && !(isAdmin || (req.user.role === 'ergebnisdienst' && config.competitionState === 'finale'))) {
       return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
     }
 
