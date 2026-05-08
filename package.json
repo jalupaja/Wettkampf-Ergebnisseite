@@ -5,6 +5,9 @@
   "workspaces": [
     "shared"
   ],
+  "scripts": {
+    "postinstall": "node ./scripts/link-shared.js"
+  },
   "dependencies": {
     "playwright": "^1.59.1"
   }

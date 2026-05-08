@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import CompetitionStates from '../../../shared/competitionStates.js';
+import CompetitionStates from 'shared/competitionStates.js';
 import {
   getRoutes,
   getUsers,

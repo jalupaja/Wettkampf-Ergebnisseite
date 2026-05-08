@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, requireAdminOrSchiedsrichter, requireAdmin } from '../middleware/auth.js';
-import Roles from '../../../shared/roles.js';
+import Roles from 'shared/roles.js';
 import {
   getUsers,
   getUserById,
