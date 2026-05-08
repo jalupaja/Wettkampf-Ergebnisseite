@@ -507,7 +507,7 @@
                 <div class="route-name">{route.name}</div>
                 <div class="route-buttons">
                   <button 
-                    class="result-btn attemp-btn" 
+                    class="result-btn attempt-btn" 
                     class:active={route.result === 'attempted'} 
                     class:disabled={disabled} 
                     disabled={disabled} 
