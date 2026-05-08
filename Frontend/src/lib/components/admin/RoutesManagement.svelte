@@ -11,7 +11,7 @@
   let importing = $state(false);
   
   
-  import RouteCategories from '../../../../shared/routeCategories.js';
+  import RouteCategories from '../../../../../shared/routeCategories.js';
 
   let formData = $state({
     name: '',
