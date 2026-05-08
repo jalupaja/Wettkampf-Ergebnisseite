@@ -135,7 +135,7 @@ async function clearAllUsers() {
     try {
       const payload = { ...formData };
       if (!payload.password) delete payload.password;
-      if (payload.role === 'admin' || payload.role === 'ergebnisdienst') delete payload.groupId;
+      if (payload.role === 'admin' || payload.role === 'schiedsrichter') delete payload.groupId;
       
       if (editingId) {
         await api.users.update(editingId, payload);
@@ -214,8 +214,8 @@ async function clearAllUsers() {
                 <span class="username-text">{user.username}</span>
                 {#if user.role === 'admin'}
                   <span class="badge admin">Admin</span>
-                {:else if user.role === 'ergebnisdienst'}
-                  <span class="badge ergebnisdienst">Schiedsrichter</span>
+                {:else if user.role === 'schiedsrichter'}
+                  <span class="badge schiedsrichter">Schiedsrichter</span>
                 {:else if user.role === 'finalist'}
                   <span class="badge finalist">Finalist</span>
                 {/if}
@@ -290,7 +290,7 @@ async function clearAllUsers() {
             <select id="role" bind:value={formData.role}>
               <option value="athlete">Athlet</option>
               <option value="admin">Admin</option>
-              <option value="ergebnisdienst">Schiedsrichter</option>
+              <option value="schiedsrichter">Schiedsrichter</option>
               <option value="finalist">Finalist</option>
             </select>
           </div>
@@ -435,7 +435,7 @@ async function clearAllUsers() {
     background: var(--color-primary);
   }
   
-  .badge.ergebnisdienst {
+  .badge.schiedsrichter {
     background: var(--color-success);
   }
   

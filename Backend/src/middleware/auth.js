@@ -49,7 +49,7 @@ export function requireAdmin(req, res, next) {
 }
 
 export function requireAdminOrErgebnisdienst(req, res, next) {
-  if (!['admin', 'ergebnisdienst', 'schiedsrichter'].includes(req.user.role)) {
+  if (!['admin', 'schiedsrichter'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Admin- oder Schiedsrichter-Rechte erforderlich' });
   }
   next();
