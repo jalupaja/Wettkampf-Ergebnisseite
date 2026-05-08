@@ -95,7 +95,8 @@
   <div class="tabs">
     {#each tabs as tab}
       <button 
-        class:active={activeTab === tab.id} 
+        class:active={activeTab === tab.id}
+        class:results={tab.id === 'results'}
         onclick={() => activeTab = tab.id}
       >
         {tab.label}
@@ -200,6 +201,13 @@
     background: var(--color-primary);
     border-color: var(--color-primary);
     color: var(--color-white);
+  }
+
+  /* Ensure the results tab stays visually first (left) by making it always appear before others
+     visually via order: it still is first in data, but this keeps styles explicit in case
+     the tabs array is changed elsewhere. */
+  .tabs button.results {
+    order: -1;
   }
   
   .tab-content {
