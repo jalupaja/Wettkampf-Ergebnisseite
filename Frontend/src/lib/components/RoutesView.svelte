@@ -307,26 +307,7 @@
     try {
       const data = await api.routes.list(userId);
       routes = data.routes;
-      // Ensure Schiedsrichter always sees finale routes. If backend returned no routes
-      // (e.g. unexpected filtering), try fetching admin routes as fallback and keep only finale.
-      if ($userStore?.role === 'schiedsrichter') {
-        const hasFinale = routes.some(r => r.category === RouteCategories.FINALE);
-        if (!hasFinale) {
-          try {
-            const adminData = await api.routes.admin.list();
-            // prefer finale routes from admin data if available
-            const adminFinale = (adminData.routes || []).filter(r => r.category === RouteCategories.FINALE);
-            if (adminFinale.length > 0) {
-              // merge finale routes into current routes, avoiding duplicates by id
-              const existingIds = new Set(routes.map(r => r.id));
-              routes = [...routes, ...adminFinale.filter(r => !existingIds.has(r.id))];
-            }
-          } catch (e) {
-            // ignore admin fetch errors (likely permission) and keep original routes
-            console.debug('[RoutesView] Admin routes fetch failed (fallback):', e.message);
-          }
-        }
-      }
+      // Backend now returns finale routes for schiedsrichter; no client-side fallback required.
     } catch (err) {
       toastStore.error(err.message);
     }
