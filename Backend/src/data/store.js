@@ -148,6 +148,21 @@ export async function initialize() {
     const defaultData = loadDefaultData();
     await migrateData(defaultData);
   }
+  // Migrate legacy role 'ergebnisdienst' to 'schiedsrichter' if present
+  try {
+    const db = getDb();
+    const res = db.exec("SELECT id, role FROM users WHERE role = 'ergebnisdienst'");
+    if (res[0] && res[0].values.length > 0) {
+      for (const row of res[0].values) {
+        const id = row[0];
+        db.run('UPDATE users SET role = ? WHERE id = ?', ['schiedsrichter', id]);
+      }
+      saveToFile();
+      console.log("Migrated 'ergebnisdienst' role to 'schiedsrichter' for existing users");
+    }
+  } catch (e) {
+    console.warn('Role migration check failed:', e.message);
+  }
 }
 
 export function getStore() {
