@@ -558,6 +558,27 @@ export function getCompletedRoutes() {
         obj.routeName = row[i];
       } else if (col === 'completed_at') {
         obj.completedAt = row[i];
+      } else if (col === 'result') {
+        const raw = row[i];
+        // Normalize result types:
+        // - null -> null
+        // - JSON-like finale objects (start with '{') -> keep string (parsed later where needed)
+        // - numeric strings -> convert to Number
+        // - numeric values -> keep as-is
+        if (raw === null || raw === undefined) {
+          obj.result = null;
+        } else if (typeof raw === 'number') {
+          obj.result = raw;
+        } else if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+          // keep JSON string; consumers will parse when needed
+          obj.result = raw;
+        } else if (typeof raw === 'string' && /^\d+(?:[.,]\d+)?$/.test(raw.trim())) {
+          // numeric string (allow comma) -> convert to number
+          obj.result = Number(String(raw).replace(',', '.'));
+        } else {
+          // leave other strings (e.g. 'top', zone names) as-is
+          obj.result = raw;
+        }
       } else {
         obj[col] = row[i];
       }
