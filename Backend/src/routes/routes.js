@@ -23,9 +23,9 @@ router.get('/', authenticate, (req, res) => {
     return res.status(404).json({ error: 'Benutzer nicht gefunden' });
   }
 
-    const isErgebnisdienst = ['admin', 'ergebnisdienst', 'schiedsrichter'].includes(req.user.role);
+    const isSchiedsrichter = ['admin', 'schiedsrichter'].includes(req.user.role);
 
-  if (targetUserId !== req.user.id && !isErgebnisdienst) {
+  if (targetUserId !== req.user.id && !isSchiedsrichter) {
     return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
   }
 
@@ -33,11 +33,11 @@ router.get('/', authenticate, (req, res) => {
     targetUserId === req.user.id &&
     ['athlete', 'finalist'].includes(req.user.role);
 
-    const isAdminOrErgebnisdienst = ['admin', 'schiedsrichter'].includes(req.user.role);
+    const isAdminOrSchiedsrichter = ['admin', 'schiedsrichter'].includes(req.user.role);
 
-  const visibleRoutes = isAdminOrErgebnisdienst
+  const visibleRoutes = isAdminOrSchiedsrichter
     ? routes
-    : isErgebnisdienst
+    : isSchiedsrichter
     ? routes.filter(route => route.category === 'finale')
     : isAthleteOrFinalistSelf
       ? routes.filter(route => route.category !== 'finale')
@@ -75,20 +75,20 @@ router.post('/result', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Benutzer nicht gefunden' });
     }
 
-    const isAdminOrErgebnisdienst = ['admin', 'schiedsrichter'].includes(req.user.role);
+    const isAdminOrSchiedsrichter = ['admin', 'schiedsrichter'].includes(req.user.role);
     const isAdmin = req.user.role === 'admin';
 
-    if (isAdminOrErgebnisdienst && config.competitionState === 'finale') {
+    if (isAdminOrSchiedsrichter && config.competitionState === 'finale') {
     } else if (config.competitionState === 'finale' && route.category === 'finale') {
-      return res.status(403).json({ error: 'Nur Admin oder Ergebnisdienst dürfen Finalrouten bearbeiten' });
+      return res.status(403).json({ error: 'Nur Admin oder Schiedsrichter dürfen Finalrouten bearbeiten' });
     }
 
-    if (req.user.role === 'ergebnisdienst' && config.competitionState !== 'finale') {
-      return res.status(403).json({ error: 'Ergebnisdienst darf nur im Finale Routen bearbeiten' });
+    if (req.user.role === 'schiedsrichter' && config.competitionState !== 'finale') {
+      return res.status(403).json({ error: 'Schiedsrichter darf nur im Finale Routen bearbeiten' });
     }
 
     // Allow admins to edit any user. Allow 'ergebnisdienst' to edit other users only during the finale.
-    if (targetUserId !== req.user.id && !(isAdmin || (req.user.role === 'ergebnisdienst' && config.competitionState === 'finale'))) {
+    if (targetUserId !== req.user.id && !(isAdmin || (req.user.role === 'schiedsrichter' && config.competitionState === 'finale'))) {
       return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
     }
 

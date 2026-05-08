@@ -15,10 +15,10 @@
   let users = $state([]);
   let selectedUserId = $state('');
   let loadingUsers = $state(true);
-  const isErgebnisdienst = $derived($userStore?.role === 'schiedsrichter');
+  const isSchiedsrichter = $derived($userStore?.role === 'schiedsrichter');
   
   const tabs = $derived(
-    isErgebnisdienst
+    isSchiedsrichter
       ? [
           { id: 'results', label: 'Rangliste' },
           { id: 'entry', label: 'Ergebniseingabe' }
