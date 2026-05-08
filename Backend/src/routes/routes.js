@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import CompetitionStates from '../../../shared/competitionStates.js';
+import Roles from '../../../shared/roles.js';
 import RouteCategories from '../../../shared/routeCategories.js';
 import { authenticate } from '../middleware/auth.js';
 import {
@@ -25,8 +26,8 @@ router.get('/', authenticate, (req, res) => {
     return res.status(404).json({ error: 'Benutzer nicht gefunden' });
   }
 
-    const isSchiedsrichter = req.user.role === 'schiedsrichter';
-    const isAdmin = req.user.role === 'admin';
+    const isSchiedsrichter = req.user.role === Roles.SCHIEDSRICHTER;
+    const isAdmin = req.user.role === Roles.ADMIN;
 
   if (targetUserId !== req.user.id && !isSchiedsrichter && !isAdmin) {
     return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
@@ -34,19 +35,25 @@ router.get('/', authenticate, (req, res) => {
 
   const isAthleteOrFinalistSelf =
     targetUserId === req.user.id &&
-    ['athlete', 'finalist'].includes(req.user.role);
+    [Roles.ATHLETE, Roles.FINALIST].includes(req.user.role);
 
-    // Visible routes:
+    // Visible routes rules (explicit):
     // - Admin: all routes
-    // - Schiedsrichter: only finale routes
-    // - Athlete/Finalist (self): qualification and bonus (not finale)
-    const visibleRoutes = isAdmin
-      ? routes
-      : isSchiedsrichter
-      ? routes.filter(route => route.category === RouteCategories.FINALE)
-      : isAthleteOrFinalistSelf
-        ? routes.filter(route => route.category !== RouteCategories.FINALE)
-        : routes;
+    // - Schiedsrichter: always see finale routes
+    // - Athlete/Finalist (self): see qualification and bonus (not finale)
+    // - Others: no routes (should be blocked earlier)
+    let visibleRoutes = [];
+
+    if (isAdmin) {
+      visibleRoutes = routes;
+    } else if (isSchiedsrichter) {
+      // Schiedsrichter should always be able to view finale routes
+      visibleRoutes = routes.filter(route => route.category === RouteCategories.FINALE);
+    } else if (isAthleteOrFinalistSelf) {
+      visibleRoutes = routes.filter(route => route.category !== RouteCategories.FINALE);
+    } else {
+      visibleRoutes = [];
+    }
 
   const userCompleted = completed.filter(cr => cr.userId === targetUserId);
   const routesWithStatus = visibleRoutes.map(route => {
@@ -80,10 +87,10 @@ router.post('/result', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Benutzer nicht gefunden' });
     }
 
-    const isAdmin = req.user.role === 'admin';
-    const isSchiedsrichter = req.user.role === 'schiedsrichter';
+    const isAdmin = req.user.role === Roles.ADMIN;
+    const isSchiedsrichter = req.user.role === Roles.SCHIEDSRICHTER;
     const isSelf = targetUserId === req.user.id;
-    const isAthleteOrFinalist = ['athlete', 'finalist'].includes(req.user.role);
+    const isAthleteOrFinalist = [Roles.ATHLETE, Roles.FINALIST].includes(req.user.role);
 
     if (isAdmin) {
       // Admin allowed
@@ -208,7 +215,7 @@ router.post('/bonus', authenticate, (req, res) => {
       return res.status(400).json({ error: 'Route-ID erforderlich' });
     }
 
-    if (req.user.role === 'schiedsrichter') {
+    if (req.user.role === Roles.SCHIEDSRICHTER) {
       return res.status(403).json({ error: 'Schiedsrichter darf keine Bonusdaten erfassen' });
     }
 
@@ -224,11 +231,11 @@ router.post('/bonus', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Benutzer nicht gefunden' });
     }
 
-    if (targetUserId !== req.user.id && req.user.role !== 'admin') {
+    if (targetUserId !== req.user.id && req.user.role !== Roles.ADMIN) {
       return res.status(403).json({ error: 'Keine Berechtigung für andere Benutzer' });
     }
 
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== Roles.ADMIN) {
       if (config.competitionState === CompetitionStates.SETUP || config.competitionState === CompetitionStates.FINISHED) {
         return res.status(403).json({ error: 'Wettkampf ist nicht aktiv' });
       }
@@ -238,7 +245,7 @@ router.post('/bonus', authenticate, (req, res) => {
       if (route.category === 'finale') {
         return res.status(403).json({ error: 'Finalrouten können nicht als Bonusdaten erfasst werden' });
       }
-    } else if (req.user.role === 'admin' && config.competitionState === 'finale') {
+    } else if (req.user.role === Roles.ADMIN && config.competitionState === CompetitionStates.FINALE) {
     }
 
     if (typeof count !== 'number' || count < 0) {

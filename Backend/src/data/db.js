@@ -2,7 +2,8 @@ import initSqlJs from 'sql.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
+const uuidv4 = () => randomUUID();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

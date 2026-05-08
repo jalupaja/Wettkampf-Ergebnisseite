@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { getConfig, updateConfig, getGroups, getUsers, updateUserRole } from '../data/store.js';
 import CompetitionStates from '../../../shared/competitionStates.js';
+import Roles from '../../../shared/roles.js';
 import { calculateResults } from './results.js';
 
 const router = Router();
@@ -61,14 +62,14 @@ router.put('/', authenticate, requireAdmin, (req, res) => {
     
     if (transitionedOutOfFinale) {
       getUsers()
-        .filter(u => u.role === 'finalist')
-        .forEach(u => updateUserRole(u.id, 'athlete'));
+        .filter(u => u.role === Roles.FINALIST)
+        .forEach(u => updateUserRole(u.id, Roles.ATHLETE));
     }
     
     if (transitionedToFinale) {
       getUsers()
-        .filter(u => u.role === 'finalist')
-        .forEach(u => updateUserRole(u.id, 'athlete'));
+        .filter(u => u.role === Roles.FINALIST)
+        .forEach(u => updateUserRole(u.id, Roles.ATHLETE));
 
       const { results } = calculateResults();
       

@@ -6,6 +6,7 @@ import {
   updateRoute,
   deleteRoute
 } from '../data/store.js';
+import RouteCategories from '../../../shared/routeCategories.js';
 
 const router = Router();
 
@@ -23,7 +24,7 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
       return res.status(400).json({ error: 'Name und Kategorie erforderlich', received: req.body });
     }
     
-    if (!['qualification', 'bonus', 'finale'].includes(category)) {
+    if (![RouteCategories.QUALIFICATION, RouteCategories.BONUS, RouteCategories.FINALE].includes(category)) {
       return res.status(400).json({ error: 'Ungültige Kategorie' });
     }
     
@@ -35,7 +36,7 @@ router.post('/', authenticate, requireAdmin, (req, res) => {
     const routeData = {
       name,
       category,
-      topPoints: Number.isFinite(normalizedTopPoints) ? normalizedTopPoints : (category === 'bonus' ? 50 : (category === 'finale' ? 0 : 100)),
+      topPoints: Number.isFinite(normalizedTopPoints) ? normalizedTopPoints : (category === RouteCategories.BONUS ? 50 : (category === RouteCategories.FINALE ? 0 : 100)),
       zones: normalizedZones,
       order
     };
@@ -63,7 +64,7 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
       updates.zones = updates.zones.map(z => ({ ...z, points: Number(String(z.points).replace(',', '.')) || 0 }));
     }
 
-    if (updates.category && !['qualification', 'bonus', 'finale'].includes(updates.category)) {
+    if (updates.category && ![RouteCategories.QUALIFICATION, RouteCategories.BONUS, RouteCategories.FINALE].includes(updates.category)) {
       return res.status(400).json({ error: 'Ungültige Kategorie' });
     }
     

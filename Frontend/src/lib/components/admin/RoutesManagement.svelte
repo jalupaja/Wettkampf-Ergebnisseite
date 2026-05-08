@@ -11,9 +11,11 @@
   let importing = $state(false);
   
   
+  import RouteCategories from '../../../../shared/routeCategories.js';
+
   let formData = $state({
     name: '',
-    category: 'qualification',
+    category: RouteCategories.QUALIFICATION,
     topPoints: 100,
     zones: [],
     order: null
@@ -22,9 +24,9 @@
   let editingId = $state(null);
   
   const categories = [
-    { value: 'qualification', label: 'Qualifikation' },
-    { value: 'bonus', label: 'Bonus' },
-    { value: 'finale', label: 'Finale' }
+    { value: RouteCategories.QUALIFICATION, label: 'Qualifikation' },
+    { value: RouteCategories.BONUS, label: 'Bonus' },
+    { value: RouteCategories.FINALE, label: 'Finale' }
   ];
   
   onMount(async () => {

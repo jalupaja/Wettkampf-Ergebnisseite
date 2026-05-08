@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
+import Roles from '../../../shared/roles.js';
+import RouteCategories from '../../../shared/routeCategories.js';
 import {
   getConfig,
   getRoutes,
@@ -111,7 +113,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
 
         let rawTopPoints = String(row.topPoints || '').replace(',', '.');
         const topPointsNum = rawTopPoints ? Number(rawTopPoints) : NaN;
-        const topPoints = Number.isFinite(topPointsNum) ? topPointsNum : (row.category === 'bonus' ? 50 : (row.category === 'finale' ? 0 : 100));
+        const topPoints = Number.isFinite(topPointsNum) ? topPointsNum : (row.category === RouteCategories.BONUS ? 50 : (row.category === RouteCategories.FINALE ? 0 : 100));
 
         if (mode === 'replace' || mode === 'append') {
           const currentRoutes = getRoutes();
@@ -128,13 +130,13 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
               results.push({ name: row.name, error: 'Route konnte nicht aktualisiert werden' });
             }
           } else {
-            createRoute({
-              name: row.name,
-              category: row.category || 'qualification',
-              topPoints,
-              zones,
-              order: index + 1
-            });
+              createRoute({
+                name: row.name,
+                category: row.category || RouteCategories.QUALIFICATION,
+                topPoints,
+                zones,
+                order: index + 1
+              });
             results.push({ name: row.name, action: 'created' });
           }
         }
@@ -151,7 +153,7 @@ router.post('/routes', authenticate, requireAdmin, (req, res) => {
 });
 
 router.get('/users', authenticate, requireAdmin, (req, res) => {
-  const users = getUsers().filter(u => !['admin', 'schiedsrichter'].includes(u.role));
+  const users = getUsers().filter(u => ![Roles.ADMIN, Roles.SCHIEDSRICHTER].includes(u.role));
   const groups = getGroups();
   const completed = getCompletedRoutes();
   
@@ -188,9 +190,9 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
     if (mode === 'replace') {
       const store = getStore();
       const athleteIds = users.filter(u => ['athlete', 'finalist'].includes(u.role)).map(u => u.id);
-      store.users = store.users.filter(u => ['admin', 'schiedsrichter'].includes(u.role));
+      store.users = store.users.filter(u => [Roles.ADMIN, Roles.SCHIEDSRICHTER].includes(u.role));
       store.completedRoutes = store.completedRoutes.filter(cr => 
-        users.find(u => u.id === cr.userId && ['admin', 'schiedsrichter'].includes(u.role))
+        users.find(u => u.id === cr.userId && [Roles.ADMIN, Roles.SCHIEDSRICHTER].includes(u.role))
       );
     }
     
@@ -208,7 +210,7 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
           const existing = users.find(u => u.username === row.username);
           const password = row.password ? row.password : generatePassword();
           if (existing) {
-              if (['admin', 'schiedsrichter'].includes(existing.role)) continue;
+              if ([Roles.ADMIN, Roles.SCHIEDSRICHTER].includes(existing.role)) continue;
               const updates = { groupId: group?.id || null };
               if (row.password) {
                 updates.password = password;
@@ -219,7 +221,7 @@ router.post('/users', authenticate, requireAdmin, (req, res) => {
               createUser(
                 row.username,
                 password,
-                ['athlete', 'finalist', 'schiedsrichter', 'admin'].includes(row.role) ? row.role : 'athlete',
+                [Roles.ATHLETE, Roles.FINALIST, Roles.SCHIEDSRICHTER, Roles.ADMIN].includes(row.role) ? row.role : 'athlete',
                 group?.id || null
               );
               results.push({ username: row.username, password: row.password ? undefined : password, action: 'created' });

@@ -15,8 +15,8 @@ const router = Router();
 router.get('/', authenticate, requireAdminOrSchiedsrichter, (req, res) => {
   const users = getUsers();
   const groups = getGroups();
-  const visibleUsers = ['schiedsrichter'].includes(req.user.role)
-    ? users.filter(u => ['athlete', 'finalist'].includes(u.role))
+  const visibleUsers = [Roles.SCHIEDSRICHTER].includes(req.user.role)
+    ? users.filter(u => [Roles.ATHLETE, Roles.FINALIST].includes(u.role))
     : users;
   
   const safeUsers = visibleUsers.map(u => ({

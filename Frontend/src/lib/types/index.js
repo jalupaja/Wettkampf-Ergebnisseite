@@ -1,7 +1,7 @@
 export interface User {
   id: string;
   username: string;
-  role: 'admin' | 'athlete';
+  role: 'admin' | 'athlete' | 'finalist' | 'schiedsrichter';
   groupId: string | null;
   groupName?: string | null;
 }

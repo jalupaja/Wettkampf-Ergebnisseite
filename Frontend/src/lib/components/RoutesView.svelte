@@ -8,7 +8,7 @@
   
   let { targetUser = null } = $props();
   let routes = $state([]);
-  let competitionState = $state('setup');
+  let competitionState = $state(CompetitionStates.SETUP);
   let config = $state({});
   let loading = $state(true);
   let finalists = $state(new Set());
@@ -111,16 +111,16 @@
     try {
       const configData = await api.config.get();
       config = configData.config;
-      const newState = config.competitionState || 'setup';
+      const newState = config.competitionState || CompetitionStates.SETUP;
       
     if (newState !== competitionState) {
       competitionState = newState;
       finalists = new Set();
-        if (competitionState === 'finale') {
-          const resultsData = await api.results.get();
-          updateFinalists(resultsData);
+    if (competitionState === CompetitionStates.FINALE) {
+      const resultsData = await api.results.get();
+      updateFinalists(resultsData);
         }
-      } else if (competitionState === 'finale') {
+      } else if (competitionState === CompetitionStates.FINALE) {
         const resultsData = await api.results.get();
         updateFinalists(resultsData);
       }
@@ -146,12 +146,12 @@
     try {
       const [configData, resultsData] = await Promise.all([
         api.config.get(),
-        competitionState === 'finale' ? api.results.get() : Promise.resolve(null)
+        competitionState === CompetitionStates.FINALE ? api.results.get() : Promise.resolve(null)
       ]);
       config = configData.config;
-      competitionState = config.competitionState || 'setup';
+      competitionState = config.competitionState || CompetitionStates.SETUP;
       await loadRoutes();
-      if (competitionState === 'finale' && resultsData) {
+      if (competitionState === CompetitionStates.FINALE && resultsData) {
         updateFinalists(resultsData);
       } else {
         finalists = new Set();
@@ -179,7 +179,7 @@
 
     // Schiedsrichter: only allowed to edit finale routes while the competition is in FINALE
     if (role === 'schiedsrichter') {
-      return config?.competitionState === CompetitionStates.FINALE && route.category === 'finale';
+      return config?.competitionState === CompetitionStates.FINALE && route.category === RouteCategories.FINALE;
     }
 
     // Athletes/Finalists: may edit during qualification and only non-finale routes (their own)
@@ -262,16 +262,16 @@
   function getDisableReason(route) {
     const role = $userStore?.role;
     if (role === 'admin') return null;
-    if (role === 'schiedsrichter') {
-      if (config?.competitionState !== CompetitionStates.FINALE) return 'Schiedsrichter dürfen nur im Finale Routen bearbeiten';
-      if (route.category !== 'finale') return 'Schiedsrichter dürfen nur Finalrouten bearbeiten';
-      return null;
-    }
-    if (role === 'athlete' || role === 'finalist') {
-      if (config?.competitionState !== CompetitionStates.QUALIFICATION) return 'Athleten dürfen Routen nur während der Qualifikation bearbeiten';
-      if (route.category === 'finale') return 'Athleten dürfen Finalrouten nicht bearbeiten';
-      return null;
-    }
+      if (role === 'schiedsrichter') {
+        if (config?.competitionState !== CompetitionStates.FINALE) return 'Schiedsrichter dürfen nur im Finale Routen bearbeiten';
+        if (route.category !== RouteCategories.FINALE) return 'Schiedsrichter dürfen nur Finalrouten bearbeiten';
+        return null;
+      }
+      if (role === 'athlete' || role === 'finalist') {
+        if (config?.competitionState !== CompetitionStates.QUALIFICATION) return 'Athleten dürfen Routen nur während der Qualifikation bearbeiten';
+        if (route.category === RouteCategories.FINALE) return 'Athleten dürfen Finalrouten nicht bearbeiten';
+        return null;
+      }
     return 'Keine Berechtigung';
   }
   
@@ -307,6 +307,26 @@
     try {
       const data = await api.routes.list(userId);
       routes = data.routes;
+      // Ensure Schiedsrichter always sees finale routes. If backend returned no routes
+      // (e.g. unexpected filtering), try fetching admin routes as fallback and keep only finale.
+      if ($userStore?.role === 'schiedsrichter') {
+        const hasFinale = routes.some(r => r.category === RouteCategories.FINALE);
+        if (!hasFinale) {
+          try {
+            const adminData = await api.routes.admin.list();
+            // prefer finale routes from admin data if available
+            const adminFinale = (adminData.routes || []).filter(r => r.category === RouteCategories.FINALE);
+            if (adminFinale.length > 0) {
+              // merge finale routes into current routes, avoiding duplicates by id
+              const existingIds = new Set(routes.map(r => r.id));
+              routes = [...routes, ...adminFinale.filter(r => !existingIds.has(r.id))];
+            }
+          } catch (e) {
+            // ignore admin fetch errors (likely permission) and keep original routes
+            console.debug('[RoutesView] Admin routes fetch failed (fallback):', e.message);
+          }
+        }
+      }
     } catch (err) {
       toastStore.error(err.message);
     }
@@ -476,20 +496,24 @@
 </script>
 
 <div class="routes-view">
-  {#if competitionState === 'setup' && !loading}
+  {#if competitionState === CompetitionStates.SETUP && !loading}
     <div class="setup-banner">Wettkampf noch nicht gestartet.</div>
-  {:else if competitionState === 'finale' && !['admin', 'schiedsrichter'].includes($userStore?.role) && !loading}
+  {:else if competitionState === CompetitionStates.FINALE && !loading}
     <div class="setup-banner finale">Finale läuft!</div>
-  {:else if competitionState === 'finished' && !loading}
+  {:else if competitionState === CompetitionStates.FINISHED && !loading}
     <div class="setup-banner finished">Wettkampf beendet.</div>
   {/if}
   
-  {#if $userStore?.role == 'schiedsrichter'}
-    <div class="schiedsrichter-note">Schiedsrichter-Modus: Nur Finalrouten sind sichtbar und bearbeitbar.</div>
-  {:else if loading}
+  {#if loading}
     <div class="loading">Routen werden geladen...</div>
-  {:else}
-      <div class="stats">
+  {/if}
+
+  {#if $userStore?.role == 'schiedsrichter'}
+    <div class="schiedsrichter-note">Schiedsrichter-Modus: Nur Finalrouten sind sichtbar. Bearbeiten ist während des Finales möglich.</div>
+  {/if}
+
+  {#if !loading}
+    <div class="stats">
         <div class="stat-card total">
               <div class="stat-label">{pointsLabel}</div>
               <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
@@ -530,7 +554,8 @@
             {/each}
           </div>
         </section>
-      {/if}
+    {/if}
+  {/if}
       
       {#if bonusRoutes.length}
         <section class="route-section">

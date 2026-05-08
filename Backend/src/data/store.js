@@ -1,5 +1,9 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
+const uuidv4 = () => randomUUID();
 import { getDb, initDatabase, isDatabaseEmpty, migrateData, saveToFile } from './db.js';
+import CompetitionStates from '../../../shared/competitionStates.js';
+import RouteCategories from '../../../shared/routeCategories.js';
+import Roles from '../../../shared/roles.js';
 
 function loadDefaultData() {
   const adminPassword = 'ADMIN';
@@ -11,18 +15,18 @@ function loadDefaultData() {
     { id: uuidv4(), name: 'Jugend w', description: 'Weibliche Jugend', order: 4, createdAt: new Date().toISOString() }
   ];
   
-  const routes = [
-    { id: uuidv4(), name: 'Route 1', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 1, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 2', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 2, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 3', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 3, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 4', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 4, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 5', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 5, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Route 6', category: 'qualification', topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 6, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Bonus 1', category: 'bonus', topPoints: 50, zones: [], order: 7, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Bonus 2', category: 'bonus', topPoints: 50, zones: [], order: 8, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Bonus 3', category: 'bonus', topPoints: 50, zones: [], order: 9, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Finale 1', category: 'finale', topPoints: 0, zones: [], order: 10, createdAt: new Date().toISOString() },
-    { id: uuidv4(), name: 'Finale 2', category: 'finale', topPoints: 0, zones: [], order: 11, createdAt: new Date().toISOString() }
+    const routes = [
+    { id: uuidv4(), name: 'Route 1', category: RouteCategories.QUALIFICATION, topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 1, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 2', category: RouteCategories.QUALIFICATION, topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 2, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 3', category: RouteCategories.QUALIFICATION, topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 3, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 4', category: RouteCategories.QUALIFICATION, topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 4, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 5', category: RouteCategories.QUALIFICATION, topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 5, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Route 6', category: RouteCategories.QUALIFICATION, topPoints: 100, zones: [{name: 'Zone 1', points: 25}, {name: 'Zone 2', points: 50}], order: 6, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Bonus 1', category: RouteCategories.BONUS, topPoints: 50, zones: [], order: 7, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Bonus 2', category: RouteCategories.BONUS, topPoints: 50, zones: [], order: 8, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Bonus 3', category: RouteCategories.BONUS, topPoints: 50, zones: [], order: 9, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Finale 1', category: RouteCategories.FINALE, topPoints: 0, zones: [], order: 10, createdAt: new Date().toISOString() },
+    { id: uuidv4(), name: 'Finale 2', category: RouteCategories.FINALE, topPoints: 0, zones: [], order: 11, createdAt: new Date().toISOString() }
   ];
   
   const athletes = [
@@ -53,7 +57,7 @@ function loadDefaultData() {
       username: 'admin',
       password: adminPassword,
       hashed: false,
-      role: 'admin',
+      role: Roles.ADMIN,
       isSuperAdmin: true,
       groupId: null,
       needsPasswordChange: true,
@@ -81,7 +85,7 @@ function loadDefaultData() {
       username: name,
       password: athleteData.password,
       hashed: false,
-      role: 'athlete',
+      role: Roles.ATHLETE,
       groupId: group.id,
       createdAt: new Date().toISOString()
     });
@@ -112,7 +116,7 @@ function loadDefaultData() {
     });
     
     for (let i = 0; i < results.bonusTops; i++) {
-      const bonusRoute = routes.find(r => r.category === 'bonus');
+      const bonusRoute = routes.find(r => r.category === RouteCategories.BONUS);
       if (bonusRoute) {
         completedRoutes.push({
           id: uuidv4(),
@@ -125,7 +129,7 @@ function loadDefaultData() {
     }
   });
   
-  return {
+    return {
     users,
     groups,
     routes,
@@ -135,7 +139,7 @@ function loadDefaultData() {
       finaleMaxAthletes: 8,
       finaleSmallGroupMaxAthletes: 6,
       finaleSmallGroupThreshold: 10,
-    competitionState: 'setup',
+    competitionState: CompetitionStates.SETUP,
       rulesURL: ''
     }
   };
@@ -153,7 +157,7 @@ export async function initialize() {
     const db = getDb();
     const res = db.exec("SELECT id, role FROM users WHERE role = 'ergebnisdienst'");
     if (res[0] && res[0].values.length > 0) {
-      for (const row of res[0].values) {
+    for (const row of res[0].values) {
         const id = row[0];
         db.run('UPDATE users SET role = ? WHERE id = ?', ['schiedsrichter', id]);
       }
@@ -482,7 +486,7 @@ export function getRouteById(id) {
   };
 }
 
-export function createRoute({ name, category, topPoints = (category === 'bonus' ? 50 : (category === 'finale' ? 0 : 100)), zones = [], order = null }) {
+export function createRoute({ name, category, topPoints = (category === RouteCategories.BONUS ? 50 : (category === RouteCategories.FINALE ? 0 : 100)), zones = [], order = null }) {
   const db = getDb();
   
   if (order === null) {
@@ -671,12 +675,12 @@ export function getConfig() {
     }
   }
   
-  return {
+    return {
     qualificationBestCount: config.qualificationBestCount ?? 5,
     finaleMaxAthletes: config.finaleMaxAthletes ?? 8,
     finaleSmallGroupMaxAthletes: config.finaleSmallGroupMaxAthletes ?? 6,
     finaleSmallGroupThreshold: config.finaleSmallGroupThreshold ?? 10,
-    competitionState: config.competitionState ?? 'setup',
+    competitionState: config.competitionState ?? CompetitionStates.SETUP,
     rulesUrl: config.rulesUrl ?? config.rulesURL ?? ''
   };
 }
