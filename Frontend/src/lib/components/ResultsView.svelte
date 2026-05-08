@@ -31,7 +31,8 @@
       results = data.results;
       config = data.config;
       
-      if (config?.competitionState === 'finale') {
+      import { CompetitionStates } from '../../../../shared/competitionStates.js';
+      if (config?.competitionState === CompetitionStates.FINALE) {
         console.log('[FRONTEND] Results received from API:');
         results.forEach(group => {
           console.log(`  Group "${group.groupName}": ${group.athletes.map((a, i) => `${i + 1}. ${a.username} (${a.finalePoints}pts, time=${a.finaleTotalTime}s)`).join(' → ')}`);

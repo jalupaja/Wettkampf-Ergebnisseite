@@ -86,7 +86,8 @@
   {#if loading}
     <div class="loading">Rangliste wird geladen...</div>
   {:else if results.length}
-    {#if config?.competitionState === 'finale' || config?.competitionState === 'finished'}
+    import { CompetitionStates } from '../../../../shared/competitionStates.js';
+    {#if config?.competitionState === CompetitionStates.FINALE || config?.competitionState === CompetitionStates.FINISHED}
       <div class="round-section finale-phase">
          <h2 class="round-title finale phase-heading">Finale</h2>
          {#each results as groupResult}

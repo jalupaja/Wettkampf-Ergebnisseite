@@ -326,6 +326,7 @@
     return sum + (count * (Number(r.topPoints) || 0));
   }, 0));
   
+  // TODO unused
   const finalePoints = $derived(finaleRoutes.reduce((sum, r) => {
     if (!r.result) return sum;
     let points = 0;
@@ -353,7 +354,7 @@
     return sum + points;
   }, 0));
   
-  const totalPoints = $derived(qualPoints + bonusPoints + finalePoints);
+  const totalPoints = $derived(qualPoints + bonusPoints);
 
   const pointsLabel = 'Deine Punkte';
 
@@ -453,7 +454,7 @@
   {:else}
       <div class="stats">
         <div class="stat-card total">
-<div class="stat-label">{pointsLabel}</div>
+              <div class="stat-label">{pointsLabel}</div>
               <div class="stat-value">{formatPoints(totalPoints)} Pkt</div>
         </div>
       </div>
@@ -670,23 +671,33 @@
      width: 100%;
    }
 
-   .finale-input-row input {
-     max-width: 140px;
-     text-align: center;
-     font-weight: 600;
-     padding: 14px 12px;
-     font-size: 18px;
-     border: 2px solid var(--color-border);
-     border-radius: 8px;
-     background: var(--color-white);
-   }
+    .finale-input-row input {
+      max-width: 140px;
+      text-align: center;
+      font-weight: 600;
+      padding: 14px 12px;
+      font-size: 18px;
+      border: 2px solid var(--color-border);
+      border-radius: 8px;
+      background: var(--color-white);
+      /* Use site text color so input is readable on white background */
+      color: var(--color-text);
+    }
    
-   .finale-points-input {
-     width: 130px;
-   }
-   .finale-time-input {
-     width: 160px;
-   }
+    .finale-points-input {
+      width: 130px;
+      color: var(--color-text);
+    }
+    .finale-time-input {
+      width: 160px;
+      color: var(--color-text);
+    }
+
+    /* Placeholder color should be muted but visible */
+    .finale-input-row input::placeholder {
+      color: var(--color-text-muted);
+      opacity: 1;
+    }
   
    .timer-btn {
      background: var(--color-bg-light);

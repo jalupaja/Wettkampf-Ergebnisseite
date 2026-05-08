@@ -21,6 +21,7 @@ function parseTimeToSeconds(timeStr) {
 
 export function calculateResults() {
   const config = getConfig();
+  const CompetitionStates = await import('../../../../shared/competitionStates.js').then(m => m.default);
   const groups = getGroups();
   const routes = getRoutes();
   const users = getUsers().filter(u => ['athlete', 'finalist'].includes(u.role) && u.groupId);
@@ -155,9 +156,9 @@ export function calculateResults() {
        const finaleTotalTime = finaleResults.reduce((sum, r) => sum + parseTimeToSeconds(r.time), 0);
        
        const totalTops = qualTops + bonusTops;
-       const totalPoints = config.competitionState === 'finale'
-         ? finalePoints
-         : qualPoints + bonusPoints + finalePoints;
+        const totalPoints = config.competitionState === CompetitionStates.FINALE
+          ? finalePoints
+          : qualPoints + bonusPoints + finalePoints;
        
        return {
          userId: user.id,
@@ -181,7 +182,7 @@ export function calculateResults() {
     
     const sortedAthletes = [...athleteResults].sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-      if (config.competitionState === 'finale') {
+      if (config.competitionState === CompetitionStates.FINALE) {
         if (b.finaleTops !== a.finaleTops) return b.finaleTops - a.finaleTops;
         if (b.finaleZones !== a.finaleZones) return b.finaleZones - a.finaleZones;
         const aHasTime = a.finaleTotalTime !== Infinity;

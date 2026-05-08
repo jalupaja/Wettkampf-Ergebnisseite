@@ -6,11 +6,13 @@
   let loading = $state(true);
   let error = $state('');
   
+  import { CompetitionStates } from '../../../../shared/competitionStates.js';
+
   const states = [
-    { value: 'setup', label: 'Setup', description: 'Routen und Athleten werden vorbereitet' },
-    { value: 'qualification', label: 'Qualifikation', description: 'Athleten klettern Qualifikation und Bonus' },
-    { value: 'finale', label: 'Finale', description: 'Finalisten klettern die Finalrouten' },
-    { value: 'finished', label: 'Beendet', description: 'Wettkampf beendet, Ergebnisse einsehbar' }
+    { value: CompetitionStates.SETUP, label: 'Setup', description: 'Routen und Athleten werden vorbereitet' },
+    { value: CompetitionStates.QUALIFICATION, label: 'Qualifikation', description: 'Athleten klettern Qualifikation und Bonus' },
+    { value: CompetitionStates.FINALE, label: 'Finale', description: 'Finalisten klettern die Finalrouten' },
+    { value: CompetitionStates.FINISHED, label: 'Beendet', description: 'Wettkampf beendet, Ergebnisse einsehbar' }
   ];
   
   onMount(async () => {

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { getConfig, updateConfig, getGroups, getUsers, updateUserRole } from '../data/store.js';
+import CompetitionStates from '../../../../shared/competitionStates.js';
 import { calculateResults } from './results.js';
 
 const router = Router();
@@ -55,8 +56,8 @@ router.put('/', authenticate, requireAdmin, (req, res) => {
     
     const previousConfig = getConfig();
     const config = updateConfig(updates);
-    const transitionedToFinale = updates.competitionState === 'finale' && previousConfig.competitionState !== 'finale';
-    const transitionedOutOfFinale = previousConfig.competitionState === 'finale' && updates.competitionState && updates.competitionState !== 'finale';
+    const transitionedToFinale = updates.competitionState === CompetitionStates.FINALE && previousConfig.competitionState !== CompetitionStates.FINALE;
+    const transitionedOutOfFinale = previousConfig.competitionState === CompetitionStates.FINALE && updates.competitionState && updates.competitionState !== CompetitionStates.FINALE;
     
     if (transitionedOutOfFinale) {
       getUsers()
@@ -71,9 +72,9 @@ router.put('/', authenticate, requireAdmin, (req, res) => {
 
       const { results } = calculateResults();
       
-      const threshold = config.finaleSmallGroupThreshold || 10;
-      const maxAthletes = config.finaleMaxAthletes || 8;
-      const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
+    const threshold = config.finaleSmallGroupThreshold || 10;
+    const maxAthletes = config.finaleMaxAthletes || 8;
+    const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
       
       for (const group of results) {
         const groupSize = group.athletes.length;
