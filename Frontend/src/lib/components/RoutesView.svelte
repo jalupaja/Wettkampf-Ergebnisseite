@@ -7,7 +7,7 @@
   import { CompetitionStates } from 'shared/competitionStates.js';
   import RouteCategories from 'shared/routeCategories.js';
   import Roles from 'shared/roles.js';
-  
+
   let { targetUser = null } = $props();
   let routes = $state([]);
   let competitionState = $state(CompetitionStates.SETUP);
@@ -15,7 +15,7 @@
   let loading = $state(true);
   let finalists = $state(new Set());
   let refreshInterval;
-  
+
   // Timer state
   let timerRunning = $state(false);
   let timerStartTime = $state(0);
@@ -23,10 +23,10 @@
   let timerInterval = $state(null);
   let showTimer = $state(false);
   let timerRouteId = $state(null);
-  
+
   // Debounce timers for finale saves to prevent duplicate requests
   let finaleDebounceTimers = new Map();
-  
+
   function formatTime(ms) {
     if (!ms || ms < 0) return '0:00.000';
     const minutes = Math.floor(ms / 60000);
@@ -34,7 +34,7 @@
     const millis = Math.floor(ms % 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}.${millis.toString().padStart(3, '0')}`;
   }
-  
+
   function startTimer() {
     if (timerRunning) return;
     timerStartTime = performance.now() - timerElapsed;
@@ -43,7 +43,7 @@
       timerElapsed = performance.now() - timerStartTime;
     }, 10);
   }
-  
+
   function pauseTimer() {
     if (!timerRunning) return;
     timerRunning = false;
@@ -52,69 +52,69 @@
       timerInterval = null;
     }
   }
-  
+
   function resetTimer() {
     pauseTimer();
     timerElapsed = 0;
     timerStartTime = 0;
   }
-  
+
   function useTimerTime(routeId) {
     const timeValue = formatTime(timerElapsed);
     setFinaleTime(routeId, timeValue);
   }
-  
+
   function openTimer(routeId) {
     timerRouteId = routeId;
     showTimer = true;
   }
-  
+
   function closeTimer() {
     showTimer = false;
     timerRouteId = null;
   }
-  
+
   function getActiveUser() {
     return targetUser || $userStore;
   }
-  
+
   function getActiveUserId() {
     return getActiveUser()?.id || null;
   }
-  
+
   onMount(async () => {
     await loadData();
     refreshInterval = setInterval(refreshState, 30000);
   });
-  
+
   onDestroy(async () => {
     if (refreshInterval) clearInterval(refreshInterval);
     if (timerInterval) clearInterval(timerInterval);
-    
+
     // Clear any pending finale debounce timers
     for (const timer of finaleDebounceTimers.values()) {
       clearTimeout(timer);
     }
     finaleDebounceTimers.clear();
   });
-  
+
   function getFinalistCount(groupSize) {
     const threshold = config.finaleSmallGroupThreshold || 10;
     const maxAthletes = config.finaleMaxAthletes || 8;
     const smallGroupMax = config.finaleSmallGroupMaxAthletes || 6;
-    
+
     if (groupSize < threshold) {
       return Math.min(smallGroupMax, groupSize);
     }
     return Math.min(maxAthletes, groupSize);
   }
-  
+
   async function refreshState() {
     try {
       const configData = await api.config.get();
       config = configData.config;
       const newState = config.competitionState || CompetitionStates.SETUP;
-      
+
     if (newState !== competitionState) {
       competitionState = newState;
       finalists = new Set();
@@ -130,7 +130,7 @@
       console.error('Failed to refresh state:', err);
     }
   }
-  
+
   function updateFinalists(resultsData) {
     const finalistSet = new Set();
     resultsData.results.forEach(group => {
@@ -142,7 +142,7 @@
     });
     finalists = finalistSet;
   }
-  
+
   async function loadData() {
     loading = true;
     try {
@@ -163,13 +163,13 @@
     }
     loading = false;
   }
-  
+
   function isFinalist() {
     const user = getActiveUser();
     if (!user) return false;
     return user.role === 'finalist';
   }
-  
+
   function canEditRoute(route) {
     const role = $userStore?.role;
     // Use shared Roles enum
@@ -197,37 +197,37 @@
   function isRouteDisabled(route) {
     return !canEditRoute(route);
   }
-  
+
   async function checkStateAndSetResult(routeId, result, resultType = 'points') {
     await refreshState();
     await setResult(routeId, result, resultType);
   }
-  
+
   async function checkStateAndIncrementBonus(routeId, currentCount) {
     await refreshState();
     await incrementBonus(routeId, currentCount);
   }
-  
+
   async function checkStateAndDecrementBonus(routeId, currentCount) {
     await refreshState();
     await decrementBonus(routeId, currentCount);
   }
-  
+
   async function setResult(routeId, result, resultType = 'points') {
      const route = routes.find(r => r.id === routeId);
      if (!route) return;
-     
+
      if (!canEditRoute(route)) {
        toastStore.error('Keine Berechtigung diese Route zu bearbeiten');
        return;
      }
-     
+
      const userId = getActiveUserId();
      if (!userId) {
        toastStore.error('Kein Benutzer ausgewählt');
        return;
      }
-     
+
       try {
         console.debug('[setResult] Sending', { routeId, result, userId, resultType });
         await api.routes.setResult(routeId, result, userId, resultType);
@@ -237,20 +237,20 @@
         toastStore.error(err.message || String(err));
       }
     }
-  
+
   async function incrementBonus(routeId, currentCount) {
     const route = routes.find(r => r.id === routeId);
     if (!route || !canEditRoute(route)) {
       toastStore.error('Keine Berechtigung diese Route zu bearbeiten');
       return;
     }
-    
+
     const userId = getActiveUserId();
     if (!userId) {
       toastStore.error('Kein Benutzer ausgewählt');
       return;
     }
-    
+
     try {
       await api.routes.setBonusResult(routeId, currentCount + 1, userId);
       await loadRoutes();
@@ -274,7 +274,7 @@
     }
     return 'Keine Berechtigung';
   }
-  
+
   async function decrementBonus(routeId, currentCount) {
     const route = routes.find(r => r.id === routeId);
     if (!route || !canEditRoute(route)) {
@@ -282,13 +282,13 @@
       return;
     }
     if (currentCount <= 0) return;
-    
+
     const userId = getActiveUserId();
     if (!userId) {
       toastStore.error('Kein Benutzer ausgewählt');
       return;
     }
-    
+
     try {
       await api.routes.setBonusResult(routeId, currentCount - 1, userId);
       await loadRoutes();
@@ -296,14 +296,14 @@
       toastStore.error(err.message);
     }
   }
-  
+
   async function loadRoutes() {
     const userId = getActiveUserId();
     if (!userId) {
       routes = [];
       return;
     }
-    
+
     try {
       const data = await api.routes.list(userId);
       routes = data.routes;
@@ -312,60 +312,51 @@
       toastStore.error(err.message);
     }
   }
-   
+
    const qualRoutes = $derived(routes.filter(r => r.category === RouteCategories.QUALIFICATION));
    const bonusRoutes = $derived(routes.filter(r => r.category === RouteCategories.BONUS));
    const finaleRoutes = $derived(routes.filter(r => r.category === RouteCategories.FINALE));
-  
+
    // Use the configured qualificationBestCount (fallback to 4 best routes)
    const qualBestCount = $derived(config?.qualificationBestCount || 4);
-  
+
   const qualTops = $derived(qualRoutes.filter(r => r.result === 'top').length);
   const qualZones = $derived(qualRoutes.filter(r => r.result && r.result !== 'top' && r.result !== 'attempted').length);
   const totalBonusCount = $derived(bonusRoutes.reduce((sum, r) => sum + (typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0)), 0));
   const maxBonusCount = $derived(bonusRoutes.length);
-  
+
   function calculateQualPoints(routesToCalc, bestCount) {
     const routeResults = routesToCalc.map(r => {
       let points = 0;
       let isTop = false;
-      let zonePoints = 0;
       if (r.result === 'top') {
         isTop = true;
         points = r.topPoints;
       } else if (r.result && r.result !== 'top' && r.result !== 'attempted') {
         const zone = r.zones?.find(z => z.name === r.result);
         if (zone) {
-          zonePoints = zone.points;
           points = zone.points;
         }
       }
-      return { ...r, points, isTop, zonePoints };
+      return points;
     });
-    
-    const sorted = [...routeResults].sort((a, b) => {
-      if (a.isTop && !b.isTop) return -1;
-      if (!a.isTop && b.isTop) return 1;
-      if (a.zonePoints !== b.zonePoints) return b.zonePoints - a.zonePoints;
-      return b.topPoints - a.topPoints;
-    });
-    
-    const best = sorted.slice(0, bestCount);
+
+    const best = routeResults.sort().slice(0, bestCount);
     return best.reduce((sum, r) => sum + r.points, 0);
   }
-  
+
   const qualPoints = $derived(calculateQualPoints(qualRoutes, qualBestCount));
-  
+
   const bonusPoints = $derived(bonusRoutes.reduce((sum, r) => {
     const count = typeof r.result === 'number' ? r.result : (r.result === 'top' ? 1 : 0);
     return sum + (count * (Number(r.topPoints) || 0));
   }, 0));
-  
+
   // TODO unused
   const finalePoints = $derived(finaleRoutes.reduce((sum, r) => {
     if (!r.result) return sum;
     let points = 0;
-    
+
     try {
       if (typeof r.result === 'string' && r.result.startsWith('{')) {
         const parsed = JSON.parse(r.result);
@@ -385,10 +376,10 @@
         points = zone?.points || 0;
       }
     }
-    
+
     return sum + points;
   }, 0));
-  
+
   const totalPoints = $derived(qualPoints + bonusPoints);
 
   const pointsLabel = 'Deine Punkte';
@@ -431,20 +422,20 @@
 
   async function setFinalePoints(routeId, rawValue) {
     const parsed = parseFinaleInput(rawValue);
-    
+
     // Don't send if user left field empty (could be unintentional)
     if (parsed === null && rawValue === '') {
       return;
     }
-    
+
     if (parsed === null && rawValue !== '' && rawValue !== null && rawValue !== undefined) {
       toastStore.error('Bitte einen gültigen Zahlenwert >= 0 eingeben');
       return;
     }
-    
+
     await checkStateAndSetResult(routeId, parsed);
   }
-  
+
   async function setFinaleTime(routeId, timeValue) {
     // Skip sending empty time (intentional clear by user)
     if (timeValue === '' || timeValue === null || timeValue === undefined) {
@@ -455,12 +446,12 @@
 
   function debounceFinaleChange(routeId, value, type) {
     const key = `${routeId}-${type}`;
-    
+
     // Clear any existing timer for this field
     if (finaleDebounceTimers.has(key)) {
       clearTimeout(finaleDebounceTimers.get(key));
     }
-    
+
     // Set new debounce timer - save after 500ms of no changes
     const timer = setTimeout(() => {
       finaleDebounceTimers.delete(key);
@@ -470,7 +461,7 @@
         setFinaleTime(routeId, value);
       }
     }, 500);
-    
+
     finaleDebounceTimers.set(key, timer);
   }
 </script>
@@ -481,7 +472,7 @@
   {:else if competitionState === CompetitionStates.FINISHED && !loading}
     <div class="setup-banner finished">Wettkampf beendet.</div>
   {/if}
-  
+
   {#if loading}
     <div class="loading">Routen werden geladen...</div>
   {/if}
@@ -495,7 +486,7 @@
         </div>
       {/if}
     </div>
-    
+
     <div class="route-sections">
       {#if qualRoutes.length}
         <section class="route-section">
@@ -506,11 +497,11 @@
               <div class="route-card" class:top={route.result === 'top'} class:zone={route.result && route.result !== 'top'} class:attempted={'result' in route && route.result === 'attempted'} class:disabled={disabled}>
                 <div class="route-name">{route.name}</div>
                 <div class="route-buttons">
-                  <button 
-                    class="result-btn attempt-btn" 
-                    class:active={route.result === 'attempted'} 
-                    class:disabled={disabled} 
-                    disabled={disabled} 
+                  <button
+                    class="result-btn attempt-btn"
+                    class:active={route.result === 'attempted'}
+                    class:disabled={disabled}
+                    disabled={disabled}
                     onclick={() => checkStateAndSetResult(route.id, route.result === 'attempted' ? null : 'attempted')}>
                     Versucht</button>
                   {#each route.zones || [] as zone}
@@ -560,7 +551,7 @@
           </div>
         </section>
       {/if}
-      
+
       {#if finaleRoutes.length}
         <section class="route-section">
           <h2>Finale</h2>
@@ -615,13 +606,13 @@
           </div>
         </section>
       {/if}
-      
+
       {#if !routes.length}
         <div class="empty-state"><p>Keine Routen verfügbar.</p></div>
       {/if}
     </div>
   {/if}
-  
+
   {#if showTimer}
     <div class="timer-overlay" role="presentation" tabindex="-1" onclick={closeTimer} onkeydown={(e) => {
         const key = e.key || e.code;
@@ -653,14 +644,14 @@
 
 <style>
   .routes-view { max-width: 1200px; }
-  
+
   .setup-banner { background: color-mix(in srgb, var(--color-zone) 10%, transparent); border: 1px solid var(--color-zone); color: var(--color-zone); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 500; }
   .setup-banner.finished { background: color-mix(in srgb, var(--color-finished) 10%, transparent); border-color: var(--color-finished); color: var(--color-finished); }
-  
+
   .loading { text-align: center; padding: 40px; color: var(--color-text-muted); }
-  
+
   .stats { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 32px; }
-  
+
   .stat-card { background: var(--color-bg-light); border: 1px solid var(--color-border); border-radius: 12px; padding: 20px; }
   .stat-label { font-size: 14px; color: var(--color-text-muted); margin-bottom: 8px; }
   .stat-value { font-size: 24px; font-weight: 600; margin-bottom: 12px; }
@@ -668,32 +659,32 @@
   .stat-card.total { background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary) 100%); border-color: var(--color-primary); }
   .stat-card.total .stat-value { color: var(--color-white); }
   .stat-card.total .stat-label { color: rgba(255,255,255,0.8); }
-  
+
   .route-sections { display: flex; flex-direction: column; gap: 32px; }
   .route-section h2 { margin-bottom: 16px; font-size: 18px; color: var(--color-text); }
-  
+
    .routes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-   
+
    .route-section:has(.finale-card) .routes-grid {
      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
      gap: 16px;
    }
 
   @media (min-width: 768px) {
-    .bonus-routes { 
-      gap: 24px; 
+    .bonus-routes {
+      gap: 24px;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
   }
-  
+
   .route-card { position: relative; background: var(--color-bg-light); border: 2px solid var(--color-border); border-radius: 12px; padding: 16px; text-align: center; transition: all 0.2s ease; }
   .route-card.zone { border-color: var(--color-zone); background: color-mix(in srgb, var(--color-zone) 10%, transparent); }
   .route-card.top { border-color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 10%, transparent); }
   .route-card.attempted { border-color: var(--color-attempted); background: color-mix(in srgb, var(--color-attempted) 10%, transparent); }
   .route-name { font-weight: 600; font-size: 15px; margin-bottom: 12px; }
-  
+
   .route-buttons { display: grid; grid-template-columns: 1fr; gap: 6px; }
-  
+
   .result-btn { padding: 10px 8px; border: 2px solid var(--color-border); border-radius: 6px; background: transparent; color: var(--color-text-muted); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }
   .result-btn:hover { border-color: var(--color-text-muted); }
   .attempt-btn.active { background: var(--color-attempted); border-color: var(--color-attempted); color: var(--color-white); }
@@ -701,7 +692,7 @@
   .top-btn.active { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-white); }
   .result-btn.disabled, .result-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
   .route-card.disabled { opacity: 0.5; }
-  
+
   .bonus-card { cursor: default; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; min-height: 120px; min-width: 180px; }
   .bonus-card .route-name { margin-bottom: 16px; }
   .bonus-counter { display: flex; align-items: center; justify-content: center; gap: 16px; flex: 1; width: 100%; }
@@ -709,7 +700,7 @@
   .counter-btn:hover:not(:disabled) { border-color: var(--color-secondary); color: var(--color-secondary); }
   .counter-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .counter-value { font-size: 28px; font-weight: 700; color: var(--color-secondary); min-width: 40px; }
-  
+
    .route-card.finale-card { cursor: pointer; }
    .route-card.finale-card:hover { border-color: var(--color-finale); transform: translateY(-2px); }
    .route-card.finale-card.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
@@ -721,7 +712,7 @@
      justify-content: center;
      align-items: center;
    }
-   
+
    .route-card.finale-card .route-name {
      font-size: 20px;
      margin-bottom: 20px;
@@ -749,7 +740,7 @@
       background: var(--color-bg-light);
       color: var(--color-text);
     }
-   
+
     .finale-points-input {
       width: 130px;
       color: var(--color-text);
@@ -764,7 +755,7 @@
       color: var(--color-text-muted);
       opacity: 1;
     }
-  
+
    .timer-btn {
      background: var(--color-bg-light);
      border: 2px solid var(--color-finale);
@@ -775,7 +766,7 @@
    }
    .timer-btn:hover:not(:disabled) { background: var(--color-finale); }
    .timer-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  
+
   .timer-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -785,7 +776,7 @@
     justify-content: center;
     z-index: 9999;
   }
-  
+
   .timer-popup {
     background: var(--color-bg);
     border-radius: 16px;
@@ -793,16 +784,16 @@
     min-width: 320px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
-  
+
   .timer-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
   }
-  
+
   .timer-header h3 { margin: 0; font-size: 20px; }
-  
+
   .timer-close {
     background: none;
     border: none;
@@ -810,7 +801,7 @@
     cursor: pointer;
     color: var(--color-text-muted);
   }
-  
+
   .timer-display {
     font-size: 48px;
     font-weight: 700;
@@ -819,7 +810,7 @@
     margin-bottom: 4px;
     color: var(--color-finale);
   }
-  
+
   .timer-controls {
     display: flex;
     gap: 8px;
@@ -827,7 +818,7 @@
     flex-wrap: wrap;
     margin-bottom: 12px;
   }
-  
+
   .timer-controls button {
     padding: 8px 14px;
     border-radius: 6px;
@@ -835,12 +826,12 @@
     cursor: pointer;
     font-size: 12px;
   }
-  
+
   .timer-use-row {
     display: flex;
     justify-content: center;
   }
-  
+
   .timer-btn-use {
     padding: 10px 20px;
     border-radius: 6px;
@@ -854,37 +845,37 @@
   .timer-btn-use:hover {
     background: color-mix(in srgb, var(--color-finale) 80%, black);
   }
-  
+
   .timer-btn-start {
     background: var(--color-primary);
     border: 2px solid var(--color-primary);
     color: white;
   }
   .timer-btn-start:hover { background: color-mix(in srgb, var(--color-primary) 80%, black); }
-  
+
   .timer-btn-pause {
     background: var(--color-zone);
     border: 2px solid var(--color-zone);
     color: white;
   }
   .timer-btn-pause:hover { background: color-mix(in srgb, var(--color-zone) 80%, black); }
-  
+
   .timer-btn-reset {
     background: transparent;
     border: 2px solid var(--color-error);
     color: var(--color-error);
   }
   .timer-btn-reset:hover { background: var(--color-error); color: white; }
-  
+
   .timer-btn-use {
     background: var(--color-finale);
     border: 2px solid var(--color-finale);
     color: white;
   }
   .timer-btn-use:hover { background: color-mix(in srgb, var(--color-finale) 80%, black); }
-  
+
   .empty-state { text-align: center; padding: 60px; color: var(--color-text-muted); }
-  
+
    @media (max-width: 480px) {
      .stats { grid-template-columns: 1fr; gap: 12px; }
      .routes-grid { grid-template-columns: 1fr; gap: 8px; }
@@ -892,38 +883,38 @@
      .route-name { font-size: 13px; margin-bottom: 8px; }
      .result-btn { padding: 8px 6px; font-size: 11px; }
      .route-buttons { grid-template-columns: 1fr; gap: 4px; }
-     
+
      .route-section:has(.finale-card) .routes-grid {
        grid-template-columns: 1fr;
      }
-     
+
      .route-card.finale-card {
        padding: 20px;
        min-height: 200px;
      }
-     
+
      .route-card.finale-card .route-name {
        font-size: 18px;
        margin-bottom: 16px;
      }
-     
+
      .finale-input-row {
        gap: 8px;
      }
-     
+
      .finale-input-row input {
        font-size: 16px;
        padding: 12px 10px;
      }
-     
+
      .finale-points-input {
        width: 110px;
      }
-     
+
      .finale-time-input {
        width: 140px;
      }
-     
+
      .timer-btn {
        padding: 12px 14px;
        font-size: 18px;
