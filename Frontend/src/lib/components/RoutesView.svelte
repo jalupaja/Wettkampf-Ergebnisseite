@@ -341,8 +341,9 @@
       return points;
     });
 
-    const best = routeResults.sort().slice(0, bestCount);
-    return best.reduce((sum, r) => sum + r, 0);
+    const best = routeResults.sort((a, b) => b - a).slice(0, bestCount);
+    const val = best.reduce((sum, r) => sum + r, 0);
+    return val; 
   }
 
   const qualPoints = $derived(calculateQualPoints(qualRoutes, qualBestCount));
